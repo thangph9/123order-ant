@@ -257,16 +257,18 @@ export default {
             // Batch Query
         }
     ],function(err,result){
-        if(err) res.send({status: 'error'});
+        if(err) return res.send({status: 'error'});
        // console.log(queries);
         models.doBatch(queries,function(err){
             user['username']=PARAM_IS_VALID.username;
             //console.log(queries);
-            if(err) res.send({status: 'error'});
-            else (msg.length > 0)?
-                res.send({ status: 'error', message: msg, form: PARAM_IS_VALID})
-            :
-                res.send({ status: 'ok'});
+            if(err) return res.send({status: 'error'});
+            let token = jwt.sign({ user_id:PARAM_IS_VALID.user_id ,username:PARAM_IS_VALID.username,rule: PARAM_IS_VALID.rule}, privateKEY, {
+                  expiresIn: '30d', // expires in 24 hours
+                  algorithm: "RS256",
+                  subject: PARAM_IS_VALID.email, 
+            });
+            res.send({ status: 'ok',currentAuthority: {token: token,auth: true}});
         });
     })  
   },

@@ -16,7 +16,7 @@ export default {
         },
         locale: {
           enable: true, // default false
-          default: 'zh-CN', // default zh-CN
+          default: 'en-US', // default zh-CN
           baseNavigator: true, // default true, when it is true, will use `navigator.language` overwrite default
         },
         dynamicImport: {
