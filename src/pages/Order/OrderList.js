@@ -968,13 +968,13 @@ class OrderList extends PureComponent {
       handleUpdate: this.handleUpdate,
     };
     return (
-      <PageHeaderWrapper title="查询表格">
+      <PageHeaderWrapper title="Danh sách đơn đặt hàng">
         <Card bordered={false}>
           <div className={styles.tableList}>
             <div className={styles.tableListForm}>{this.renderForm()}</div>
             <div className={styles.tableListOperator}>
               <Button icon="plus" type="primary" onClick={() => this.handleModalVisible(true)}>
-                新建
+                Tạo mới
               </Button>
               {selectedRows.length > 0 && (
                 <span>

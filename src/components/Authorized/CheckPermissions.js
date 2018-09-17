@@ -27,9 +27,11 @@ const checkPermissions = (authority, currentAuthority, target, Exception) => {
   // 数组处理
   if (Array.isArray(authority)) {
     if (authority.indexOf(currentAuthority) >= 0) {
+        
       return target;
     }
     if (Array.isArray(currentAuthority)) {
+        
       for (let i = 0; i < currentAuthority.length; i += 1) {
         const element = currentAuthority[i];
         if (authority.indexOf(element) >= 0) {
@@ -37,11 +39,13 @@ const checkPermissions = (authority, currentAuthority, target, Exception) => {
         }
       }
     }
+    
     return Exception;
   }
-
+  
   // string 处理
   if (typeof authority === 'string') {
+      
     if (authority === currentAuthority) {
       return target;
     }
@@ -53,6 +57,7 @@ const checkPermissions = (authority, currentAuthority, target, Exception) => {
         }
       }
     }
+      
     return Exception;
   }
 
@@ -82,7 +87,9 @@ const checkPermissions = (authority, currentAuthority, target, Exception) => {
 
 export { checkPermissions };
 
-const check = (authority, target, Exception) =>
-  checkPermissions(authority, CURRENT, target, Exception);
+const check = (authority, target, Exception) =>{
+    return checkPermissions(authority, CURRENT, target, Exception);
+}
+  
 
 export default check;

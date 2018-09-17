@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'dva';
 import Link from 'umi/link';
 import router from 'umi/router';
-import { Form, Input, Button, Select, Row, Col, Popover, Progress } from 'antd';
+import { Form, Input, Button, Select, Row, Col, Popover, Progress,message } from 'antd';
 import styles from './Register.less';
 
 const FormItem = Form.Item;
@@ -60,6 +60,8 @@ class Register extends Component {
           },
         })
       );
+    }else{
+        
     }
   }
 
@@ -341,10 +343,7 @@ class Register extends Component {
                     onChange={this.changeRule}
                     style={{ width: '60%' }}
                   >
-                    <Option value="superadmin">Super Admin</Option>
-                    <Option value="admin">Admin</Option>
-                    <Option value="moduser">Manager User</Option>
-                    <Option value="member">User</Option>
+                <Option value="member">User</Option>
               </Select>
             </FormItem>
     

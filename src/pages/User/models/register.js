@@ -16,6 +16,9 @@ export default {
         type: 'registerHandle',
         payload: response,
       });
+        if(response.status!=='ok'){
+            message.error('Không thể đăng ký tài khoản, mời liên hệ với quản trị viên');
+        }
     },
     *checkAccount({ payload } , { call,put }){
         const response = yield call(checkAccount, payload);
@@ -29,8 +32,8 @@ export default {
 
   reducers: {
     registerHandle(state, { payload }) {
-     // setAuthority(payload.currentAuthority);
-    //  reloadAuthorized();
+    setAuthority(payload.currentAuthority);
+    reloadAuthorized();
       return {
         ...state,
         status: payload.status,

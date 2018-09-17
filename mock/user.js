@@ -185,6 +185,7 @@ export default {
     let saltRounds=10;
     var _salt="",_hash="";
     var PARAM_IS_VALID={},user={};
+    var privateKEY  = fs.readFileSync('./ssl/jwtprivate.pem', 'utf8');  
     async.series([
         function(callback){
             PARAM_IS_VALID["username"]      = params.username;
@@ -257,14 +258,16 @@ export default {
             // Batch Query
         }
     ],function(err,result){
+        console.log(err);
         if(err) return res.send({status: 'error'});
        // console.log(queries);
         models.doBatch(queries,function(err){
             user['username']=PARAM_IS_VALID.username;
             //console.log(queries);
+            console.log(err)
             if(err) return res.send({status: 'error'});
             let token = jwt.sign({ user_id:PARAM_IS_VALID.user_id ,username:PARAM_IS_VALID.username,rule: PARAM_IS_VALID.rule}, privateKEY, {
-                  expiresIn: '30d', // expires in 24 hours
+                  expiresIn: '30d', // expires in 30 day
                   algorithm: "RS256",
                   subject: PARAM_IS_VALID.email, 
             });

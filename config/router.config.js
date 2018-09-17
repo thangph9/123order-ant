@@ -17,7 +17,9 @@ export default [
     Routes: ['src/pages/Authorized'],
     routes: [
       // dashboard
-      { path: '/', redirect: '/dashboard/analysis' },
+    
+      { path: '/', redirect: '/order/order-list' },
+    /*    
       {
         path: '/dashboard',
         name: 'dashboard',
@@ -86,6 +88,7 @@ export default [
           },
         ],
       },
+    */
         // order
       {
         path: '/order',
@@ -105,6 +108,7 @@ export default [
         ],
       },
       // list
+    /*    
       {
         path: '/list',
         icon: 'table',
@@ -214,6 +218,7 @@ export default [
           },
         ],
       },
+    */  
       {
         name: 'account',
         icon: 'user',
