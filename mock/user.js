@@ -123,7 +123,8 @@ export default {
                models.instance.users.update({user_id:user.user_id},{last_login:new Date()},{ttl: 86400, if_exists: true},function(err){
                    callback(err,null);  
                });
-               
+            }else{
+                callback(null,null)
             }   
         },
         function(callback){

@@ -392,6 +392,10 @@ function addOrder(req,res){
             PARAM_IS_VALID['semployee']     =legit.username,
             PARAM_IS_VALID['sstatus']       =body.status,
             PARAM_IS_VALID['scomment']      =body.comment,
+            PARAM_IS_VALID['currency']      =body.currency,
+            PARAM_IS_VALID['surcharge']     =(body.surcharge && body.surcharge!=undefined  ) ? parseFloat(body.surcharge) : 0 ,
+            PARAM_IS_VALID['ssurcharge']    =body.ssurcharge,
+            PARAM_IS_VALID['scomment']      =body.comment,
                 
             callback(null,null);
             

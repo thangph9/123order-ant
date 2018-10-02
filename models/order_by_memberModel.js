@@ -1,6 +1,6 @@
 module.exports={
     fields:{
-        sbill_code   : 'text',
+        sbill_code  : 'text',
         ddate       : 'timestamp',
         sname       : 'text',
         sphone      : 'varchar',
@@ -25,6 +25,9 @@ module.exports={
         semployee   :'text',
         sstatus     :'text',
         scomment    :'text',  
+        fsurcharge  :'float',
+        ssurcharge  :'text',
+        scurrency   :'text'
     },
     key:[["sbill_code"]] ,
 } 
