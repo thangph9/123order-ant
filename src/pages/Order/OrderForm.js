@@ -52,6 +52,17 @@ class OrderForm extends PureComponent {
       }
     });
   }
+  handleOrder = e =>{
+      const { dispatch, form } = this.props;
+      form.validateFieldsAndScroll((err, values) => {
+          if (!err) {
+            dispatch({
+              type: 'order/submitRegularForm',
+              payload: values,
+            });
+          }
+      });
+  }
   changeStatus=e=>{
       this.setState({
           status: e,
@@ -185,7 +196,7 @@ class OrderForm extends PureComponent {
         content="Đặt hàng"
       >
         <Card bordered={false}>
-          <Form onSubmit={this.handleSubmit} hideRequiredMark style={{ marginTop: 8 }}>
+          <Form  hideRequiredMark style={{ marginTop: 8 }}>
             <Row>
                 <Col xs={{ span: 24, offset: 0 }} sm={{ span: 12, offset: 0 }}>
                     <FormItem {...formItemLayout} label="Mã Bill">
@@ -511,7 +522,7 @@ class OrderForm extends PureComponent {
                 </Col>
             </Row>
             <FormItem {...submitFormLayout} style={{ marginTop: 32 }}>
-              <Button type="primary" htmlType="submit" loading={submitting}>
+              <Button type="primary" htmlType="button" loading={submitting} onClick={(e)=>{this.handleOrder(e)}} >
                 Lên Đơn
               </Button>
               <Button style={{ marginLeft: 8 }}>Huỷ</Button>
