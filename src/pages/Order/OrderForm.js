@@ -63,7 +63,7 @@ class OrderForm extends PureComponent {
   }
   changeSurcharge =e=>{
       this.setState({
-          surcharge: e,
+          currency: e,
       })
   }
   componentDidMount() {
@@ -102,15 +102,13 @@ class OrderForm extends PureComponent {
       _amount= Number.isNaN(_amount) ? 1 : _amount
       _surcharge= Number.isNaN(_surcharge) ? 0 : _surcharge
       _deliveryprice= Number.isNaN(_deliveryprice) ? 1 : _deliveryprice
-      _shipWeb= Number.isNaN(_shipWeb) ? 1 : _shipWeb
-      
-      //console.log(_web_price,_sale,_servicerate,_amount)
+      _shipWeb= Number.isNaN(_shipWeb) ? 0 : _shipWeb
       
       
       let j=_web_price*((100-_sale)/100)*((100+_servicerate)/100)*_amount;
       
       let s=parseInt(currencyRate[currency])*j;
-      let a=parseInt(currencyRate[surcharge])*_surcharge;
+      let a=parseInt(currencyRate[currency])*_surcharge;
       let i=_deliveryprice*250000;
       let e=parseInt(currencyRate[currency])*_shipWeb
       
@@ -392,8 +390,8 @@ class OrderForm extends PureComponent {
                         </Col>
                         <Col md={{ span: 5, offset: 1 }}>
                             <FormItem {...formItemLayoutCurrencyRight}>
-                               {getFieldDecorator('ssurcharge', {
-                                    initialValue:surcharge
+                               {getFieldDecorator('currency', {
+                                    initialValue:currency
                                 }) (<Select
                                     onChange={this.changeSurcharge}
                                   >
