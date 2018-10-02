@@ -34,6 +34,7 @@ class OrderForm extends PureComponent {
         currency: 'USD',
         surcharge: 'USD',
         price:0,
+        payprice:0,
         currencyRate:{USD: '24500',
                      EUR: '29500',
                      JPY: '2111',
@@ -86,6 +87,7 @@ class OrderForm extends PureComponent {
       let fsurcharge=this.props.form.getFieldValue('surcharge');
       let deliveryprice=this.props.form.getFieldValue('deliveryprice');
       let shipWeb=this.props.form.getFieldValue('shipWeb');
+      let deposit=this.props.form.getFieldValue('deposit');
       
       let _web_price=Number.isNaN(web_price) ? 0 : parseInt(web_price);
       let _sale=Number.isNaN(sale) ? 0 : parseInt(sale);
@@ -94,6 +96,7 @@ class OrderForm extends PureComponent {
       let _surcharge=Number.isNaN(fsurcharge) ? 0 : parseFloat(fsurcharge);
       let _deliveryprice=Number.isNaN(deliveryprice) ? 0 : parseFloat(deliveryprice);
       let _shipWeb=Number.isNaN(shipWeb) ? 0 : parseFloat(shipWeb);
+      let _deposit=Number.isNaN(deposit) ? 0 : parseFloat(deposit);
       
       let price=0;
       _web_price= Number.isNaN(_web_price) ? 0 : _web_price
@@ -103,6 +106,7 @@ class OrderForm extends PureComponent {
       _surcharge= Number.isNaN(_surcharge) ? 0 : _surcharge
       _deliveryprice= Number.isNaN(_deliveryprice) ? 1 : _deliveryprice
       _shipWeb= Number.isNaN(_shipWeb) ? 0 : _shipWeb
+      _deposit= Number.isNaN(_deposit) ? 0 : _deposit
       
       
       let j=_web_price*((100-_sale)/100)*((100+_servicerate)/100)*_amount;
@@ -114,8 +118,13 @@ class OrderForm extends PureComponent {
       
       price=s+a+i+e;
       
+      let payprice=0;
+      payprice = price - _deposit;
+      
+      
       this.setState({
-          price: price
+          price: price,
+          payprice:payprice
       });
       
   }
@@ -128,7 +137,7 @@ class OrderForm extends PureComponent {
     const {
       form: { getFieldDecorator, getFieldValue },
     } = this.props;
-    const {status, currency,surcharge,price} = this.state;
+    const {status, currency,surcharge,price,payprice} = this.state;
     let bill_code=order.billcode;
     const formItemLayout = {
       labelCol: {
@@ -381,7 +390,6 @@ class OrderForm extends PureComponent {
                               {getFieldDecorator('surcharge', {
                                 rules: [
                                   {
-                                    required: true,
                                     message: ' ',
                                   },
                                 ],
@@ -452,7 +460,7 @@ class OrderForm extends PureComponent {
                 <Col md={{ span: 12, offset: 0 }}>
                     <FormItem {...formItemLayout} label="Đặt cọc">
                       {getFieldDecorator('deposit', {
-
+                            
                       })(<Input placeholder=" "  addonAfter="VND"/>)}
                     </FormItem>
                 </Col>  
@@ -464,7 +472,8 @@ class OrderForm extends PureComponent {
                             required: true,
                             message: ' ',
                           },
-                        ],
+                        ], 
+                        initialValue:payprice
                       })(<Input placeholder=" " addonAfter="VND"/>)}
                     </FormItem>
                 </Col>  
