@@ -13,9 +13,10 @@ export default {
   },
 
   effects: {
-    *submitRegularForm({ payload }, { call }) {
+    *submitRegularForm({ payload }, { call,put }) {
       yield call(addOrder, payload);
       message.success('Thành công');
+      yield put(routerRedux.push('/order/order-list'));
     },
     *submitStepForm({ payload }, { call, put }) {
       yield call(addOrder, payload);
@@ -28,6 +29,7 @@ export default {
     *submitAdvancedForm({ payload }, { call }) {
       yield call(addOrder, payload);
       message.success('Đặt hàng thành công');
+      
     },  
     *generateBillCode({ payload }, { call,put }){
         const response = yield call(generateBillCode, payload);
@@ -45,7 +47,6 @@ export default {
     },
     *editCeil({ payload },{call, put}){
           const response = yield call(editCeil, payload);
-        console.log(payload)
           if(response.status==='ok'){
                 message.success('Thay đổi thành công');
             }else if (response.status==='expired'){

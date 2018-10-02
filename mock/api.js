@@ -388,7 +388,7 @@ function addOrder(req,res){
             PARAM_IS_VALID['frealpayprice'] =(body.realpayprice && body.realpayprice!=undefined  ) ? parseFloat(body.realpayprice) : 0 ,
             PARAM_IS_VALID['fdelivery']     =(body.delivery && body.delivery!=undefined  ) ? parseFloat(body.delivery) : 0 ,
             PARAM_IS_VALID['fdeliveryprice']=(body.deliveryprice && body.deliveryprice!=undefined  ) ? parseFloat(body.deliveryprice) : 0 ,
-            PARAM_IS_VALID['fservicerate']  =(body.servicerate && body.servicerate!=undefined  ) ? parseFloat(body.deliveryprice) : 0 ,
+            PARAM_IS_VALID['fservicerate']  =(body.servicerate && body.servicerate!=undefined && !Number.isNaN(body.servicerate) ) ? parseFloat(body.servicerate) : 0 ,
             PARAM_IS_VALID['semployee']     =legit.username,
             PARAM_IS_VALID['sstatus']       =body.status,
             PARAM_IS_VALID['scomment']      =body.comment,
