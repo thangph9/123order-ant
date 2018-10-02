@@ -33,6 +33,11 @@ class OrderForm extends PureComponent {
         status:'pending',
         currency: 'USD',
         surcharge: 'USD',
+        price:0,
+        currencyRate:{USD: '24500',
+                     EUR: '29500',
+                     JPY: '2111',
+                     GBP: '33000'}
     }
   handleSubmit = e => {
     const { dispatch, form } = this.props;
@@ -70,15 +75,62 @@ class OrderForm extends PureComponent {
     });
     
   }
+  componentDidUpdate(){
+      
+      const {currency,surcharge,currencyRate} = this.state;
+      
+      let web_price=this.props.form.getFieldValue('web_price');
+      let sale=this.props.form.getFieldValue('sale');
+      let servicerate=this.props.form.getFieldValue('servicerate');
+      let amount=this.props.form.getFieldValue('amount');
+      let fsurcharge=this.props.form.getFieldValue('surcharge');
+      let deliveryprice=this.props.form.getFieldValue('deliveryprice');
+      let shipWeb=this.props.form.getFieldValue('shipWeb');
+      
+      let _web_price=Number.isNaN(web_price) ? 0 : parseInt(web_price);
+      let _sale=Number.isNaN(sale) ? 0 : parseInt(sale);
+      let _servicerate=Number.isNaN(servicerate) ? 0 : parseFloat(servicerate);
+      let _amount=Number.isNaN(amount) ? 0 : parseFloat(amount);
+      let _surcharge=Number.isNaN(fsurcharge) ? 0 : parseFloat(fsurcharge);
+      let _deliveryprice=Number.isNaN(deliveryprice) ? 0 : parseFloat(deliveryprice);
+      let _shipWeb=Number.isNaN(shipWeb) ? 0 : parseFloat(shipWeb);
+      
+      let price=0;
+      _web_price= Number.isNaN(_web_price) ? 0 : _web_price
+      _sale= Number.isNaN(_sale) ? 0 : _sale
+      _servicerate= Number.isNaN(_servicerate) ? 0 : _servicerate
+      _amount= Number.isNaN(_amount) ? 1 : _amount
+      _surcharge= Number.isNaN(_surcharge) ? 0 : _surcharge
+      _deliveryprice= Number.isNaN(_deliveryprice) ? 1 : _deliveryprice
+      _shipWeb= Number.isNaN(_shipWeb) ? 1 : _shipWeb
+      
+      //console.log(_web_price,_sale,_servicerate,_amount)
+      
+      
+      let j=_web_price*((100-_sale)/100)*((100+_servicerate)/100)*_amount;
+      
+      let s=parseInt(currencyRate[currency])*j;
+      let a=parseInt(currencyRate[surcharge])*_surcharge;
+      let i=_deliveryprice*250000;
+      let e=parseInt(currencyRate[currency])*_shipWeb
+      
+      price=s+a+i+e;
+      
+      this.setState({
+          price: price
+      });
+      
+  }
   componentWillUnmount(){
     window.onbeforeunload = null;
   }
+
   render() {
     const { submitting, order } = this.props;
     const {
       form: { getFieldDecorator, getFieldValue },
     } = this.props;
-    const {status, currency,surcharge} = this.state;
+    const {status, currency,surcharge,price} = this.state;
     let bill_code=order.billcode;
     const formItemLayout = {
       labelCol: {
@@ -119,7 +171,7 @@ class OrderForm extends PureComponent {
         sm: { span: 10, offset: 7 },
       },
     };
-      
+    
     return (
       <PageHeaderWrapper
         title="Đặt hàng"
@@ -294,7 +346,7 @@ class OrderForm extends PureComponent {
                             message: ' ',
                           },
                         ],
-                      })(<Input placeholder="sale" />)}
+                      })(<Input placeholder="sale" addonAfter="%" />)}
                     </FormItem>
                 </Col>  
             </Row>
@@ -359,14 +411,14 @@ class OrderForm extends PureComponent {
                 <Col md={{ span: 12, offset: 0 }}>
                     <FormItem {...formItemLayout} label="Tỷ giá báo khách">
                       {getFieldDecorator('rate', {
-                      })(<Input placeholder=" " />)}
+                      })(<Input placeholder=" " addonAfter="VND" />)}
                     </FormItem>
                 </Col>  
                 <Col md={{ span: 12, offset: 0 }}>
                 <FormItem {...formItemLayout} label="Vận chuyển báo khách">
                   {getFieldDecorator('deliveryprice', {
 
-                  })(<Input placeholder=" " />)}
+                  })(<Input placeholder=" " addonAfter="Kg" />)}
                 </FormItem>
                 </Col>  
             </Row>
@@ -380,7 +432,7 @@ class OrderForm extends PureComponent {
                             message: 'Bắt buộc ',
                           },
                         ],
-                      })(<Input placeholder=" " />)}
+                      })(<Input placeholder=" " addonAfter="%" />)}
                     </FormItem>
                 </Col>  
                 <Col md={{ span: 12, offset: 0 }}>
@@ -391,8 +443,10 @@ class OrderForm extends PureComponent {
                             required: true,
                             message: ' ',
                           },
+                        
                         ],
-                      })(<Input placeholder=" " />)}
+                        initialValue:price
+                      })(<Input placeholder=" " addonAfter="VND" />)}
                     </FormItem>
                 </Col>  
             </Row>
@@ -401,7 +455,7 @@ class OrderForm extends PureComponent {
                     <FormItem {...formItemLayout} label="Đặt cọc">
                       {getFieldDecorator('deposit', {
 
-                      })(<Input placeholder=" " />)}
+                      })(<Input placeholder=" "  addonAfter="VND"/>)}
                     </FormItem>
                 </Col>  
                 <Col md={{ span: 12, offset: 0 }}>
@@ -413,7 +467,7 @@ class OrderForm extends PureComponent {
                             message: ' ',
                           },
                         ],
-                      })(<Input placeholder=" " />)}
+                      })(<Input placeholder=" " addonAfter="VND"/>)}
                     </FormItem>
                 </Col>  
             </Row>
