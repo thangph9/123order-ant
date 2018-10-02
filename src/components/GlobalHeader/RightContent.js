@@ -41,10 +41,10 @@ export default class GlobalHeaderRight extends PureComponent {
 
   changLang = () => {
     const locale = getLocale();
-    if (!locale || locale === 'zh-CN') {
+    if (!locale || locale === 'vi-VN') {
       setLocale('en-US');
     } else {
-      setLocale('zh-CN');
+      setLocale('vi-VN');
     }
   };
 
@@ -74,7 +74,7 @@ export default class GlobalHeaderRight extends PureComponent {
         <Menu.Divider />
         <Menu.Item key="logout">
           <Icon type="logout" />
-          退出登录
+          <FormattedMessage id="menu.account.logout" defaultMessage="Logout" />
         </Menu.Item>
       </Menu>
     );

@@ -54,16 +54,6 @@ const desc = [
 ];
 
 const user = [
-  '付小小',
-  '曲丽丽',
-  '林东东',
-  '周星星',
-  '吴加好',
-  '朱偏右',
-  '鱼酱',
-  '乐哥',
-  '谭小仪',
-  '仲尼',
 ];
 
 function fakeList(count) {
@@ -529,6 +519,7 @@ function generateOrderBillCode(req,res){
     let bill_code,billCode;
     let id=Uuid.random();
     var token=req.headers['x-access-token'];
+    console.log(token);
     var verifyOptions = {
      expiresIn:  '30d',
      algorithm:  ["RS256"]
@@ -537,7 +528,6 @@ function generateOrderBillCode(req,res){
     try{
         legit   = jwt.verify(token, publicKEY, verifyOptions);
     }catch(e){
-        console.log(e);
        return  res.send({status: 'expired'}); 
     }
     
