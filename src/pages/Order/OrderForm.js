@@ -17,7 +17,7 @@ import {
 import {isDirty} from 'redux-form';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 import styles from './style.less';
-
+var currencyFormatter = require('currency-formatter');
 const FormItem = Form.Item;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -35,9 +35,10 @@ class OrderForm extends PureComponent {
         surcharge: 'USD',
         price:0,
         payprice:0,
+        changePrice:false,
         currencyRate:{USD: '24500',
                      EUR: '29500',
-                     JPY: '2111',
+                     JPY: '211.50',
                      GBP: '33000'}
     }
   handleSubmit = e => {
@@ -45,6 +46,7 @@ class OrderForm extends PureComponent {
     e.preventDefault();
     form.validateFieldsAndScroll((err, values) => {
       if (!err) {
+        
         dispatch({
           type: 'order/submitRegularForm',
           payload: values,
@@ -56,6 +58,8 @@ class OrderForm extends PureComponent {
       const { dispatch, form } = this.props;
       form.validateFieldsAndScroll((err, values) => {
           if (!err) {
+            console.log(form.getFieldValue('price'));  
+            console.log(form.getFieldValue('realpayprice'));    
             dispatch({
               type: 'order/submitRegularForm',
               payload: values,
@@ -78,6 +82,18 @@ class OrderForm extends PureComponent {
           currency: e,
       })
   }
+  handleFormatCurrency = (key) =>{
+      let v=key.target.value;
+      let c=currencyFormatter.format(v, { locale: 'vi-VN',symbol: '' });
+      
+      this.props.form.setFieldsValue({
+            [key.target.id]: c,
+        });
+      this.setState({
+          [key.target.id]:c,
+          changePrice: true,
+      });
+  }
   componentDidMount() {
     const { dispatch } = this.props;
       
@@ -89,7 +105,7 @@ class OrderForm extends PureComponent {
   }
   componentDidUpdate(){
       
-      const {currency,surcharge,currencyRate} = this.state;
+      const {currency,surcharge,currencyRate,changePrice} = this.state;
       
       let web_price=this.props.form.getFieldValue('web_price');
       let sale=this.props.form.getFieldValue('sale');
@@ -99,6 +115,7 @@ class OrderForm extends PureComponent {
       let deliveryprice=this.props.form.getFieldValue('deliveryprice');
       let shipWeb=this.props.form.getFieldValue('shipWeb');
       let deposit=this.props.form.getFieldValue('deposit');
+      let rprice=this.props.form.getFieldValue('price');
       
       let _web_price=Number.isNaN(web_price) ? 0 : parseInt(web_price);
       let _sale=Number.isNaN(sale) ? 0 : parseInt(sale);
@@ -108,8 +125,10 @@ class OrderForm extends PureComponent {
       let _deliveryprice=Number.isNaN(deliveryprice) ? 0 : parseFloat(deliveryprice);
       let _shipWeb=Number.isNaN(shipWeb) ? 0 : parseFloat(shipWeb);
       let _deposit=Number.isNaN(deposit) ? 0 : parseFloat(deposit);
+      let _rprice=Number.isNaN(rprice) ? 0 : parseFloat(rprice);
       
-      let price=0;
+      
+      
       _web_price= Number.isNaN(_web_price) ? 0 : _web_price
       _sale= Number.isNaN(_sale) ? 0 : _sale
       _servicerate= Number.isNaN(_servicerate) ? 0 : _servicerate
@@ -118,20 +137,29 @@ class OrderForm extends PureComponent {
       _deliveryprice= Number.isNaN(_deliveryprice) ? 1 : _deliveryprice
       _shipWeb= Number.isNaN(_shipWeb) ? 0 : _shipWeb
       _deposit= Number.isNaN(_deposit) ? 0 : _deposit
+      _rprice= Number.isNaN(_rprice) ? 0 : _rprice
       
+      let price=0;
       
       let j=_web_price*((100-_sale)/100)*((100+_servicerate)/100)*_amount;
       
       let s=parseInt(currencyRate[currency])*j;
       let a=parseInt(currencyRate[currency])*_surcharge;
-      let i=_deliveryprice*250000;
+      let i=_deliveryprice;
       let e=parseInt(currencyRate[currency])*_shipWeb
       
-      price=s+a+i+e;
       
+      if (changePrice){
+          price=_rprice;
+      }else{
+          price=s+a+i+e;
+      }
       let payprice=0;
       payprice = price - _deposit;
       
+      payprice=currencyFormatter.format(payprice, { locale: 'vi-VN' ,symbol: ''});
+      price=currencyFormatter.format(price, { locale: 'vi-VN',symbol: '' });
+      deposit=currencyFormatter.format(_deposit, { locale: 'vi-VN',symbol: '' });
       
       this.setState({
           price: price,
@@ -435,7 +463,7 @@ class OrderForm extends PureComponent {
                 <FormItem {...formItemLayout} label="Vận chuyển báo khách">
                   {getFieldDecorator('deliveryprice', {
 
-                  })(<Input placeholder=" " addonAfter="Kg" />)}
+                  })(<Input placeholder=" " addonAfter="VND" />)}
                 </FormItem>
                 </Col>  
             </Row>
@@ -462,8 +490,9 @@ class OrderForm extends PureComponent {
                           },
                         
                         ],
-                        initialValue:price
-                      })(<Input placeholder=" " addonAfter="VND" />)}
+                        initialValue:price,
+                        onChange: this.handleFormatCurrency
+                      })(<Input placeholder=" " addonAfter="VND"  />)}
                     </FormItem>
                 </Col>  
             </Row>

@@ -1,7 +1,8 @@
 import React, { PureComponent, Fragment } from 'react';
-import { Table, Alert } from 'antd';
+import { Table, Alert,Row,Col ,DatePicker} from 'antd';
 import styles from './index.less';
-
+import moment from 'moment';
+const RangePicker = DatePicker.RangePicker;
 function initTotalList(columns) {
   const totalList = [];
   columns.forEach(column => {
@@ -60,7 +61,25 @@ class StandardTable extends PureComponent {
   cleanSelectedKeys = () => {
     this.handleRowSelectChange([], []);
   };
-
+  handleClick = record=>{
+      const { onRowSelect } = this.props;
+      if(onRowSelect){
+          onRowSelect(record)
+      }
+  }
+  handleClickHeaderRow =(column)=>{
+      
+      const { onHeaderRow } = this.props;
+      if(onHeaderRow){
+          onHeaderRow(column)
+      }
+  }
+  onChangeRangPicker =(e)=>{
+      const { onChangeRangPicker } = this.props;
+      if(onChangeRangPicker){
+          onChangeRangPicker(e)
+      }
+  }
   render() {
     const { selectedRowKeys, needTotalList } = this.state;
     const {
@@ -86,30 +105,18 @@ class StandardTable extends PureComponent {
 
     return (
       <div className={styles.standardTable}>
-        <div className={styles.tableAlert}>
-          <Alert
-            message={
-              <Fragment>
-                已选择 <a style={{ fontWeight: 600 }}>{selectedRowKeys.length}</a> 项&nbsp;&nbsp;
-                {needTotalList.map(item => (
-                  <span style={{ marginLeft: 8 }} key={item.dataIndex}>
-                    {item.title}
-                    总计&nbsp;
-                    <span style={{ fontWeight: 600 }}>
-                      {item.render ? item.render(item.total) : item.total}
-                    </span>
-                  </span>
-                ))}
-                <a onClick={this.cleanSelectedKeys} style={{ marginLeft: 24 }}>
-                  清空
-                </a>
-              </Fragment>
-            }
-            type="info"
-            showIcon
-          />
-        </div>
-        <div>    
+        <Row type="flex" justify="end">
+          
+                <RangePicker
+                      ranges={{ 'Hôm nay': [moment(), moment()], 'Trong tháng': [moment().startOf('month'), moment().endOf('month')],'Tuần này': [moment().startOf('week'), moment().endOf('week')]}}
+                      showTime
+                      format="YYYY/MM/DD"
+                      defaultValue={[moment(),moment()]}
+                      onChange={this.onChangeRangPicker}
+
+                />  
+        </Row>
+        <div>        
         <Table
           loading={loading}
           rowKey={rowKey || 'key'}
@@ -120,6 +127,16 @@ class StandardTable extends PureComponent {
           pagination={paginationProps}
           onChange={this.handleTableChange}
           scroll={{ x: 4000 }}
+          onRow={(record) => {
+                return {
+                  onClick: () => {this.handleClick(record)}
+                };
+              }}
+         onHeaderRow={(column) =>{
+            return {
+              onClick: () => {this.handleClickHeaderRow(column)},   
+            };             
+         }}
         />
         </div>
       </div>

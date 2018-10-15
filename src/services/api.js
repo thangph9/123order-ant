@@ -132,9 +132,11 @@ export async function addOrder(params){
         headers:{'X-Access-Token':getAuthority()[0].token}
     })
 }
-export async function getOrderList(){
+export async function getOrderList(e){
+    console.log(e);
     return request(`/api/order/list`,{
-        method:'GET',
+        method:'POST',
+        body:e,
         headers:{'X-Access-Token':getAuthority()[0].token}
     })
 }

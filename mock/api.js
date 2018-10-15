@@ -4,6 +4,7 @@ const async     = require("async");
 const Uuid      = require("cassandra-driver").types.Uuid;
 const jwt       = require('jsonwebtoken');
 const fs        =require('fs');
+var currencyFormatter = require('currency-formatter');
 var publicKEY  = fs.readFileSync('./ssl/jwtpublic.pem', 'utf8');  
 const titles = [
   'Alipay',
@@ -327,24 +328,95 @@ function getOrder(req,res){
     }catch(e){
         return res.send({status: 'expired'}); 
     }
+    let filter_params={};
+    let currentPage=1;
+    let pageSize=10;
+    let total=1;
+    let limit=10000;
+    var query={};
     var list=[],_list=[];
+    const locale={
+      'USD':'en-US',
+      'GBP':'en-GB',
+      'VND':'vi-VN',
+      'JPY':'ja-JP',
+      'EUR':'de-DE',
+    }
     async.series([
        function(callback){
+            currentPage=(req.body.currentPage) ? req.body.currentPage : 1;
+            pageSize=(req.body.pageSize) ? req.body.pageSize : 10;
+            
+            let _total=(currentPage*pageSize+pageSize) ;
+            limit = (_total > 10000) ? (limit+_total) : 10000;
+           
+            if(req.body.name){
+                query['sname']={ '$like': req.body.name+'%' };
+                
+            } 
+            if(req.body.phone){
+                query['sphone']={'$like': req.body.phone+'%'};
+            }
+            query['$limit']=limit
             callback(null,null);    
        },
        function(callback){
-            models.instance.order_by_member.find({},function(err,items){
-                list=(items && items.length> 0 ) ? items : [];
+            models.instance.order_by_member.find(query,{raw: true},function(err,items){
+                _list=items;
+                //let newList=[];
+                
+                try{
+                    items.map((e,i)=>{
+                        let n=JSON.stringify(e);
+                        let l=JSON.parse(n);
+                        l['_deposit']=currencyFormatter.format(e.fdeposit, { locale: 'vi-VN',code: "VND"});
+                        l['_price']=currencyFormatter.format(e.fprice, { locale: 'vi-VN',code: "VND"  });
+                        l['_realpayprice']=currencyFormatter.format(e.frealpayprice, { locale: 'vi-VN',code: "VND" });
+                        l['_deliveryprice']=currencyFormatter.format(e.fdeliveryprice, { locale: 'vi-VN',code: "VND" });
+                        l['_exchangerate']=currencyFormatter.format(e.fexchangerate, { locale: 'vi-VN',code: "VND" });
+                        l['_sale']=(e.fsale) ? e.fsale+"%" : "0%"
+                        l['_servicerate']=(e.fservicerate) ? e.fservicerate+"%" : "0%"
+                        l['_webprice']=currencyFormatter.format(e.fwebprice, { locale:'vi-VN',code: e.scurrency });
+                        l['_shipweb']=currencyFormatter.format(e.fshipweb, { locale:'vi-VN',code:e.scurrency });
+                        l['_surcharge']=currencyFormatter.format(e.fsurcharge, { locale:'vi-VN',code:e.scurrency  });
+                        list.push(l)
+                    })
+                }catch(e){
+                    
+                }
                 callback(err,null);
                 
             })
             
-       }
+       },
+       function(callback){
+           const filterName=_list.filter(function(e){
+               if(req.body.name){
+                   return (req.body.name.indexOf(e.sname) > -1 )
+               }
+           });
+           const filterPhone=_list.filter(function(e){
+               if(req.body.phone){
+                   return (req.body.phone.indexOf(e.sphone) > -1 )
+               }
+           });
+            callback(null,null);
+        },
+        function(callback){
+            total=list.length;
+            
+            let start=currentPage*pageSize-pageSize;
+            let end=currentPage*pageSize-1;
+            list = list.splice(start, end)
+            callback(null,null)
+        }
     ],function(err,result){
         if(err) return res.send({status:'error'});
+        
+        
         res.send({
             list:list,
-            pagination:{total: 46, pageSize: 10, current: 1}
+            pagination:{total: total, pageSize: pageSize, current: currentPage}
         })
     });
     
@@ -378,22 +450,24 @@ function addOrder(req,res){
             PARAM_IS_VALID['snameproduct']  =body.product_name, 
             PARAM_IS_VALID['ssize']         =body.size, 
             PARAM_IS_VALID['scolor']        =body.color, 
-            PARAM_IS_VALID['iquality']      =(body.amount && body.amount!=undefined  ) ? parseInt(body.amount,10) : 0 ,
-            PARAM_IS_VALID['fwebprice']     =(body.web_price && body.web_price!=undefined  ) ? parseFloat(body.web_price) : 0,
-            PARAM_IS_VALID['fsale']         =(body.sale && body.sale!=undefined  ) ? parseFloat(body.sale) : 0, 
-            PARAM_IS_VALID['fshipweb']      =(body.shipWeb && body.shipWeb!=undefined  ) ? parseFloat(body.shipWeb) : 0 ,
-            PARAM_IS_VALID['fexchangerate'] =(body.rate && body.rate!=undefined  ) ? parseFloat(body.rate) : 0 ,
-            PARAM_IS_VALID['fprice']        =(body.price && body.price!=undefined  ) ? parseFloat(body.price) : 0 ,
-            PARAM_IS_VALID['fdeposit']      =(body.deposit && body.deposit!=undefined  ) ? parseFloat(body.deposit) : 0 ,
-            PARAM_IS_VALID['frealpayprice'] =(body.realpayprice && body.realpayprice!=undefined  ) ? parseFloat(body.realpayprice) : 0 ,
-            PARAM_IS_VALID['fdelivery']     =(body.delivery && body.delivery!=undefined  ) ? parseFloat(body.delivery) : 0 ,
-            PARAM_IS_VALID['fdeliveryprice']=(body.deliveryprice && body.deliveryprice!=undefined  ) ? parseFloat(body.deliveryprice) : 0 ,
-            PARAM_IS_VALID['fservicerate']  =(body.servicerate && body.servicerate!=undefined && !Number.isNaN(body.servicerate) ) ? parseFloat(body.servicerate) : 0 ,
+            PARAM_IS_VALID['iquality']      =(body.amount) ? parseInt(body.amount,10) : 0 ,
+            PARAM_IS_VALID['fwebprice']     =(body.web_price) ? parseFloat(body.web_price) : 0,
+            PARAM_IS_VALID['fsale']         =(body.sale) ? parseFloat(body.sale) : 0, 
+            PARAM_IS_VALID['fshipweb']      =(body.shipWeb) ? parseFloat(body.shipWeb) : 0 ,
+            PARAM_IS_VALID['fexchangerate'] =(body.rate) ? parseFloat(body.rate) : 0 ,
+            PARAM_IS_VALID['fprice']        =(body.price) ? parseFloat(currencyFormatter.unformat(body.price, { locale: 'vi-VN' })) : 0 ,
+                
+            PARAM_IS_VALID['fdeposit']      =(body.deposit) ? parseFloat(body.deposit) : 0 ,
+            PARAM_IS_VALID['frealpayprice'] =(body.realpayprice) ? parseFloat(currencyFormatter.unformat(body.realpayprice, { locale: 'vi-VN' })) : 0 ,
+                
+            PARAM_IS_VALID['fdelivery']     =(body.delivery) ? parseFloat(body.delivery) : 0 ,
+            PARAM_IS_VALID['fdeliveryprice']=(body.deliveryprice) ? parseFloat(body.deliveryprice) : 0 ,
+            PARAM_IS_VALID['fservicerate']  =(body.servicerate && !Number.isNaN(body.servicerate) ) ? parseFloat(body.servicerate) : 0 ,
             PARAM_IS_VALID['semployee']     =legit.username,
             PARAM_IS_VALID['sstatus']       =body.status,
             PARAM_IS_VALID['scomment']      =body.comment,
-            PARAM_IS_VALID['currency']      =body.currency,
-            PARAM_IS_VALID['surcharge']     =(body.surcharge && body.surcharge!=undefined  ) ? parseFloat(body.surcharge) : 0 ,
+            PARAM_IS_VALID['scurrency']      =body.currency,
+            PARAM_IS_VALID['surcharge']     =(body.surcharge) ? parseFloat(body.surcharge) : 0 ,
             PARAM_IS_VALID['ssurcharge']    =body.ssurcharge,
             PARAM_IS_VALID['scomment']      =body.comment,
                 
@@ -402,7 +476,7 @@ function addOrder(req,res){
         },
         function(callback){
             
-            
+            console.log(PARAM_IS_VALID);
             const order_by_member=()=>{
                 let object      =PARAM_IS_VALID;
                 let instance    =new models.instance.order_by_member(object);
@@ -599,7 +673,7 @@ export default {
   },
   'PUT /api/order/edit_ceil':updateOrder,    
   'POST /api/order/add':addOrder,
-  'GET /api/order/list':getOrder,
+  'POST /api/order/list':getOrder,
   'DELETE /api/order/del_row':delOrder,
   'POST /api/user/check_account':checkAccount , 
   'GET /api/generate/bill_code':generateOrderBillCode,       

@@ -1,6 +1,7 @@
 import { routerRedux } from 'dva/router';
 import { message } from 'antd';
 import { addOrder, generateBillCode, getOrderList, editCeil, deleteRow } from '@/services/api';
+var currencyFormatter = require('currency-formatter');
 
 export default {
   namespace: 'order',
@@ -11,7 +12,6 @@ export default {
       pagination: {},
     },
   },
-
   effects: {
     *submitRegularForm({ payload }, { call,put }) {
       yield call(addOrder, payload);
@@ -39,10 +39,13 @@ export default {
           });
     },
     *fetch({ payload }, { call, put }) {
+      console.log(payload);
       const response = yield call(getOrderList, payload);
+      let newlist =[];
+      let list = Array.isArray(response.list) ? response : []  ;
       yield put({
         type: 'orderList',
-        payload: Array.isArray(response.list) ? response : [],
+        payload: list,
       });
     },
     *editCeil({ payload },{call, put}){

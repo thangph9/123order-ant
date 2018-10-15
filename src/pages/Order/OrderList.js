@@ -2,6 +2,8 @@ import React, { PureComponent, Fragment } from 'react';
 import { connect } from 'dva';
 import moment from 'moment';
 import {
+  Alert,
+  Calendar,
   Row,
   Col,
   Card,
@@ -21,12 +23,13 @@ import {
   Divider,
   Steps,
   Radio,
+  Table    
 } from 'antd';
 import StandardTable from '@/components/StandardTable';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
-
+var currencyFormatter = require('currency-formatter');
 import styles from './OrderList.less';
-
+const RangePicker = DatePicker.RangePicker;
 const FormItem = Form.Item;
 const { Step } = Steps;
 const { TextArea } = Input;
@@ -64,6 +67,7 @@ const CreateForm = Form.create()(props => {
     </Modal>
   );
 });
+
 
 @Form.create()
 class UpdateForm extends PureComponent {
@@ -282,6 +286,7 @@ class EditableCell extends React.Component {
     status:'',
       
   }
+  
   componentDidMount() {
     if (this.props.editable) {
       document.addEventListener('click', this.handleClickOutside, true);
@@ -416,16 +421,20 @@ class OrderList extends PureComponent {
   state = {
     modalVisible: false,
     updateModalVisible: false,
+    visibleFullScreenTable: false,
     expandForm: false,
     selectedRows: [],
+    selectedRow:{},
     formValues: {},
     stepFormValues: {},
     data:{
         list:[],
         pagination:{},
-    }
-  };
+    },
+    visible: false,  
+  }; 
   
+    
   columns = [
     {
         title: 'Mã Bill',
@@ -447,56 +456,52 @@ class OrderList extends PureComponent {
         key: 'sname',
         width: 150,
         fixed: 'left',
-        editable: true,
     },
+      
     {
         title: 'Số điện thoại',
         dataIndex: 'sphone',
         key: 'sphone',
         width: 150,
-        editable: true,
     },
     {
         title: 'Địa chỉ',
         dataIndex: 'saddress',
         key: 'saddress',
         width: 150,
-        editable: true,
     },
     {
         title: 'Email',
         dataIndex: 'semail',
         width: 250,
         key:'semail',
-        editable: true,
     },
     {
         title: 'Code SP',
         dataIndex: 'scode',
         width: 150,    
         key:'scode',
-        editable: true,
     },
     {
         title: 'Link SP',
         dataIndex: 'slinkproduct',
         key:'slinkproduct',
+        render: (text, record) => (
+             <a href={text} target="_blank">Link sản phẩm</a>
+      ),
         width: 150,
-        editable: true,
     },
     {
         title: 'Tên SP',
         dataIndex: 'snameproduct',
         key:'snameproduct',
         width: 150,
-        editable: true,
     },
     {
         title: 'Size',
         dataIndex: 'ssize',
         key:'ssize',
         width: 150,
-        editable: true,
     },
     
     
@@ -505,84 +510,72 @@ class OrderList extends PureComponent {
         dataIndex: 'scolor',
         key: 'scolor',
         width: 150,
-        editable: true,
     },
     {
         title: 'SL',
         dataIndex: 'iquality',
         key: 'iquality',
         width: 150,
-        editable: true,
     },
     {
         title: 'Giá WEB',
-        dataIndex: 'fwebprice',
-        key: 'fwebprice',
+        dataIndex: '_webprice',
+        key: '_webprice',
         width: 150,
-        editable: true,
     }, 
     {
         title: 'Sale',
-        dataIndex: 'fsale',
-        key: 'fsale',
+        dataIndex: '_sale',
+        key: '_sale',
         width: 150,
-        editable: true,
     },
       {
         title: 'Ship Web',
-        dataIndex: 'fshipweb',
-        key: 'fshipweb',
+        dataIndex: '_shipweb',
+        key: '_shipweb',
         width: 150,
-        editable: true,
     },
     {
         title: 'Tỷ giá báo khách',
-        dataIndex: 'fexchangerate',
-        key: 'fexchangerate',
+        dataIndex: '_exchangerate',
+        key: '_exchangerate',
         width: 150,
-        editable: true,
     },
     {
         title: '% dịch vụ',
-        dataIndex: 'fservicerate',
-        key: 'fservicerate',
+        dataIndex: '_servicerate',
+        key: '_servicerate',
         width: 150,
-        editable: true,
     },
     {
         title: 'Giá báo khách',
-        dataIndex: 'fprice',
-        key: 'fprice' ,
+        dataIndex: '_price',
+        key: '_price' ,
         width: 150,
-        editable: true,
     },
       {
         title: 'Đặt cọc',
-        dataIndex: 'fdeposit',
-        key: 'fdeposit',
+        dataIndex: '_deposit',
+        key: '_deposit',
         width: 150,
-        editable: true,
     },
     {
         title: 'Cần thu',
-        dataIndex: 'frealpayprice',
-        key: 'frealpayprice',
+        dataIndex: '_realpayprice',
+        key: '_realpayprice',
         width: 150,
-        editable: true,
     },
     {
         title: 'Vận chuyển thực tế',
-        dataIndex: 'fdeliveryprice',
-        key: 'fdeliveryprice',
+        dataIndex: '_deliveryprice',
+        key: '_deliveryprice',
         width: 150,
-        editable: true,
     },
     {
         title: 'Vận chuyển báo khách',
-        dataIndex: 'fdelivery',
-        key: 'fdelivery',
+        dataIndex: '_delivery',
+        key: '_delivery',
         width: 150,
-        editable: true,
     },
     {
         title: 'Người lên đơn',
@@ -614,9 +607,9 @@ class OrderList extends PureComponent {
         dataIndex: 'scomment',
         key: 'scomment',
         width: 150,
-        editable: true,
     },
-      {
+      /*
+    {
       title: ' ',
       width: 50,
       fixed: 'right',
@@ -628,15 +621,15 @@ class OrderList extends PureComponent {
         </Fragment>
         
       ),
-    },
+    },*/
   ];
   
   componentDidMount() {
     
-    const { dispatch } = this.props;
-    
+    const { dispatch } = this.props;  
     dispatch({
         type: 'order/fetch',
+        payload:'',
     })    
   }
   componentWillUpdate(){
@@ -664,7 +657,7 @@ class OrderList extends PureComponent {
       newObj[key] = getValue(filtersArg[key]);
       return newObj;
     }, {});
-
+ 
     const params = {
       currentPage: pagination.current,
       pageSize: pagination.pageSize,
@@ -676,7 +669,7 @@ class OrderList extends PureComponent {
     }
 
     dispatch({
-      type: 'rule/fetch',
+      type: 'order/fetch', 
       payload: params,
     });
   };
@@ -740,30 +733,44 @@ class OrderList extends PureComponent {
       selectedRows: rows,
     });
   };
-
+  handleRowSelect = row =>{
+      this.setState({
+          visible: true,
+          selectedRow:row,
+        });
+       
+  }
+  handleHeaderRow = (e)=>{
+      this.setState({
+          visibleFullScreenTable: true,
+        });
+  }
+  
   handleSearch = e => {
     e.preventDefault();
-
+    const { from,to } =this.state;  
     const { dispatch, form } = this.props;
 
     form.validateFields((err, fieldsValue) => {
-      if (err) return;
-
+      if (err) return; 
       const values = {
         ...fieldsValue,
         updatedAt: fieldsValue.updatedAt && fieldsValue.updatedAt.valueOf(),
+        from,
+        to
       };
-
+ 
       this.setState({
         formValues: values,
       });
-
+        
       dispatch({
-        type: 'rule/fetch',
+        type: 'order/fetch',
         payload: values,
       });
     });
   };
+
 
   handleModalVisible = flag => {
     this.setState({
@@ -790,7 +797,7 @@ class OrderList extends PureComponent {
     message.success('添加成功');
     this.handleModalVisible();
   };
-
+ 
   handleUpdate = fields => {
     const { dispatch } = this.props;
     dispatch({
@@ -805,7 +812,53 @@ class OrderList extends PureComponent {
     message.success('配置成功');
     this.handleUpdateModalVisible();
   };
-
+  handleOk = (e) => {
+    this.setState({
+      visible: false,
+    });
+  }
+  handleCancel = (e) => {
+    this.setState({
+      visible: false,
+    });
+  }
+  
+  handleFullScreenTableOk= (e)=>{
+    this.setState({
+        visibleFullScreenTable: false,
+    });
+  }
+  handleFullScreenTableCancel= (e)=>{
+    this.setState({
+        visibleFullScreenTable: false,
+    });
+  }
+  onPanelChange= ()=>{
+      
+  }
+  onChangeRangPicker =(e)=>{
+      const { formValues } = this.state;
+      const { dispatch, form } = this.props;
+      if(e.length>0){
+          
+          let from=e[0].format('YYYY/MM/DD');
+          let to=e[1].format('YYYY/MM/DD');
+          this.setState({
+              from:from,
+              to:to
+          })
+          let values={
+              ...formValues,
+              from,
+              to
+          }
+          dispatch({
+            type: 'order/fetch',
+            payload: values,
+          });
+      }
+    
+  }
   renderSimpleForm() {
     const {
       form: { getFieldDecorator },
@@ -814,116 +867,51 @@ class OrderList extends PureComponent {
       <Form onSubmit={this.handleSearch} layout="inline">
         <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
           <Col md={8} sm={24}>
-            <FormItem label="规则名称">
-              {getFieldDecorator('name')(<Input placeholder="请输入" />)}
+            <FormItem label="Tên khách hàng">
+              {getFieldDecorator('name')(<Input placeholder="" />)}
             </FormItem>
           </Col>
           <Col md={8} sm={24}>
-            <FormItem label="使用状态">
-              {getFieldDecorator('status')(
-                <Select placeholder="请选择" style={{ width: '100%' }}>
-                  <Option value="0">关闭</Option>
-                  <Option value="1">运行中</Option>
-                </Select>
+            <FormItem label="Số điện thoại">
+              {getFieldDecorator('phone')(
+                <Input placeholder="" />
               )}
             </FormItem>
           </Col>
           <Col md={8} sm={24}>
             <span className={styles.submitButtons}>
               <Button type="primary" htmlType="submit">
-                查询
+                Tìm kiếm
               </Button>
-              <Button style={{ marginLeft: 8 }} onClick={this.handleFormReset}>
-                重置
-              </Button>
-              <a style={{ marginLeft: 8 }} onClick={this.toggleForm}>
-                展开 <Icon type="down" />
-              </a>
             </span>
           </Col>
         </Row>
       </Form>
     );
   }
-
+  
   renderAdvancedForm() {
     const {
       form: { getFieldDecorator },
     } = this.props;
     return (
-      <Form onSubmit={this.handleSearch} layout="inline">
         <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
-          <Col md={8} sm={24}>
-            <FormItem label="规则名称">
-              {getFieldDecorator('name')(<Input placeholder="请输入" />)}
-            </FormItem>
+          <Col md={9} sm={24}>
+                <Calendar fullscreen={false} onPanelChange={this.onPanelChange} />
           </Col>
-          <Col md={8} sm={24}>
-            <FormItem label="使用状态">
-              {getFieldDecorator('status')(
-                <Select placeholder="请选择" style={{ width: '100%' }}>
-                  <Option value="0">关闭</Option>
-                  <Option value="1">运行中</Option>
-                </Select>
-              )}
-            </FormItem>
+          <Col md={9} sm={24}>
+                <Calendar fullscreen={false} onPanelChange={this.onPanelChange} />
           </Col>
-          <Col md={8} sm={24}>
-            <FormItem label="调用次数">
-              {getFieldDecorator('number')(<InputNumber style={{ width: '100%' }} />)}
-            </FormItem>
+          <Col md={6} sm={24}>
+                
           </Col>
         </Row>
-        <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
-          <Col md={8} sm={24}>
-            <FormItem label="更新日期">
-              {getFieldDecorator('date')(
-                <DatePicker style={{ width: '100%' }} placeholder="请输入更新日期" />
-              )}
-            </FormItem>
-          </Col>
-          <Col md={8} sm={24}>
-            <FormItem label="使用状态">
-              {getFieldDecorator('status3')(
-                <Select placeholder="请选择" style={{ width: '100%' }}>
-                  <Option value="0">关闭</Option>
-                  <Option value="1">运行中</Option>
-                </Select>
-              )}
-            </FormItem>
-          </Col>
-          <Col md={8} sm={24}>
-            <FormItem label="使用状态">
-              {getFieldDecorator('status4')(
-                <Select placeholder="请选择" style={{ width: '100%' }}>
-                  <Option value="0">关闭</Option>
-                  <Option value="1">运行中</Option>
-                </Select>
-              )}
-            </FormItem>
-          </Col>
-        </Row>
-        <div style={{ overflow: 'hidden' }}>
-          <div style={{ float: 'right', marginBottom: 24 }}>
-            <Button type="primary" htmlType="submit">
-              查询
-            </Button>
-            <Button style={{ marginLeft: 8 }} onClick={this.handleFormReset}>
-              重置
-            </Button>
-            <a style={{ marginLeft: 8 }} onClick={this.toggleForm}>
-              收起 <Icon type="up" />
-            </a>
-          </div>
-        </div>
-      </Form>
     );
   }
   renderForm() {
     const { expandForm } = this.state;
     return expandForm ? this.renderAdvancedForm() : this.renderSimpleForm();
   }
-  
   render() {
     const components = {
       body: {
@@ -951,14 +939,13 @@ class OrderList extends PureComponent {
       order: { data },
       loading,
     } = this.props;
-    const { selectedRows, modalVisible, updateModalVisible, stepFormValues } = this.state;
+    const { selectedRows, modalVisible, updateModalVisible, stepFormValues,selectedRow } = this.state;
     const menu = (
       <Menu onClick={this.handleMenuClick} selectedKeys={[]}>
         <Menu.Item key="remove">删除</Menu.Item>
         <Menu.Item key="approval">批量审批</Menu.Item>
       </Menu>
     );
-
     const parentMethods = {
       handleAdd: this.handleAdd,
       handleModalVisible: this.handleModalVisible,
@@ -967,16 +954,12 @@ class OrderList extends PureComponent {
       handleUpdateModalVisible: this.handleUpdateModalVisible,
       handleUpdate: this.handleUpdate,
     };
+    
     return (
       <PageHeaderWrapper title="Danh sách đơn đặt hàng">
-        <Card bordered={false}>
+        <Card>
           <div className={styles.tableList}>
-            <div className={styles.tableListOperator}>
-              <Button icon="plus" type="primary" onClick={() => this.handleModalVisible(true)}>
-                Tạo mới
-              </Button>
-              
-            </div>
+            <div className={styles.tableListForm}>{this.renderForm()}</div>
             <StandardTable
               selectedRows={selectedRows}
               loading={loading}
@@ -986,9 +969,173 @@ class OrderList extends PureComponent {
               columns={columns}
               onSelectRow={this.handleSelectRows}
               onChange={this.handleStandardTableChange}
+              onRowSelect={this.handleRowSelect}
+              onHeaderRow={this.handleHeaderRow}
+              onChangeRangPicker={this.onChangeRangPicker}
             />
           </div>
         </Card>
+        <Modal
+          visible={this.state.visibleFullScreenTable}
+          onOk={this.handleFullScreenTableOk}
+          onCancel={this.handleFullScreenTableCancel}
+          width="100%"
+          style={{ top: 10 }}
+          zIndex="1000"
+        > 
+        <StandardTable
+              selectedRows={selectedRows}
+              loading={loading}
+              components={components}
+              data={data}
+              rowKey="sbill_code"
+              columns={columns}
+              onSelectRow={this.handleSelectRows}
+              onChange={this.handleStandardTableChange}
+              onRowSelect={this.handleRowSelect}
+              onHeaderRow={this.handleHeaderRow}
+              onChangeRangPicker={this.onChangeRangPicker}
+            />
+        </Modal>      
+        <Modal 
+          title={selectedRow.sname}
+          visible={this.state.visible}
+          onOk={this.handleOk}
+          onCancel={this.handleCancel}
+          width="80%"
+          style={{ top: 20 }}
+          zIndex="1001"    
+        >
+        <div className="gutter-example">
+          <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Mã bill</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow.sbill_code} showIcon={false} banner /> </Col>
+          </Row>
+          <Row>   
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Tên</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow.sname} showIcon={false} banner /> </Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Số điện thoại</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow.sphone} showIcon={false} banner /> </Col>
+          </Row>
+          <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Địa chỉ</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow.saddress} showIcon={false} banner /></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Email</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow.semail} showIcon={false} banner /></Col>
+          </Row>    
+          <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>LinkSP</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={<a href={selectedRow.slinkproduct} target="_blank">Link SP</a>} showIcon={false} banner /></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Mã SP</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow.scode} showIcon={false} banner/></Col>  
+          </Row>
+          <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Tên SP</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow.snameproduct} showIcon={false} banner/></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Màu</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow.scolor} showIcon={false} banner/></Col>
+          </Row>    
+           <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Size</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow.ssize} showIcon={false} banner/></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Số lượng</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow.iquality} showIcon={false} banner/></Col>
+          </Row> 
+           <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Giá Web</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow._webprice} showIcon={false} banner/></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Sale</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow._sale} showIcon={false} banner/></Col>
+          </Row>  
+            <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Ship Web</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow._shipweb} showIcon={false} banner/></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Phụ thu</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow._surcharge} showIcon={false} banner/></Col>
+          </Row>
+          <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Tỷ giá báo khách</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow._exchangerate} showIcon={false} banner/></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Vận chuyển báo khách</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow._deliveryprice} showIcon={false} banner/></Col>
+          </Row>
+         <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>% dịch vu</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow._servicerate} showIcon={false} banner/></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Giá báo khách</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow._price} showIcon={false} banner/></Col>
+          </Row> 
+            <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Đặt cọc</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={selectedRow._deposit} showIcon={false} banner/></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
+                <span className={styles.label}>Cần thu</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                <Alert message={`${selectedRow._realpayprice}`} showIcon={false} banner/>
+            </Col>
+          </Row>
+            <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><span className={styles.label}>Trạng thái</span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}><Select
+                    
+                    onChange={this.changeStatus}
+                    style={{width:'150px'}}
+                    ref={node => (this.input = node)}
+                    onPressEnter={this.save}
+                    defaultValue={selectedRow.sstatus}
+                  >
+                    <Option value="pending">Chờ</Option>
+                    <Option value="paid">Đã mua</Option>
+                    <Option value="cancel">Cancel</Option>
+              </Select> </Col>
+          </Row>
+            <Row>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 12, offset: 0 }}><b>Ghi chú</b></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 12, offset: 0 }}>{selectedRow.scomment}</Col>
+          </Row>
+          </div>
+        </Modal>
+          
         <CreateForm {...parentMethods} modalVisible={modalVisible} />
         {stepFormValues && Object.keys(stepFormValues).length ? (
           <UpdateForm
@@ -1001,4 +1148,5 @@ class OrderList extends PureComponent {
     );
   }
 }
+
 export default OrderList;
