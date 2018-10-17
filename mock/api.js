@@ -4,6 +4,7 @@ const async     = require("async");
 const Uuid      = require("cassandra-driver").types.Uuid;
 const jwt       = require('jsonwebtoken');
 const fs        =require('fs');
+import moment from 'moment';
 var currencyFormatter = require('currency-formatter');
 var publicKEY  = fs.readFileSync('./ssl/jwtpublic.pem', 'utf8');  
 const titles = [
@@ -328,6 +329,7 @@ function getOrder(req,res){
     }catch(e){
         return res.send({status: 'expired'}); 
     }
+    
     let filter_params={};
     let currentPage=1;
     let pageSize=10;
@@ -335,6 +337,7 @@ function getOrder(req,res){
     let limit=10000;
     var query={};
     var list=[],_list=[];
+    var list_billCode=[];
     const locale={
       'USD':'en-US',
       'GBP':'en-GB',
@@ -351,20 +354,41 @@ function getOrder(req,res){
             limit = (_total > 10000) ? (limit+_total) : 10000;
            
             if(req.body.name){
-                query['sname']={ '$like': req.body.name+'%' };
+                query['sname']={ '$like': '%'+req.body.name+'%' };
                 
             } 
             if(req.body.phone){
-                query['sphone']={'$like': req.body.phone+'%'};
+                query['sphone']={'$like': '%'+req.body.phone+'%'};
             }
+            
             query['$limit']=limit
             callback(null,null);    
        },
+        function(callback){
+           let from=moment().format("YYYY-MM-DD");
+           let to=moment().format("YYYY-MM-DD");
+           
+           if(req.body.from){
+               from=req.body.from;
+           }
+           if(req.body.to){
+               to=req.body.to;
+           }
+            var start = new Date(from); // Your timezone!
+            var estart = start.getTime();
+            var end = new Date(to); // Your timezone!
+            var eend = (end.getTime()/1000.0 + 86400)*1000;
+            query['semployee']=legit.username;
+            query['ddate']={ '$gt':estart, '$lte':eend };
+            
+            callback(null,null);
+                   
+       },
        function(callback){
-            models.instance.order_by_member.find(query,{raw: true},function(err,items){
+            
+            models.instance.orders.find(query,{raw: true,allow_filtering: true},function(err,items){
                 _list=items;
                 //let newList=[];
-                
                 try{
                     items.map((e,i)=>{
                         let n=JSON.stringify(e);
@@ -412,8 +436,6 @@ function getOrder(req,res){
         }
     ],function(err,result){
         if(err) return res.send({status:'error'});
-        
-        
         res.send({
             list:list,
             pagination:{total: total, pageSize: pageSize, current: currentPage}
@@ -476,23 +498,34 @@ function addOrder(req,res){
         },
         function(callback){
             
-            console.log(PARAM_IS_VALID);
-            const order_by_member=()=>{
+            const orders=()=>{
                 let object      =PARAM_IS_VALID;
-                let instance    =new models.instance.order_by_member(object);
+                let instance    =new models.instance.orders(object);
                 let save        =instance.save({return_query: true});
                 return save;
             }
-           queries.push(order_by_member());
-            const order_by_member_update=()=>{
+           queries.push(orders());
+            const orders_update=()=>{
                 const uid=Uuid.random();
                 let object      =PARAM_IS_VALID;
                 object['uid']   =uid;
-                let instance    =new models.instance.order_by_member_update(object);
+                let instance    =new models.instance.orders_update(object);
                 let save        =instance.save({return_query: true});
                 return save;
             } 
-           queries.push(order_by_member_update());
+           queries.push(orders_update());
+            
+           const order_by_member=()=>{
+                let object      ={
+                    sbill_code: PARAM_IS_VALID['sbill_code'] ,
+                    semployee: PARAM_IS_VALID['semployee'] ,
+                    ddate: PARAM_IS_VALID['ddate'] ,
+                };
+                let instance    =new models.instance.order_by_member(object);
+                let save        =instance.save({return_query: true});
+                return save;
+           }    
+           queries.push(order_by_member());
            callback(null,null);
         },
         
@@ -528,27 +561,27 @@ function updateOrder(req,res){
             callback(null,null);
         },
         function(callback){
-            const order_by_member=()=>{
+            const orders=()=>{
                 
                 let object      =PARAM_IS_VALID;
-                let instance    =new models.instance.order_by_member(object);
+                let instance    =new models.instance.orders(object);
                 let save        =instance.save({return_query: true});
                 return save;
             }
-           queries.push(order_by_member());
-            const order_by_member_update=()=>{
+           queries.push(orders());
+            const orders_update=()=>{
                 const uid=Uuid.random();
                 let object      =PARAM_IS_VALID;
                 object['uid']   =uid;
                 object['supdateat']  =legit.username;
                 object['dupdateat']  =new Date();
                 
-                let instance    =new models.instance.order_by_member_update(object);
+                let instance    =new models.instance.orders_update(object);
                 let save        =instance.save({return_query: true});
                 return save;
                 
             } 
-           queries.push(order_by_member_update());
+           queries.push(orders_update());
            callback(null,null);
         },
     ],function(err,result){
@@ -582,11 +615,12 @@ function delOrder(req,res){
        },
        function(callback){
             var query_object = {sbill_code: sbill_code};
-            models.instance.order_by_member.delete(query_object, function(err){
+            models.instance.orders.delete(query_object, function(err){
                 callback(err,null);
             });
        }
     ],function(err,result){
+        
         if(err) return res.send('error');
         res.send('ok')
     });

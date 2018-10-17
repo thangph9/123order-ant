@@ -432,8 +432,8 @@ class OrderList extends PureComponent {
         pagination:{},
     },
     visible: false,  
-  }; 
-  
+  };  
+   
     
   columns = [
     {
@@ -441,7 +441,7 @@ class OrderList extends PureComponent {
         dataIndex: 'sbill_code',
         width: 100,
         fixed: 'left'
-    },
+    },   
     {
         title: 'Ngày',
         dataIndex: 'ddate',
@@ -496,7 +496,10 @@ class OrderList extends PureComponent {
         dataIndex: 'snameproduct',
         key:'snameproduct',
         width: 150,
-    },
+        render: (text, record) => (
+             <span>{text.substring(0,10)}...</span>
+        ),
+    },  
     {
         title: 'Size',
         dataIndex: 'ssize',
@@ -510,6 +513,9 @@ class OrderList extends PureComponent {
         dataIndex: 'scolor',
         key: 'scolor',
         width: 150,
+        render: (text, record) => (
+             <span>{(text) ? text.substring(0,10)+" ..." : ''}</span>
+        ),
     },
     {
         title: 'SL',
@@ -624,12 +630,18 @@ class OrderList extends PureComponent {
     },*/
   ];
   
-  componentDidMount() {
+  componentDidMount() {  
     
     const { dispatch } = this.props;  
+    let from=moment().format('YYYY/MM/DD');
+    let to=moment().format('YYYY/MM/DD');
+    const values={
+        from,
+        to
+    } 
     dispatch({
         type: 'order/fetch',
-        payload:'',
+        payload:values,
     })    
   }
   componentWillUpdate(){
@@ -667,7 +679,7 @@ class OrderList extends PureComponent {
     if (sorter.field) {
       params.sorter = sorter.field+"_"+sorter.order;
     }
-
+    
     dispatch({
       type: 'order/fetch', 
       payload: params,
@@ -763,7 +775,6 @@ class OrderList extends PureComponent {
       this.setState({
         formValues: values,
       });
-        
       dispatch({
         type: 'order/fetch',
         payload: values,
@@ -836,7 +847,7 @@ class OrderList extends PureComponent {
   onPanelChange= ()=>{
       
   }
-  onChangeRangPicker =(e)=>{
+  onChangeRangPicker =(e)=>{  
       const { formValues } = this.state;
       const { dispatch, form } = this.props;
       if(e.length>0){
@@ -857,10 +868,10 @@ class OrderList extends PureComponent {
             payload: values,
           });
       }
-    
-  }
+       
+  }  
   renderSimpleForm() {
-    const {
+    const {    
       form: { getFieldDecorator },
     } = this.props;
     return (
@@ -877,7 +888,7 @@ class OrderList extends PureComponent {
                 <Input placeholder="" />
               )}
             </FormItem>
-          </Col>
+          </Col> 
           <Col md={8} sm={24}>
             <span className={styles.submitButtons}>
               <Button type="primary" htmlType="submit">

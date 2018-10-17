@@ -4,6 +4,5 @@ module.exports={
         types       : 'text',
         bill_code   : 'counter',
     },
-    key:[["id","types"]] ,
+    key:["id","types"] ,
 } 
-    

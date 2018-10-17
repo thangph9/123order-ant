@@ -108,12 +108,15 @@ class StandardTable extends PureComponent {
         <Row type="flex" justify="end">
           
                 <RangePicker
-                      ranges={{ 'Hôm nay': [moment(), moment()], 'Trong tháng': [moment().startOf('month'), moment().endOf('month')],'Tuần này': [moment().startOf('week'), moment().endOf('week')]}}
+                      ranges={{ 
+                       'Hôm nay': [moment(), moment()], 
+                       'Hôm qua': [moment().add(-1,'days'),moment().add(-1,'days')],    
+                       'Trong tháng': [moment().startOf('month'), moment().endOf('month')],
+                       'Tuần này': [moment().startOf('week'), moment().endOf('week')]}}
                       showTime
                       format="YYYY/MM/DD"
                       defaultValue={[moment(),moment()]}
-                      onChange={this.onChangeRangPicker}
-
+                      onOk={this.onChangeRangPicker}
                 />  
         </Row>
         <div>        
