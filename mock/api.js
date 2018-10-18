@@ -380,16 +380,14 @@ function getOrder(req,res){
             var estart = start.getTime();
             var end = new Date(to); // Your timezone!
             var eend = (end.getTime()/1000.0 + 86400)*1000;
-            if(legit.rule == 'member'){
-                query['semployee']=legit.username;
-            }
+            query['semployee']=legit.username;
             query['ddate']={ '$gt':estart, '$lte':eend };
            
             callback(null,null);
                    
        },
        function(callback){
-             console.log(query)
+             
             models.instance.orders.find(query,{raw: true,allow_filtering: true},function(err,items){
                 _list=items;
                 //let newList=[];
@@ -448,7 +446,139 @@ function getOrder(req,res){
     
 }
 function getOrderByAdmin(req,res){
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    const adminGroup=[
+        'admin','superadmin'
+    ]
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+        return res.send({status: 'expired'}); 
+    }
     
+    let filter_params={};
+    let currentPage=1;
+    let pageSize=10;
+    let total=1;
+    let limit=10000;
+    var query={};
+    var list=[],_list=[];
+    var list_billCode=[];
+    const locale={
+      'USD':'en-US',
+      'GBP':'en-GB',
+      'VND':'vi-VN',
+      'JPY':'ja-JP',
+      'EUR':'de-DE',
+    }
+    async.series([
+       function(callback){
+            currentPage=(req.body.currentPage) ? req.body.currentPage : 1;
+            pageSize=(req.body.pageSize) ? req.body.pageSize : 10;
+            
+            let _total=(currentPage*pageSize+pageSize) ;
+            limit = (_total > 10000) ? (limit+_total) : 10000;
+           
+            if(req.body.name){
+                query['sname']={ '$like': '%'+req.body.name+'%' };
+                
+            } 
+            if(req.body.phone){
+                query['sphone']={'$like': '%'+req.body.phone+'%'};
+            }
+            if(req.body.status){
+                query['sstatus']=req.body.status;
+            }
+           
+            query['$limit']=limit
+            callback(null,null);    
+       },
+       function(callback){
+           let from=moment().format("YYYY-MM-DD");
+           let to=moment().format("YYYY-MM-DD");
+           
+           if(req.body.from){
+               from=req.body.from;
+           }
+           if(req.body.to){
+               to=req.body.to;
+           }
+            var start = new Date(from); // Your timezone!
+            var estart = start.getTime();
+            var end = new Date(to); // Your timezone!
+            var eend = (end.getTime()/1000.0 + 86400)*1000;
+            
+            query['ddate']={ '$gt':estart, '$lte':eend };
+           
+            callback(null,null);
+                   
+       },
+       function(callback){
+           if(adminGroup.indexOf(legit.rule) > -1){
+                
+           }else{
+                query['semployee']=legit.username;
+           }
+            models.instance.orders.find(query,{raw: true,allow_filtering: true},function(err,items){
+                _list=items;
+                //let newList=[];
+                try{
+                    items.map((e,i)=>{
+                        let n=JSON.stringify(e);
+                        let l=JSON.parse(n);
+                        l['_deposit']=currencyFormatter.format(e.fdeposit, { locale: 'vi-VN',code: "VND"});
+                        l['_price']=currencyFormatter.format(e.fprice, { locale: 'vi-VN',code: "VND"  });
+                        l['_realpayprice']=currencyFormatter.format(e.frealpayprice, { locale: 'vi-VN',code: "VND" });
+                        l['_deliveryprice']=currencyFormatter.format(e.fdeliveryprice, { locale: 'vi-VN',code: "VND" });
+                        l['_exchangerate']=currencyFormatter.format(e.fexchangerate, { locale: 'vi-VN',code: "VND" });
+                        l['_sale']=(e.fsale) ? e.fsale+"%" : "0%"
+                        l['_servicerate']=(e.fservicerate) ? e.fservicerate+"%" : "0%"
+                        l['_webprice']=currencyFormatter.format(e.fwebprice, { locale:'vi-VN',code: e.scurrency });
+                        l['_shipweb']=currencyFormatter.format(e.fshipweb, { locale:'vi-VN',code:e.scurrency });
+                        l['_surcharge']=currencyFormatter.format(e.fsurcharge, { locale:'vi-VN',code:e.scurrency  });
+                        list.push(l)
+                    })
+                }catch(e){
+                    
+                }
+                callback(err,null);
+                
+            })
+            
+       },
+       function(callback){
+           const filterName=_list.filter(function(e){
+               if(req.body.name){
+                   return (req.body.name.indexOf(e.sname) > -1 )
+               }
+           });
+           const filterPhone=_list.filter(function(e){
+               if(req.body.phone){
+                   return (req.body.phone.indexOf(e.sphone) > -1 )
+               }
+           });
+            callback(null,null);
+        },
+        function(callback){
+            total=list.length;
+            
+            let start=currentPage*pageSize-pageSize;
+            let end=currentPage*pageSize-1;
+            list = list.splice(start, end)
+            callback(null,null)
+        }
+    ],function(err,result){
+        if(err) return res.send({status:'error'});
+        res.send({
+            list:list,
+            pagination:{total: total, pageSize: pageSize, current: currentPage}
+        })
+    });
 }
 function addOrder(req,res){
     const { body } = req;
@@ -539,8 +669,6 @@ function addOrder(req,res){
     ],function(err,result){
         if(err) return res.send({status: 'error'});
         models.doBatch(queries,function(err){
-            user['username']=PARAM_IS_VALID.username;
-            //console.log(queries);
             if(err) return res.send({status: 'error'});
             res.send({ status: 'ok'});
         });
@@ -559,10 +687,15 @@ function updateOrder(req,res){
     }catch(e){
        return  res.send({status: 'expired'}); 
     }
-    if(legit.rule !='member'){
+    const adminGroup=[
+        'admin','superadmin'
+    ]
+    if(adminGroup.indexOf(legit.rule)>-1){
+        
+    }else{
         return res.send({status: 'error'});
     }
-    console.log(legit,req.body);
+    
     let PARAM_IS_VALID={},queries=[];
     async.series([
         function(callback){
@@ -597,8 +730,7 @@ function updateOrder(req,res){
     ],function(err,result){
            if(err) return res.send({status: 'error'});
             models.doBatch(queries,function(err){
-                user['username']=PARAM_IS_VALID.username;
-                //console.log(queries);
+                
                 if(err) return res.send({status: 'error'});
                 res.send({ status: 'ok'});
             });
@@ -617,6 +749,14 @@ function delOrder(req,res){
         legit   = jwt.verify(token, publicKEY, verifyOptions);
     }catch(e){
         return res.send('expired'); 
+    }
+    const adminGroup=[
+        'admin','superadmin'
+    ]
+    if(adminGroup.indexOf(legit.rule)>-1){
+        
+    }else{
+        return res.send({status: 'error'});
     }
     var list=[],_list=[];
     async.series([
@@ -668,8 +808,13 @@ function saveCurrencyRaito(req,res){
     }catch(e){
        return  res.send({status: 'expired'}); 
     }
-    if(legit.rule =='member'){
-        return  res.send({status: 'error'}); 
+    const adminGroup=[
+        'admin','superadmin'
+    ]
+    if(adminGroup.indexOf(legit.rule)>-1){
+        
+    }else{
+        return res.send({status: 'error'});
     }
     let PARAM_IS_VALID={},queries=[];
     async.series([
@@ -708,7 +853,7 @@ function saveCurrencyRaito(req,res){
     ],function(err,result){
            if(err) return res.send({status: 'error'});
             models.doBatch(queries,function(err){
-                //console.log(queries);
+                
                 if(err) return res.send({status: 'error'});
                 res.send({ status: 'ok'});
             });
@@ -718,7 +863,7 @@ function generateOrderBillCode(req,res){
     let bill_code,billCode;
     let id=Uuid.random();
     var token=req.headers['x-access-token'];
-    console.log(token);
+    
     var verifyOptions = {
      expiresIn:  '30d',
      algorithm:  ["RS256"]

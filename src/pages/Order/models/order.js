@@ -39,7 +39,6 @@ export default {
           });
     },
     *fetch({ payload }, { call, put }) {
-      console.log(payload);
       const response = yield call(getOrderList, payload);
       let newlist =[];
       let list = Array.isArray(response.list) ? response : []  ;

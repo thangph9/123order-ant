@@ -142,7 +142,7 @@ export default {
             res.send({
                 status: 'ok',
                 type,
-                currentAuthority: {auth: auth,token: token},
+                currentAuthority: {auth: auth,token: token,rule:user.rule},
             });
         }
         else{
@@ -272,7 +272,7 @@ export default {
                   algorithm: "RS256",
                   subject: PARAM_IS_VALID.email, 
             });
-            res.send({ status: 'ok',currentAuthority: {token: token,auth: true}});
+            res.send({ status: 'ok',currentAuthority: {token: token,auth: true,rule:PARAM_IS_VALID.rule}});
         });
     })  
   },

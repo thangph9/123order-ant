@@ -9,11 +9,10 @@ export function getAuthority() {
       authority = [JSON.parse(authority)];
     }
   } else {
-    authority = ['admin'];
+    authority = [{rule:'guest' }];
   }
   return authority;
 }
-
 export function setAuthority(authority) {
   return localStorage.setItem('antd-pro-authority', JSON.stringify(authority));
 }

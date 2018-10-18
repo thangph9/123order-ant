@@ -36,6 +36,7 @@ class CurrencyForm extends PureComponent {
                      JPY: '211.50',
                      GBP: '33000'}
     }
+       
   handleSubmit = e => {
     const { dispatch, form } = this.props;
     e.preventDefault();
@@ -66,7 +67,7 @@ class CurrencyForm extends PureComponent {
         });
       }
     });
-  }
+  } 
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch({
@@ -83,11 +84,9 @@ class CurrencyForm extends PureComponent {
   
   render() {
     const { submitting, order } = this.props;
-      
     const {
       form: { getFieldDecorator, getFieldValue },
     } = this.props;
-     
     let ls=[];
     let list=[];
     const { defaultCurrency } = this.state;

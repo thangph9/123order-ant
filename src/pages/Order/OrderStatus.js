@@ -767,6 +767,10 @@ class OrderStatus extends PureComponent {
     });
   };
   handleRowSelect = row =>{
+      const {form} =this.props;
+      form.setFieldsValue({sstatus: row.sstatus});
+      form.setFieldsValue({sbill_code: row.sbill_code});
+      form.setFieldsValue({ddate: row.ddate});
       this.setState({
           visible: true,
           selectedRow:row,
@@ -862,6 +866,14 @@ class OrderStatus extends PureComponent {
     this.handleUpdateModalVisible();
   };
   handleOk = (e) => {
+    const {form} = this.props;
+    const {changeStatus} = this.state;  
+    if(changeStatus){
+        this.setState({
+            changeStatus: false,
+        });
+        
+    }
     this.setState({
       visible: false,
     });
@@ -913,7 +925,8 @@ class OrderStatus extends PureComponent {
     
     const {    
       form: { getFieldDecorator },
-        } = this.props; 
+      form,    
+    } = this.props; 
     const {changeStatus} = this.state;
     const {sstatus} = selectedRow;
     let list=[
@@ -1052,6 +1065,7 @@ class OrderStatus extends PureComponent {
     return expandForm ? this.renderAdvancedForm() : this.renderSimpleForm();
   }
   render() {
+      
     const components = {
       body: {
         row: EditableFormRow,
