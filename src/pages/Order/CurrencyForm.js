@@ -60,7 +60,17 @@ class CurrencyForm extends PureComponent {
     
     form.validateFieldsAndScroll((err, values) => {
       if (!err) {
-        console.log(values);
+        if(values['currency']){
+            if(values['raito']){
+                try{
+                    values['raito']= currencyFormatter.unformat(values['raito'], { locale: 'en-US',code : 'VND'})
+                }catch(e){
+                    alert("Lỗi định dang tiền tệ")
+                    return;
+                }
+                 
+            }
+        }
         dispatch({
           type: 'order/saveCurrencyRaito',
           payload: values,
@@ -93,7 +103,12 @@ class CurrencyForm extends PureComponent {
     if(order.currency){
         order.currency.raito.forEach(function(e){
             ls.push(<Option value={e.currency} key={e.currency}>{e.currency}</Option>);
-            list[[e.currency]]=e.raito;
+            try{
+                list[[e.currency]]=currencyFormatter.format(e.raito, { locale: 'en-US',symbol: '' });
+            }catch(e){
+                return;
+            }
+            
         });
     }
     const formItemLayout = {

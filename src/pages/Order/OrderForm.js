@@ -33,8 +33,11 @@ class OrderForm extends PureComponent {
         status:'pending',
         currency: 'USD',
         surcharge: 'USD',
+        amount:1,
         price:0,
+        deposit:0,
         payprice:0,
+        servicerate:10,
         changePrice:false,
         locale:{
               'USD':'en-US',
@@ -59,58 +62,43 @@ class OrderForm extends PureComponent {
   }
   handleOrder = e =>{
       const { dispatch, form } = this.props;
+      const {locale} = this.state;
       form.validateFieldsAndScroll((err, values) => {
           if (!err) { 
-            
-            var r = /\d+/g;
-            
-            
-            let tempPrice=values['price'].trim().match(r)
-            let tempRealPrice=values['realpayprice'].trim().match(r)
-            let tempWebPrice=values['web_price'].trim().match(r)
-            let tempShipWeb=values['shipWeb'].trim().match(r)
-            let tempDeliveryprice=values['deliveryprice'].trim().match(r)
-            let tempDeposit=values['deposit'].trim().match(r)
-            
-            let numPrice='';
-            let numRealPrice='';
-            let numWebPrice='';
-            let numShipWeb='';
-            let numDeliveryprice='';
-            let numDeposit='';
-            tempPrice.forEach(function(e){
-                numPrice=numPrice+e;
-            })
-            tempRealPrice.forEach(function(e){
-                numRealPrice=numRealPrice+e;
-            });
-            tempWebPrice.forEach(function(e){
-                numWebPrice=numWebPrice+e;
-            });
-            tempShipWeb.forEach(function(e){
-                numShipWeb=numShipWeb+e;
-            });
-            tempDeliveryprice.forEach(function(e){
-                numDeliveryprice=numDeliveryprice+e;
-            });
-            tempDeposit.forEach(function(e){
-                numDeposit=numDeposit+e;
-            });
-            values['price']=numPrice;
-            values['realpayprice']=numRealPrice;
-            values['web_price']  = numWebPrice;
-            values['web_price']  = numWebPrice;
-            values['shipWeb']  = numShipWeb;
-            values['deliveryprice']  = numDeliveryprice;
-            values['deposit']  = numDeposit;
-              //console.log(values['price'],values['realpayprice']);
-            console.log(values);
-              /*
+            try{
+            if(values['web_price']){
+                values['web_price']=currencyFormatter.unformat(values['web_price'], { locale: locale[currency]}) 
+            }
+            if(values['fsurcharge']){
+                values['fsurcharge']=currencyFormatter.unformat(values['fsurcharge'], { locale: locale[currency]})  
+            }
+            let _shipWeb='0';
+            if(values['shipWeb']){
+                values['shipWeb']=currencyFormatter.unformat(values['shipWeb'], { locale: locale[currency]}) 
+            }
+            if(values['price']){
+                values['price']=currencyFormatter.unformat(values['price'], { locale: 'en-US',code : 'VND'})
+            }
+            if(values['realpayprice']){
+               values['realpayprice']= currencyFormatter.unformat(values['realpayprice'], { locale: 'en-US',code : 'VND'})
+            }
+            if(values['deliveryprice']){
+               values['deliveryprice']= currencyFormatter.unformat(values['deliveryprice'], { locale: 'en-US',code : 'VND'})
+            }
+            if(values['deposit']){
+                values['deposit']= currencyFormatter.unformat(values['deposit'], { locale: 'en-US',code : 'VND'})
+            }
             dispatch({
               type: 'order/submitRegularForm',
               payload: values,
             });
-            */
+            }catch(e){
+                alert("Lỗi đơn vi tiền tệ!")
+                return;
+            }
+            
+          }else{
+              return;
           }
       });
   }
@@ -170,36 +158,35 @@ class OrderForm extends PureComponent {
       let rprice=this.props.form.getFieldValue('price');
       let rate=this.props.form.getFieldValue('rate');
       
-      let testprice=currencyFormatter.unformat(web_price, { locale: locale[currency]})  
-      let tfsurcharge=currencyFormatter.unformat(fsurcharge, { locale: locale[currency]})  
-      let tshipWeb=currencyFormatter.unformat(shipWeb, { locale: locale[currency]}) 
       
-      console.log(testprice,tfsurcharge,tshipWeb);
-      
-      
-      let _web_price=Number.isNaN(web_price) ? 0 : parseInt(web_price);
+      //let _web_price=Number.isNaN(web_price) ? 0 : parseInt(web_price);
       let _sale=Number.isNaN(sale) ? 0 : parseInt(sale);
       let _servicerate=Number.isNaN(servicerate) ? 0 : parseFloat(servicerate);
       let _amount=Number.isNaN(amount) ? 0 : parseFloat(amount);
-      let _surcharge=Number.isNaN(fsurcharge) ? 0 : parseFloat(fsurcharge);
+      //let _surcharge=Number.isNaN(fsurcharge) ? 0 : parseFloat(fsurcharge);
       let _deliveryprice=Number.isNaN(deliveryprice) ? 0 : parseFloat(deliveryprice);
-      let _shipWeb=Number.isNaN(shipWeb) ? 0 : parseFloat(shipWeb);
+      //let _shipWeb=Number.isNaN(shipWeb) ? 0 : parseFloat(shipWeb);
       let _deposit=Number.isNaN(deposit) ? 0 : parseFloat(deposit);
       let _rprice=Number.isNaN(rprice) ? 0 : parseFloat(rprice);
       let _rate=Number.isNaN(rate) ? 0 : parseFloat(rate);
       
       
       
-      _web_price= Number.isNaN(_web_price) ? 0 : _web_price
+      
+      //_web_price= Number.isNaN(_web_price) ? 0 : _web_price
       _sale= Number.isNaN(_sale) ? 0 : _sale
       _servicerate= Number.isNaN(_servicerate) ? 0 : _servicerate
       _amount= Number.isNaN(_amount) ? 1 : _amount
-      _surcharge= Number.isNaN(_surcharge) ? 0 : _surcharge
+      //_surcharge= Number.isNaN(_surcharge) ? 0 : _surcharge
       _deliveryprice= Number.isNaN(_deliveryprice) ? 1 : _deliveryprice
-      _shipWeb= Number.isNaN(_shipWeb) ? 0 : _shipWeb
+      //_shipWeb= Number.isNaN(_shipWeb) ? 0 : _shipWeb
       _deposit= Number.isNaN(_deposit) ? 0 : _deposit
       _rprice= Number.isNaN(_rprice) ? 0 : _rprice
       _rate= Number.isNaN(_rate) ? 0 : _rate
+      
+      let _web_price=currencyFormatter.unformat(web_price, { locale: locale[currency]})  
+      let _surcharge=currencyFormatter.unformat(fsurcharge, { locale: locale[currency]})  
+      let _shipWeb=currencyFormatter.unformat(shipWeb, { locale: locale[currency]}) 
       
       let price=0;
       
@@ -216,7 +203,9 @@ class OrderForm extends PureComponent {
       }else{
           price=s+a+i+e;
       }
+      
       let payprice=0;
+      _deposit= price*0.5; 
       payprice = price - _deposit;
       
       payprice=currencyFormatter.format(payprice, { locale: 'en-US' ,symbol: ''});
@@ -225,7 +214,8 @@ class OrderForm extends PureComponent {
       
       this.setState({
           price: price,
-          payprice:payprice
+          payprice:payprice,
+          deposit:deposit
       });
       
   }
@@ -238,7 +228,7 @@ class OrderForm extends PureComponent {
     const {
       form: { getFieldDecorator, getFieldValue },
     } = this.props;
-    const {status, currency,surcharge,price,payprice} = this.state;
+    const {status, currency,surcharge,price,payprice,deposit,amount,servicerate} = this.state;
       let ls=[];
       let list=[];
     if(order.currency){
@@ -423,6 +413,7 @@ class OrderForm extends PureComponent {
                             message: ' ',
                           },
                         ],
+                         initialValue:amount                 
                       })(<Input placeholder="Số lượng" />)}
                     </FormItem>
                 </Col>  
@@ -459,6 +450,7 @@ class OrderForm extends PureComponent {
                             message: ' ',
                           },
                         ],
+                          initialValue:"0"          
                       })(<Input placeholder="sale" addonAfter="%" />)}
                     </FormItem>
                 </Col>  
@@ -539,6 +531,7 @@ class OrderForm extends PureComponent {
                             message: 'Bắt buộc ',
                           },
                         ],
+                        initialValue:servicerate
                       })(<Input placeholder=" " addonAfter="%" />)}
                     </FormItem>
                 </Col>  
@@ -562,7 +555,7 @@ class OrderForm extends PureComponent {
                 <Col md={{ span: 12, offset: 0 }}>
                     <FormItem {...formItemLayout} label="Đặt cọc">
                       {getFieldDecorator('deposit', {
-                            
+                         initialValue:deposit,   
                       })(<Input placeholder=" "  addonAfter="VND"/>)}
                     </FormItem>
                 </Col>  
