@@ -53,7 +53,7 @@ const desc = [
   '生命就像一盒巧克力，结果往往出人意料',
   '城镇中有那么多的酒馆，她却偏偏走进了我的酒馆',
   '那时候我只会想自己想要什么，从不想自己拥有什么',
-];
+]; 
 
 const user = [
 ];
@@ -395,16 +395,16 @@ function getOrder(req,res){
                     items.map((e,i)=>{
                         let n=JSON.stringify(e);
                         let l=JSON.parse(n);
-                        l['_deposit']=currencyFormatter.format(e.fdeposit, { locale: 'vi-VN',code: "VND"});
-                        l['_price']=currencyFormatter.format(e.fprice, { locale: 'vi-VN',code: "VND"  });
-                        l['_realpayprice']=currencyFormatter.format(e.frealpayprice, { locale: 'vi-VN',code: "VND" });
-                        l['_deliveryprice']=currencyFormatter.format(e.fdeliveryprice, { locale: 'vi-VN',code: "VND" });
-                        l['_exchangerate']=currencyFormatter.format(e.fexchangerate, { locale: 'vi-VN',code: "VND" });
+                        l['_deposit']=currencyFormatter.format(e.fdeposit, { locale: 'en-US',code: "VND"});
+                        l['_price']=currencyFormatter.format(e.fprice, { locale: 'en-US',code: "VND"  });
+                        l['_realpayprice']=currencyFormatter.format(e.frealpayprice, { locale: 'en-US',code: "VND" });
+                        l['_deliveryprice']=currencyFormatter.format(e.fdeliveryprice, { locale: 'en-US',code: "VND" });
+                        l['_exchangerate']=currencyFormatter.format(e.fexchangerate, { locale: 'en-US',code: "VND" });
                         l['_sale']=(e.fsale) ? e.fsale+"%" : "0%"
                         l['_servicerate']=(e.fservicerate) ? e.fservicerate+"%" : "0%"
-                        l['_webprice']=currencyFormatter.format(e.fwebprice, { locale:'vi-VN',code: e.scurrency });
-                        l['_shipweb']=currencyFormatter.format(e.fshipweb, { locale:'vi-VN',code:e.scurrency });
-                        l['_surcharge']=currencyFormatter.format(e.fsurcharge, { locale:'vi-VN',code:e.scurrency  });
+                        l['_webprice']=currencyFormatter.format(e.fwebprice, { locale:'en-US',code: e.scurrency });
+                        l['_shipweb']=currencyFormatter.format(e.fshipweb, { locale:'en-US',code:e.scurrency });
+                        l['_surcharge']=currencyFormatter.format(e.fsurcharge, { locale:'en-US',code:e.scurrency  });
                         list.push(l)
                     })
                 }catch(e){
@@ -531,16 +531,16 @@ function getOrderByAdmin(req,res){
                     items.map((e,i)=>{
                         let n=JSON.stringify(e);
                         let l=JSON.parse(n);
-                        l['_deposit']=currencyFormatter.format(e.fdeposit, { locale: 'vi-VN',code: "VND"});
-                        l['_price']=currencyFormatter.format(e.fprice, { locale: 'vi-VN',code: "VND"  });
-                        l['_realpayprice']=currencyFormatter.format(e.frealpayprice, { locale: 'vi-VN',code: "VND" });
-                        l['_deliveryprice']=currencyFormatter.format(e.fdeliveryprice, { locale: 'vi-VN',code: "VND" });
-                        l['_exchangerate']=currencyFormatter.format(e.fexchangerate, { locale: 'vi-VN',code: "VND" });
+                        l['_deposit']=currencyFormatter.format(e.fdeposit, { locale: 'en-US',code: "USD"});
+                        l['_price']=currencyFormatter.format(e.fprice, { locale: 'en-US',code: "USD"  });
+                        l['_realpayprice']=currencyFormatter.format(e.frealpayprice, { locale: 'en-US',code: "USD" });
+                        l['_deliveryprice']=currencyFormatter.format(e.fdeliveryprice, { locale: 'en-US',code: "USD" });
+                        l['_exchangerate']=currencyFormatter.format(e.fexchangerate, { locale: 'en-US',code: "USD" });
                         l['_sale']=(e.fsale) ? e.fsale+"%" : "0%"
                         l['_servicerate']=(e.fservicerate) ? e.fservicerate+"%" : "0%"
-                        l['_webprice']=currencyFormatter.format(e.fwebprice, { locale:'vi-VN',code: e.scurrency });
-                        l['_shipweb']=currencyFormatter.format(e.fshipweb, { locale:'vi-VN',code:e.scurrency });
-                        l['_surcharge']=currencyFormatter.format(e.fsurcharge, { locale:'vi-VN',code:e.scurrency  });
+                        l['_webprice']=currencyFormatter.format(e.fwebprice, { locale:'en-US',code: e.scurrency });
+                        l['_shipweb']=currencyFormatter.format(e.fshipweb, { locale:'en-US',code:e.scurrency });
+                        l['_surcharge']=currencyFormatter.format(e.fsurcharge, { locale:'en-US',code:e.scurrency  });
                         list.push(l)
                     })
                 }catch(e){
@@ -648,7 +648,7 @@ function addOrder(req,res){
                 let instance    =new models.instance.orders_update(object);
                 let save        =instance.save({return_query: true});
                 return save;
-            } 
+            }  
            queries.push(orders_update());
             
            const order_by_member=()=>{
@@ -687,6 +687,7 @@ function updateOrder(req,res){
     }catch(e){
        return  res.send({status: 'expired'}); 
     }
+    /*
     const adminGroup=[
         'admin','superadmin'
     ]
@@ -695,7 +696,7 @@ function updateOrder(req,res){
     }else{
         return res.send({status: 'error'});
     }
-    
+    */
     let PARAM_IS_VALID={},queries=[];
     async.series([
         function(callback){
@@ -808,6 +809,7 @@ function saveCurrencyRaito(req,res){
     }catch(e){
        return  res.send({status: 'expired'}); 
     }
+    /*
     const adminGroup=[
         'admin','superadmin'
     ]
@@ -816,6 +818,7 @@ function saveCurrencyRaito(req,res){
     }else{
         return res.send({status: 'error'});
     }
+    */
     let PARAM_IS_VALID={},queries=[];
     async.series([
         function(callback){

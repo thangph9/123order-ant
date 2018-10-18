@@ -845,7 +845,7 @@ class OrderStatus extends PureComponent {
 
     message.success('添加成功');
     this.handleModalVisible();
-  };
+  }; 
   onChangeStatus=e=>{
      this.setState({
           changeStatus: true,
@@ -883,12 +883,12 @@ class OrderStatus extends PureComponent {
       visible: false,
     });
   }
-  
+   
   handleFullScreenTableOk= (e)=>{
     this.setState({
         visibleFullScreenTable: false,
     });
-  }
+  } 
   handleFullScreenTableCancel= (e)=>{
     this.setState({
         visibleFullScreenTable: false,
