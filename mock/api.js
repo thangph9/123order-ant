@@ -360,11 +360,13 @@ function getOrder(req,res){
             if(req.body.phone){
                 query['sphone']={'$like': '%'+req.body.phone+'%'};
             }
-            
+            if(req.body.status){
+                query['sstatus']=req.body.status;
+            }
             query['$limit']=limit
             callback(null,null);    
        },
-        function(callback){
+       function(callback){
            let from=moment().format("YYYY-MM-DD");
            let to=moment().format("YYYY-MM-DD");
            
@@ -378,14 +380,16 @@ function getOrder(req,res){
             var estart = start.getTime();
             var end = new Date(to); // Your timezone!
             var eend = (end.getTime()/1000.0 + 86400)*1000;
-            query['semployee']=legit.username;
+            if(legit.rule == 'member'){
+                query['semployee']=legit.username;
+            }
             query['ddate']={ '$gt':estart, '$lte':eend };
-            
+           
             callback(null,null);
                    
        },
        function(callback){
-            
+             console.log(query)
             models.instance.orders.find(query,{raw: true,allow_filtering: true},function(err,items){
                 _list=items;
                 //let newList=[];
@@ -443,6 +447,9 @@ function getOrder(req,res){
     });
     
 }
+function getOrderByAdmin(req,res){
+    
+}
 function addOrder(req,res){
     const { body } = req;
     
@@ -477,11 +484,10 @@ function addOrder(req,res){
             PARAM_IS_VALID['fsale']         =(body.sale) ? parseFloat(body.sale) : 0, 
             PARAM_IS_VALID['fshipweb']      =(body.shipWeb) ? parseFloat(body.shipWeb) : 0 ,
             PARAM_IS_VALID['fexchangerate'] =(body.rate) ? parseFloat(body.rate) : 0 ,
-            PARAM_IS_VALID['fprice']        =(body.price) ? parseFloat(currencyFormatter.unformat(body.price, { locale: 'vi-VN' })) : 0 ,
+            PARAM_IS_VALID['fprice']        =(body.price) ? parseFloat(body.price) : 0 ,
                 
             PARAM_IS_VALID['fdeposit']      =(body.deposit) ? parseFloat(body.deposit) : 0 ,
-            PARAM_IS_VALID['frealpayprice'] =(body.realpayprice) ? parseFloat(currencyFormatter.unformat(body.realpayprice, { locale: 'vi-VN' })) : 0 ,
-                
+            PARAM_IS_VALID['frealpayprice'] =(body.realpayprice) ? parseFloat(body.realpayprice) : 0 ,
             PARAM_IS_VALID['fdelivery']     =(body.delivery) ? parseFloat(body.delivery) : 0 ,
             PARAM_IS_VALID['fdeliveryprice']=(body.deliveryprice) ? parseFloat(body.deliveryprice) : 0 ,
             PARAM_IS_VALID['fservicerate']  =(body.servicerate && !Number.isNaN(body.servicerate) ) ? parseFloat(body.servicerate) : 0 ,
@@ -492,7 +498,7 @@ function addOrder(req,res){
             PARAM_IS_VALID['surcharge']     =(body.surcharge) ? parseFloat(body.surcharge) : 0 ,
             PARAM_IS_VALID['ssurcharge']    =body.ssurcharge,
             PARAM_IS_VALID['scomment']      =body.comment,
-                
+            
             callback(null,null);
             
         },
@@ -553,11 +559,15 @@ function updateOrder(req,res){
     }catch(e){
        return  res.send({status: 'expired'}); 
     }
-    
+    if(legit.rule !='member'){
+        return res.send({status: 'error'});
+    }
+    console.log(legit,req.body);
     let PARAM_IS_VALID={},queries=[];
     async.series([
         function(callback){
             PARAM_IS_VALID=req.body;
+            
             callback(null,null);
         },
         function(callback){
@@ -626,7 +636,84 @@ function delOrder(req,res){
     });
     
 }
-
+function getCurrencyRaito(req,res){
+    let raito={};
+    async.series([
+       function(callback){
+            callback(null,null);    
+       },
+       function(callback){
+           models.instance.currency_raito.find({},function(err,items){
+               if(items){
+                   raito=items;
+               }
+               callback(err,null);
+           });
+       }
+    ],function(err,result){
+        if(err) return res.send('error');
+        res.send({raito:raito});
+    });
+}
+function saveCurrencyRaito(req,res){
+    const { body } = req;
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+       return  res.send({status: 'expired'}); 
+    }
+    if(legit.rule =='member'){
+        return  res.send({status: 'error'}); 
+    }
+    let PARAM_IS_VALID={},queries=[];
+    async.series([
+        function(callback){
+            PARAM_IS_VALID['currency']=(req.body.currency) ? req.body.currency : '';
+            PARAM_IS_VALID['raito'] = (req.body.raito) ? parseFloat(req.body.raito) : 0;
+            
+            if(PARAM_IS_VALID['currency'] == '' || PARAM_IS_VALID['raito'] ==0 ){
+                return res.send({status: 'invalid'}); 
+            }
+            callback(null,null);
+        },
+        function(callback){
+            const currency_raito=()=>{
+                
+                let object      =PARAM_IS_VALID;
+                let instance    =new models.instance.currency_raito(object);
+                let save        =instance.save({return_query: true});
+                return save;
+            }
+           queries.push(currency_raito());
+            const currency_raito_by_date=()=>{
+                
+                let object      =PARAM_IS_VALID;
+                object['username']  =legit.username;
+                object['date']  =new Date();
+                
+                let instance    =new models.instance.currency_raito_by_date(object);
+                let save        =instance.save({return_query: true});
+                return save;
+                
+            } 
+           queries.push(currency_raito_by_date());
+           callback(null,null);
+        },
+    ],function(err,result){
+           if(err) return res.send({status: 'error'});
+            models.doBatch(queries,function(err){
+                //console.log(queries);
+                if(err) return res.send({status: 'error'});
+                res.send({ status: 'ok'});
+            });
+    });
+}
 function generateOrderBillCode(req,res){
     let bill_code,billCode;
     let id=Uuid.random();
@@ -711,8 +798,8 @@ export default {
   'DELETE /api/order/del_row':delOrder,
   'POST /api/user/check_account':checkAccount , 
   'GET /api/generate/bill_code':generateOrderBillCode,       
-      
-      
+  'GET /api/currency/raito':   getCurrencyRaito,    
+  'POST /api/currency/raito':   saveCurrencyRaito,   
   'GET /api/tags': mockjs.mock({
     'list|100': [{ name: '@city', 'value|1-100': 150, 'type|0-2': 1 }],
   }),

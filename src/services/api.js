@@ -22,7 +22,7 @@ export async function removeRule(params) {
     },
   });
 }
-
+ 
 export async function addRule(params) {
   return request('/api/rule', {
     method: 'POST',
@@ -165,6 +165,18 @@ export async function checkAccount(params){
     return request(`/api/user/check_account`,{
         method:'POST',
         body:params,
+    })
+}
+export async function getRaito(params){
+    return request(`/api/currency/raito`,{
+        method:'GET',
+    })
+}
+export async function saveCurrencyRaito(params){
+    return request(`/api/currency/raito`,{
+        method:'POST',
+        body: params,
+        headers:{'X-Access-Token':getAuthority()[0].token}
     })
 }
 

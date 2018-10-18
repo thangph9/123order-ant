@@ -31,6 +31,7 @@ module.exports={
     },
     key:[["sbill_code"],"ddate"] ,
     indexes: ["sname","sphone"],
+    clustering_order: {"ddate": "desc"},
     custom_indexes: [
         {
             on: 'sphone',

@@ -1,6 +1,6 @@
 import { routerRedux } from 'dva/router';
 import { message } from 'antd';
-import { addOrder, generateBillCode, getOrderList, editCeil, deleteRow } from '@/services/api';
+import { addOrder, generateBillCode, getOrderList, editCeil, deleteRow ,getRaito, saveCurrencyRaito } from '@/services/api';
 var currencyFormatter = require('currency-formatter');
 
 export default {
@@ -67,7 +67,7 @@ export default {
     },
     *deleteRow({ payload },{call ,put}){
           const response = yield call(deleteRow, payload);
-          
+          console.log(response);
           if(response=='ok'){
                 message.success('Xoá thành công');
             }else if (response=='expired'){
@@ -82,7 +82,27 @@ export default {
                 status:response
             },
           });
-    }    
+    },
+    *fetchRaito({payload},{call,put}){
+        const response = yield call(getRaito, payload);
+        yield put({
+            type: 'currencyRaito',
+            payload: {
+                ...response
+            },
+          });
+    },
+   *saveCurrencyRaito({payload},{call,put}){
+       const response = yield call(saveCurrencyRaito, payload);
+       
+       if(response.status=='ok'){
+                message.success('Thay đổi thành công');
+            }else if (response.status=='expired'){
+                message.warning('Đăng nhập lại ');
+            }else{
+                message.error('Lỗi! không thể thay đổi');
+            }
+   }
   },
 
   reducers: {
@@ -148,6 +168,12 @@ export default {
                 ...state
             }
         }  
+    },   
+    currencyRaito(state,{ payload }){
+        return {
+            ...state,
+            currency: payload,
+        }
     }    
   },
 };

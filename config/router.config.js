@@ -105,6 +105,16 @@ export default [
             name: 'orderlist',
             component: './Order/OrderList',
           },
+          {
+            path: '/order/currency-raito',
+            name: 'currency-raito',
+            component: './Order/CurrencyForm',
+          },
+          {
+            path: '/order/order-status',
+            name: 'orderstatus',
+            component: './Order/OrderStatus',
+          },
         ],
       },
       // list

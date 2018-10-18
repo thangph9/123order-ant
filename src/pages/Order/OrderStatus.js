@@ -417,7 +417,7 @@ class EditableCell extends React.Component {
   order,
 }))
 @Form.create()
-class OrderList extends PureComponent {
+class OrderStatus extends PureComponent {
   state = {
     modalVisible: false,
     updateModalVisible: false,
@@ -434,9 +434,12 @@ class OrderList extends PureComponent {
     visible: false,  
     statusText:{
       pending  :'Chờ',
-      paid      :'Đã mua',
-      cancel    :'Cancel'
-    }
+      paid      :'Đã đặt',
+      back      :'Back cọc',
+      tranfer   :'Chuyển cọc',
+      cancel    :'Cancel',
+    },
+    changeStatus: false,  
   };  
    
   
@@ -627,7 +630,13 @@ class OrderList extends PureComponent {
       ),
     },*/
   ];
-  
+  listStatus=[
+        <Option value="pending" key="1">Chờ</Option>  ,
+        <Option value="paid" key="2">Đã đặt</Option>  ,
+        <Option value="cancel" key="3">Cancel</Option>  ,
+        <Option value="back" key="4">Back cọc</Option>  ,
+        <Option value="tranfer" key="5">Chuyển cọc</Option> , 
+    ]
   componentDidMount() {  
     
     const { dispatch } = this.props;  
@@ -653,10 +662,24 @@ class OrderList extends PureComponent {
     }) 
     
   }
-  handleChange=(e,value)=>{
+  handleUpdateStatus=(e)=>{
       //
-      value.sstatus=e;
-      this.handleSave(value);
+      //value.sstatus=e;
+      e.preventDefault();
+       const { dispatch, form } = this.props;
+          form.validateFields((err, fieldsValue) => {
+          if (err) return; 
+          this.setState({
+              changeStatus: false,
+          })      
+          dispatch({
+                type: 'order/editCeil',
+                payload:{...fieldsValue},  
+            }
+          )      
+        });
+      
+      //this.handleSave(value);
   }
   handleStandardTableChange = (pagination, filtersArg, sorter) => {
     const { dispatch } = this.props;
@@ -706,7 +729,7 @@ class OrderList extends PureComponent {
       payload: {},
     });
   };
-
+  
   toggleForm = () => {
     const { expandForm } = this.state;
     this.setState({
@@ -755,7 +778,19 @@ class OrderList extends PureComponent {
           visibleFullScreenTable: true,
         });
   }
-  
+  handleChangeStatus = e =>{
+      const { dispatch, form } = this.props;
+      form.validateFields((err, fieldsValue) => {
+      if (err) return; 
+      const values = {
+        ...fieldsValue,
+      };
+ 
+      this.setState({
+        formValues: values,
+      });
+    });
+  }
   handleSearch = e => {
     e.preventDefault();
     const { from,to } =this.state;  
@@ -773,6 +808,7 @@ class OrderList extends PureComponent {
       this.setState({
         formValues: values,
       });
+        console.log(values)
       dispatch({
         type: 'order/fetch',
         payload: values,
@@ -806,7 +842,11 @@ class OrderList extends PureComponent {
     message.success('添加成功');
     this.handleModalVisible();
   };
- 
+  onChangeStatus=e=>{
+     this.setState({
+          changeStatus: true,
+      });
+  }
   handleUpdate = fields => {
     const { dispatch } = this.props;
     dispatch({
@@ -868,15 +908,93 @@ class OrderList extends PureComponent {
       }
        
   }  
+  renderUpdateStatusForm(selectedRow){
+      
+    
+    const {    
+      form: { getFieldDecorator },
+        } = this.props; 
+    const {changeStatus} = this.state;
+    const {sstatus} = selectedRow;
+    let list=[
+        <Option value="pending" key="1">Chờ</Option>  ,
+        <Option value="paid" key="2">Đã đặt</Option>  ,
+        <Option value="cancel" key="3">Cancel</Option>  ,
+        <Option value="back" key="4">Back cọc</Option>  ,
+        <Option value="tranfer" key="5">Chuyển cọc</Option> , 
+    ];
+    switch(sstatus){
+        case 'back':
+            list=[
+                <Option value="back" key="1">Back cọc</Option>,
+            ]
+            break;
+        case 'tranfer':
+            list=[
+                <Option value="tranfer" key="1">Chuyển cọc</Option> , 
+            ]
+            break;
+        
+    }
+    return(<Form onSubmit={this.handleUpdateStatus} layout="inline">
+        <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
+            <Col md={9} sm={24}>
+                <FormItem>
+                  {getFieldDecorator('sstatus',{
+                      initialValue:selectedRow.sstatus,
+                      onChange:this.onChangeStatus
+                  })(
+                    <Select className={styles.label} >
+                        {list}
+                    </Select>
+                  )}
+                </FormItem>
+                <FormItem>
+                  {getFieldDecorator('sbill_code',{
+                      initialValue:selectedRow.sbill_code,
+                  })(
+                    <Input type="hidden" />
+                  )}
+                </FormItem>
+                <FormItem>
+                  {getFieldDecorator('ddate',{
+                      initialValue:selectedRow.ddate,
+                  })(
+                    <Input type="hidden" />
+                  )}
+                </FormItem>
+            </Col> 
+            <Col md={15} sm={24}>
+                { (changeStatus) ? (
+                    <span className={styles.label}>
+                      <Button type="primary" htmlType="submit" >
+                        Cập nhật
+                      </Button>
+                    </span>
+                 ) : (
+                    <span className={styles.label}>
+                      <Button type="primary" htmlType="button"  disabled >
+                        Cập nhật
+                      </Button>
+                    </span>
+                 )
+                    
+                }
+            </Col>
+        </Row>    
+    </Form> );    
+  }
   renderSimpleForm() {
+    
     const {    
       form: { getFieldDecorator },
     } = this.props;
+    const status='pending'  
     return (
       <Form onSubmit={this.handleSearch} layout="inline">
         <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
-          <Col md={8} sm={24}>
-            <FormItem label="Tên khách hàng">
+          <Col md={6} sm={24}>
+            <FormItem label="Tên KH">
               {getFieldDecorator('name')(<Input placeholder="" />)}
             </FormItem>
           </Col>
@@ -887,14 +1005,26 @@ class OrderList extends PureComponent {
               )}
             </FormItem>
           </Col> 
-          <Col md={8} sm={24}>
-            <span className={styles.submitButtons}>
-              <Button type="primary" htmlType="submit">
-                Tìm kiếm
-              </Button>
-            </span>
-          </Col>
-        </Row>
+          <Col md={6} sm={24}>
+            <FormItem label="Trạng thái">
+              {getFieldDecorator('status',{
+                  initialValue:status,
+                  onChange: this.handleChangeStatus
+              })(
+                <Select>
+                    {this.listStatus}
+                </Select>
+              )}
+            </FormItem>
+          </Col> 
+        <Col md={4} sm={24}>
+                <span className={styles.submitButtons}>
+                  <Button type="primary" htmlType="submit">
+                    Tìm kiếm
+                  </Button>
+                </span>
+              </Col> 
+        </Row> 
       </Form>
     );
   }
@@ -948,7 +1078,7 @@ class OrderList extends PureComponent {
       order: { data },
       loading,
     } = this.props;
-    const { selectedRows, modalVisible, updateModalVisible, stepFormValues,selectedRow,statusText } = this.state;
+    const { selectedRows, modalVisible, updateModalVisible, stepFormValues,selectedRow,statusText,changeStatus } = this.state; 
     const menu = (
       <Menu onClick={this.handleMenuClick} selectedKeys={[]}>
         <Menu.Item key="remove">删除</Menu.Item>
@@ -1126,8 +1256,8 @@ class OrderList extends PureComponent {
           </Row>
             <Row>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><span className={styles.label}>Trạng thái</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}><Alert message={statusText[selectedRow.sstatus]} showIcon={false} banner/></Col>
-
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>{this.renderUpdateStatusForm(selectedRow)}</Col>
+            
           </Row>
             <Row>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 12, offset: 0 }}><b>Ghi chú</b></Col>
@@ -1149,4 +1279,4 @@ class OrderList extends PureComponent {
   }
 }
 
-export default OrderList;
+export default OrderStatus;
