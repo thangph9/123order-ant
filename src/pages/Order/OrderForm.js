@@ -146,7 +146,6 @@ class OrderForm extends PureComponent {
       
       const {currency,surcharge,changePrice,locale} = this.state;
       
-      
       let web_price=this.props.form.getFieldValue('web_price');
       let sale=this.props.form.getFieldValue('sale');
       let servicerate=this.props.form.getFieldValue('servicerate');
@@ -192,10 +191,10 @@ class OrderForm extends PureComponent {
       
       let j=_web_price*((100-_sale)/100)*((100+_servicerate)/100)*_amount;
       
-      let s=_rate*j;
-      let a=_rate*_surcharge;
+      let s=_rate*j; 
+      let a=_rate*_surcharge;  
       let i=_deliveryprice;
-      let e=_rate*_shipWeb
+      let e=_rate*_shipWeb 
       
       
       if (changePrice){
@@ -204,7 +203,7 @@ class OrderForm extends PureComponent {
           price=s+a+i+e;
       }
       
-      let payprice=0;
+      let payprice=0; 
       _deposit= price*0.5; 
       payprice = price - _deposit;
       

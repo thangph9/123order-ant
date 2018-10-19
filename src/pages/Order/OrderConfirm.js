@@ -417,7 +417,7 @@ class EditableCell extends React.Component {
   order,
 }))
 @Form.create()
-class OrderStatus extends PureComponent {
+class OrderConfirm extends PureComponent {
   state = {
     modalVisible: false,
     updateModalVisible: false,
@@ -505,7 +505,7 @@ class OrderStatus extends PureComponent {
         key:'snameproduct',
         width: 150,
         render: (text, record) => (
-             <span>{text.substring(0,10)}...</span>
+             <span>{(text) ? (text.substring(0,10)+"...") : "..."}</span>
         ),
     },  
     {
@@ -598,13 +598,22 @@ class OrderStatus extends PureComponent {
         width: 150,
     },
     {
-        title: 'Tình trạng',
+        title: 'Trạng thái',
         dataIndex: 'sstatus',
         key: 'sstatus',
         width: 150,
         render: (text, record) => {
            return (<span>{this.state.statusText[text]}</span>)  
         },
+    },
+    {
+        title: 'Tình trạng',
+        dataIndex: '_status',
+        key: '_status',
+        width: 150,
+        render: (text, record) => (
+             <span>{(text) ? text.substring(0,15) : ''}</span>
+        ),
     },
     {
         title: 'Ghi chú',
@@ -630,23 +639,24 @@ class OrderStatus extends PureComponent {
       ),
     },*/
   ];
-  listStatus=[ 
+  listStatus=[
         <Option value="pending" key="1">Chờ</Option>  ,
         <Option value="paid" key="2">Đã đặt</Option>  ,
         <Option value="cancel" key="3">Cancel</Option>  ,
         <Option value="back" key="4">Back cọc</Option>  ,
-        <Option value="tranfer" key="5">Chuyển cọc</Option> ,  
+        <Option value="tranfer" key="5">Chuyển cọc</Option> , 
     ]
   componentDidMount() {  
+    
     const { dispatch } = this.props;  
     let from=moment().format('YYYY/MM/DD');
     let to=moment().format('YYYY/MM/DD');
-    let status='paid';
+    let status='confirm';
     const values={
         from,
         to,
         status
-    }   
+    } 
     dispatch({
         type: 'order/fetch',
         payload:values,
@@ -678,7 +688,7 @@ class OrderStatus extends PureComponent {
                 payload:{...fieldsValue},  
             }
           )      
-        }); 
+        });
       
       //this.handleSave(value);
   }
@@ -696,8 +706,8 @@ class OrderStatus extends PureComponent {
       currentPage: pagination.current,
       pageSize: pagination.pageSize,
       ...formValues,
-      ...filters,  
-      status: "paid"
+      ...filters,
+      status: "confirm"
     };
     if (sorter.field) {
       params.sorter = sorter.field+"_"+sorter.order;
@@ -712,7 +722,7 @@ class OrderStatus extends PureComponent {
       const { dispatch } = this.props;
       
       dispatch({
-          type:'order/saveOrder', 
+          type:'order/editCeil',
           payload:{
               ...row
           }
@@ -726,7 +736,7 @@ class OrderStatus extends PureComponent {
     this.setState({
       formValues: {},
     });
-    dispatch({ 
+    dispatch({
       type: 'rule/fetch',
       payload: {},
     });
@@ -761,7 +771,7 @@ class OrderStatus extends PureComponent {
       default:
         break;
     }
-  };    
+  };
 
   handleSelectRows = rows => {
     this.setState({
@@ -769,10 +779,6 @@ class OrderStatus extends PureComponent {
     });
   };
   handleRowSelect = row =>{
-      const {form} =this.props;
-      form.setFieldsValue({sstatus: row.sstatus});
-      form.setFieldsValue({sbill_code: row.sbill_code});
-      form.setFieldsValue({ddate: row.ddate});
       this.setState({
           visible: true,
           selectedRow:row,
@@ -801,7 +807,7 @@ class OrderStatus extends PureComponent {
     e.preventDefault();
     const { from,to } =this.state;  
     const { dispatch, form } = this.props;
-    const status="paid";
+    const status="confirm";
     form.validateFields((err, fieldsValue) => {
       if (err) return; 
       const values = {
@@ -809,15 +815,15 @@ class OrderStatus extends PureComponent {
         updatedAt: fieldsValue.updatedAt && fieldsValue.updatedAt.valueOf(),
         from,
         to,
-        status 
+        status
       };
  
       this.setState({
         formValues: values,
-      });  
+      });
               
-      dispatch({ 
-        type: 'order/fetch', 
+      dispatch({
+        type: 'order/fetch',
         payload: values,
       });
     });
@@ -877,15 +883,17 @@ class OrderStatus extends PureComponent {
         });
         
     }
-    this.setState({
+    this.setState({ 
       visible: false,
     });
-  } 
+  }
   handleCancel = (e) => {
+    const { changeStatus } = this.state;  
     this.setState({
       visible: false,
+      changeStatus: !!changeStatus    
     });
-  } 
+  }
    
   handleFullScreenTableOk= (e)=>{
     this.setState({
@@ -898,6 +906,24 @@ class OrderStatus extends PureComponent {
     });
   }
   onPanelChange= ()=>{
+      
+  }
+  handleConfirm =(e)=>{
+      const { dispatch } = this.props;
+      
+      
+      if(e.status=='processing'){
+          e['status']='confirm';
+      }else{
+          e['status']='processing';
+      }
+      dispatch({
+                type: 'order/saveOrder',
+                payload:{
+                    ...e
+                },  
+            }
+        )
       
   }
   onChangeRangPicker =(e)=>{  
@@ -916,7 +942,7 @@ class OrderStatus extends PureComponent {
               ...formValues,
               from,
               to,
-              status:"paid"
+              status:"confirm"
           }
           dispatch({
             type: 'order/fetch',
@@ -924,7 +950,7 @@ class OrderStatus extends PureComponent {
           });
       }
        
-  }      
+  }  
   renderUpdateStatusForm(selectedRow){
       
     
@@ -941,6 +967,7 @@ class OrderStatus extends PureComponent {
         <Option value="back" key="4">Back cọc</Option>  ,
         <Option value="tranfer" key="5">Chuyển cọc</Option> , 
     ];
+    const confirm=[];  
     switch(sstatus){
         case 'back':
             list=[
@@ -1025,7 +1052,7 @@ class OrderStatus extends PureComponent {
           </Col> 
           <Col md={6} sm={24}>
             <FormItem label="Trạng thái">
-              {getFieldDecorator('sstatus',{
+              {getFieldDecorator('status',{
                   initialValue:status,
                   onChange: this.handleChangeStatus
               })(
@@ -1104,6 +1131,19 @@ class OrderStatus extends PureComponent {
         <Menu.Item key="approval">批量审批</Menu.Item>
       </Menu>
     );
+    let confirm=[];
+    if(selectedRow.sstatus=='pending'){
+        
+        if(selectedRow.status=='processing') {
+        confirm=[<Button type="primary" key="processing" onClick={()=>this.handleConfirm(selectedRow)}>Xác nhận  đặt cọc</Button>]
+        }else{
+            confirm=[<Button type="button" key="confirm" onClick={()=>this.handleConfirm(selectedRow)}>Huỷ xác nhận</Button>]
+        }
+    }else{
+        confirm='';
+    }
+    
+                            
     const parentMethods = {
       handleAdd: this.handleAdd,
       handleModalVisible: this.handleModalVisible,
@@ -1275,7 +1315,11 @@ class OrderStatus extends PureComponent {
           </Row>
             <Row>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><span className={styles.label}>Trạng thái</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>{this.renderUpdateStatusForm(selectedRow)}</Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}><Alert message={`${selectedRow._sstatus}`} showIcon={false} banner/></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}> </Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
+                    {confirm}
+            </Col>
             
           </Row>
             <Row>
@@ -1298,4 +1342,4 @@ class OrderStatus extends PureComponent {
   }
 }
 
-export default OrderStatus;
+export default OrderConfirm;

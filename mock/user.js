@@ -219,22 +219,25 @@ export default {
     var privateKEY  = fs.readFileSync('./ssl/jwtprivate.pem', 'utf8');  
     async.series([
         function(callback){
-            PARAM_IS_VALID["username"]      = params.username;
-            PARAM_IS_VALID['user_id']       = user_id;
-            PARAM_IS_VALID["password"]      = params.password;
-            PARAM_IS_VALID["phone"]         = params.phone;
-            PARAM_IS_VALID["email"]         = params.email;
-            PARAM_IS_VALID["address"]       = params.address;
-            PARAM_IS_VALID["name"]          = params.name;
-            PARAM_IS_VALID["createat"]      = new Date();
-            PARAM_IS_VALID["updateat"]      = new Date();
-            PARAM_IS_VALID["rule"]          = params.rule;
-            
-            
-            user={
-                user_id: PARAM_IS_VALID['user_id'],
+            try{
+                PARAM_IS_VALID["username"]      = params.username;
+                PARAM_IS_VALID['user_id']       = user_id;
+                PARAM_IS_VALID["password"]      = params.password;
+                PARAM_IS_VALID["phone"]         = params.phone;
+                PARAM_IS_VALID["email"]         = params.email;
+                PARAM_IS_VALID["address"]       = params.address;
+                PARAM_IS_VALID["name"]          = params.name;
+                PARAM_IS_VALID["createat"]      = new Date();
+                PARAM_IS_VALID["updateat"]      = new Date();
+                PARAM_IS_VALID["rule"]          = params.rule;
+                user={
+                    user_id: PARAM_IS_VALID['user_id'],
 
+                }
+            }catch(e){
+                return res.send({status:'error'})
             }
+            
             callback(null,null);
         },
         function(callback){

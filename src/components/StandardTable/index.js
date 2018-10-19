@@ -112,7 +112,9 @@ class StandardTable extends PureComponent {
                        'Hôm nay': [moment(), moment()], 
                        'Hôm qua': [moment().add(-1,'days'),moment().add(-1,'days')],    
                        'Trong tháng': [moment().startOf('month'), moment().endOf('month')],
-                       'Tuần này': [moment().startOf('week'), moment().endOf('week')]}}
+                       'Tuần này': [moment().startOf('week'), moment().endOf('week')],
+                        'Tuần trước':[moment().add(-1,'weeks'),moment().startOf('week').add(-1,'days')]
+                        }}
                       showTime
                       format="YYYY/MM/DD"
                       defaultValue={[moment(),moment()]}

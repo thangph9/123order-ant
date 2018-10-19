@@ -115,6 +115,11 @@ export default [
             name: 'orderstatus',
             component: './Order/OrderStatus',
           },
+          {
+            path: '/order/order-confirm',
+            name: 'orderconfirm',
+            component: './Order/OrderConfirm',
+          },
         ],
       },
       // list

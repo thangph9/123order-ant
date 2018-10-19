@@ -1,6 +1,6 @@
 import { routerRedux } from 'dva/router';
 import { message } from 'antd';
-import { addOrder, generateBillCode, getOrderList, editCeil, deleteRow ,getRaito, saveCurrencyRaito } from '@/services/api';
+import { addOrder, generateBillCode, getOrderList, updateOrder, deleteRow ,getRaito, saveCurrencyRaito } from '@/services/api';
 var currencyFormatter = require('currency-formatter');
 
 export default {
@@ -47,8 +47,9 @@ export default {
         payload: list,
       });
     },
-    *editCeil({ payload },{call, put}){
-          const response = yield call(editCeil, payload);
+    *saveOrder({ payload },{call, put}){
+          console.log(payload);
+          const response = yield call(updateOrder, payload);
           if(response.status==='ok'){
                 message.success('Thay đổi thành công');
             }else if (response.status==='expired'){

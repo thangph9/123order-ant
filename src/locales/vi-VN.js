@@ -41,6 +41,7 @@ export default {
   'menu.order.orderlist':'Danh sách đơn hàng',    
   'menu.order.currency-raito':'Tỷ giá',    
   'menu.order.orderstatus':'Đặt hàng',    
+  'menu.order.orderconfirm':'Xác nhận đặt cọc',    
   'app.home.introduce': 'introduce',
   'app.analysis.test': 'Gongzhuan No.{no} shop',
   'app.analysis.introduce': 'Introduce',

@@ -27,7 +27,8 @@ module.exports={
         scomment    :'text',  
         fsurcharge  :'float',
         ssurcharge  :'text',
-        scurrency   :'text'
+        scurrency   :'text',
+        status      :'text',
     },
     key:[["sbill_code"],"ddate"] ,
     indexes: ["sname","sphone"],
@@ -45,6 +46,21 @@ module.exports={
         },
         {
             on: 'ddate',
+            using: 'org.apache.cassandra.index.sasi.SASIIndex',
+            options: {}
+        },
+        {
+            on: 'semployee',
+            using: 'org.apache.cassandra.index.sasi.SASIIndex',
+            options: {}
+        },
+        {
+            on: 'sstatus',
+            using: 'org.apache.cassandra.index.sasi.SASIIndex',
+            options: {}
+        },
+        {
+            on: 'status',
             using: 'org.apache.cassandra.index.sasi.SASIIndex',
             options: {}
         }

@@ -27,6 +27,7 @@ import {
 } from 'antd';
 import StandardTable from '@/components/StandardTable';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import ModalViewOrder from '@/components/Modal/ModalViewOrder';
 var currencyFormatter = require('currency-formatter');
 import styles from './OrderList.less';
 const RangePicker = DatePicker.RangePicker;
@@ -409,6 +410,563 @@ class EditableCell extends React.Component {
   }
 }
 
+@Form.create()
+class ModalEditForm extends PureComponent{
+    constructor(props){
+        super(props);
+        const {order} = this.props;
+        let rate=[];
+        if(order){
+            order.raito.forEach(function(e){
+                rate[[e.currency]]=e.raito;
+            });
+        }
+        const { selectedRow } = this.props;
+        this.state={
+            status:'pending',
+            currency: 'USD',
+            surcharge: 'USD',
+            price: selectedRow._price,
+            deposit:selectedRow._deposit,
+            payprice: selectedRow._realpayprice,
+            changePrice: false,
+            locale:{
+                  'USD':'en-US',
+                  'GBP':'en-GB',
+                  'VND':'vi-VN',
+                  'JPY':'ja-JP',
+                  'EUR':'de-DE',
+            },
+        }
+    }
+    
+    handleCancel=()=>{
+        this.setState({ loading: true });
+        setTimeout(() => {
+          this.setState({ loading: false, visible: false });
+        }, 3000);
+    }
+    changeCurrency=(e)=>{
+        const {rate} = this.state;
+        const { form } = this.props;
+        this.setState({
+            currency: e,
+        }) 
+    }
+    handleUpdate=()=>{
+        const { form, handleUpdate } = this.props;
+        const { formVals: oldValue } = this.state;
+        
+        form.validateFields((err, fieldsValue) => {
+          if (err) return;
+          const formVals = { ...oldValue, ...fieldsValue };
+          this.setState(
+            {
+              formVals,
+            },
+            handleUpdate(formVals),
+          );
+        });
+    }
+    componentDidMount(){
+        
+    }
+    componentWillUpdate(){
+      const {currency,surcharge,changePrice,locale} = this.state;
+      
+      let web_price=this.props.form.getFieldValue('fwebprice');
+      let sale=this.props.form.getFieldValue('fsale');
+      let servicerate=this.props.form.getFieldValue('fservicerate');
+      let amount=this.props.form.getFieldValue('iquality');
+      let fsurcharge=this.props.form.getFieldValue('fsurcharge');
+      let deliveryprice=this.props.form.getFieldValue('fdeliveryprice');
+      let shipWeb=this.props.form.getFieldValue('fshipweb');
+      let deposit=this.props.form.getFieldValue('fdeposit');
+      let rprice=this.props.form.getFieldValue('fprice');
+      let fexchangerate=this.props.form.getFieldValue('fexchangerate');
+      
+      
+      //let _web_price=Number.isNaN(web_price) ? 0 : parseInt(web_price);
+      let _sale=Number.isNaN(sale) ? 0 : parseInt(sale);
+      let _servicerate=Number.isNaN(servicerate) ? 0 : parseFloat(servicerate);
+      let _amount=Number.isNaN(amount) ? 0 : parseFloat(amount);
+      //let _surcharge=Number.isNaN(fsurcharge) ? 0 : parseFloat(fsurcharge);
+      let _deliveryprice=Number.isNaN(deliveryprice) ? 0 : parseFloat(deliveryprice);
+      //let _shipWeb=Number.isNaN(shipWeb) ? 0 : parseFloat(shipWeb);
+      let _deposit=Number.isNaN(deposit) ? 0 : parseFloat(deposit);
+      let _rprice=Number.isNaN(rprice) ? 0 : parseFloat(rprice);
+      let _fexchangerate=Number.isNaN(fexchangerate) ? 0 : parseFloat(fexchangerate);
+      
+      
+      
+      
+      //_web_price= Number.isNaN(_web_price) ? 0 : _web_price
+      _sale= Number.isNaN(_sale) ? 0 : _sale
+      _servicerate= Number.isNaN(_servicerate) ? 0 : _servicerate
+      _amount= Number.isNaN(_amount) ? 1 : _amount
+      //_surcharge= Number.isNaN(_surcharge) ? 0 : _surcharge
+      _deliveryprice= Number.isNaN(_deliveryprice) ? 1 : _deliveryprice
+      //_shipWeb= Number.isNaN(_shipWeb) ? 0 : _shipWeb
+      _deposit= Number.isNaN(_deposit) ? 0 : _deposit
+      _rprice= Number.isNaN(_rprice) ? 0 : _rprice
+      let _rate= Number.isNaN(_fexchangerate) ? 1 : _fexchangerate
+      
+      let _web_price=currencyFormatter.unformat(web_price, { locale: locale[currency]})  
+      let _surcharge=currencyFormatter.unformat(fsurcharge, { locale: locale[currency]})  
+      let _shipWeb=currencyFormatter.unformat(shipWeb, { locale: locale[currency]}) 
+      
+      let price=0;
+      
+      let j=Number(_web_price)*((100-_sale)/100)*((100+_servicerate)/100)*_amount;
+      
+      let s=_rate*j;
+      let a=_rate*_surcharge;
+      let i=_deliveryprice;
+      let e=_rate*_shipWeb;
+      
+      console.log(_web_price,_amount,_sale,_rate);
+        
+      if (changePrice){
+          price=_rprice;
+      }else{
+          price=s+a+i+e;
+      }
+      
+      let payprice=0;
+      _deposit= price*0.5; 
+      payprice = price - _deposit;
+        
+      
+      payprice=currencyFormatter.format(payprice, { locale: 'en-US' ,symbol: ''});
+      price=currencyFormatter.format(price, { locale: 'en-US',symbol: '' });
+      deposit=currencyFormatter.format(_deposit, { locale: 'en-US',symbol: '' });
+      
+        
+      this.setState({
+          price: price,
+          payprice:payprice,
+          deposit:deposit
+      });
+    }
+    render(){
+        const {modalVisible, handleUpdateModalVisible , selectedRow} = this.props;
+        const { form: { getFieldDecorator} } = this.props;
+        
+        const {
+              loading,
+              order,
+            } = this.props;
+        const {price, payprice,deposit,currency} = this.state;
+        let ls=[];
+        let list=[];
+        if(order){
+            order.raito.forEach(function(e){
+                ls.push(<Option value={e.currency} key={e.currency}>{e.currency}</Option>);
+                list[[e.currency]]=e.raito;
+            });
+        }
+        let lsStatus=[
+                <Option key='pending' value="pending">Chờ</Option>,
+                <Option key='paid' value="paid">Đã mua</Option>,                         
+                <Option key='cancel' value="cancel">Cancel</Option>,                         
+                <Option key='back' value="back">Back cọc</Option>,                         
+                <Option key='tranfer' value="tranfer">Chuyển cọc</Option>,                         
+                ]
+        const formItemLayout = {
+          labelCol: {
+            xs: { span: 24 },
+            sm: { span: 9 },
+          },
+          wrapperCol: {
+            xs: { span: 24 },
+            sm: { span: 12 },
+            md: { span: 15 },
+          },
+        };
+        const formItemLayoutCurrencyLeft={
+            labelCol: {
+                xs: { span: 24 },
+                sm: { span: 12 },
+              },
+              wrapperCol: {
+                xs: { span: 12 },
+                sm: { span: 12 },
+                md: { span: 12 },
+              },
+        }
+        const formItemLayoutCurrencyRight={
+            labelCol: {
+                xs: { span: 24 },
+                sm: { span: 9 },
+              },
+              wrapperCol: {
+                xs: { span: 24 },
+                sm: { span: 24 },
+                md: { span: 24 },
+              },
+        }
+        const submitFormLayout = {
+          wrapperCol: {
+            xs: { span: 24, offset: 0 },
+            sm: { span: 10, offset: 7 },
+          },
+        };
+        
+        const footer=[
+            <Button key="cancel" onClick={()=>{handleUpdateModalVisible()}}>Huỷ</Button>,
+            <Button key="submit" type="primary" onClick={()=>{this.handleUpdate()}}>
+              Cập nhập
+            </Button>
+          ];
+                                         
+        return (
+        <Modal 
+          title={selectedRow.sname}
+          visible={modalVisible}
+          width="80%"
+          style={{ top: 20 }}
+          zIndex="1001"    
+          footer={footer}
+          onCancel={()=>{handleUpdateModalVisible()}}
+        >
+        <div className="gutter-example">
+          <Card bordered={false}>
+          <Form  hideRequiredMark style={{ marginTop: 8 }}>
+            <Row>
+                <Col xs={{ span: 24, offset: 0 }} sm={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Mã Bill">
+                      {getFieldDecorator('sbill_code', {
+                        rules: [
+                          {
+                            required: true,
+                            message: ' ',
+
+                          },
+                        ],
+                        initialValue:selectedRow.sbill_code
+                      })(<Input placeholder=" " disabled  />)}
+                    </FormItem>
+                </Col>
+            </Row>
+             <Row>
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Tên khách hàng">
+                      {getFieldDecorator('sname', {
+                        rules: [
+                          { 
+                            required: true,
+                            message: 'Nhập tên khách hàng',
+                          },
+                        ],
+                        initialValue:selectedRow.sname
+                      })(<Input placeholder="Tên khách hàng" />)}
+                    </FormItem>
+                    <FormItem>
+                      {getFieldDecorator('ddate', {
+                        initialValue:selectedRow.ddate
+                      })(<Input type="hidden"/>)}
+                    </FormItem>
+                </Col>
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Số điện thoại">
+                      {getFieldDecorator('sphone', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Nhập số điện thoại khách hàng',
+                          },
+                        ],
+                        initialValue:selectedRow.sphone
+                      })(<Input placeholder=" " />)}
+                    </FormItem>
+                </Col>
+            </Row>   
+            <Row>
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Địa chỉ">
+                      {getFieldDecorator('saddress', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Nhập địa chỉ khách hàng',
+                          },
+                        ],
+                        initialValue:selectedRow.saddress
+                      })(<Input placeholder=" " />)}
+                    </FormItem>
+                </Col>  
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Email">
+                      {getFieldDecorator('semail', {
+                            initialValue:selectedRow.semail
+                      })(<Input placeholder=" " />)}
+                    </FormItem>
+                </Col>  
+            </Row>
+            <Row>
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Link sp">
+                      {getFieldDecorator('slinkproduct', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Nhập link sản phẩm',
+                          },
+                        ],
+                        initialValue:selectedRow.slinkproduct
+                      })(<Input placeholder="Link sản phẩm" />)}
+                    </FormItem>
+                </Col>  
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Code sp">
+                      {getFieldDecorator('scode', {
+                        rules: [
+                          {
+                            required: true,
+                            message: ' ',
+                          },
+                        ],
+                        initialValue:selectedRow.scode
+                      })(<Input placeholder="Mã sản phẩm " />)}
+                    </FormItem>
+                </Col>  
+            </Row>
+            <Row>
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Tên sp">
+                      {getFieldDecorator('snameproduct', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Nhập tên sản phẩm',
+                          },
+                        ],
+                        initialValue:selectedRow.snameproduct
+                      })(<Input placeholder="Tên sản phẩm" />)}
+                    </FormItem>
+                </Col>  
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Màu">
+                      {getFieldDecorator('scolor', {
+                        initialValue:selectedRow.scolor
+                      })(<Input placeholder="Color" />)}
+                    </FormItem>
+                </Col>  
+            </Row>
+            <Row>
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Size">
+                      {getFieldDecorator('ssize', {
+                        initialValue:selectedRow.ssize
+                      })(<Input placeholder="Size" />)}
+                    </FormItem>
+                </Col>  
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Số lượng">
+                      {getFieldDecorator('iquality', {
+                        rules: [
+                          {
+                            required: true,
+                            message: ' ',
+                          },
+                        ],
+                         initialValue:selectedRow.iquality                 
+                      })(<Input placeholder="Số lượng" />)}
+                    </FormItem>
+                </Col>  
+            </Row>
+            <Row>
+                <Col md={{ span: 12, offset: 0 }}>
+                    <Row>
+                        <Col md={{ span: 18, offset: 0 }}>
+                            <FormItem {...formItemLayoutCurrencyLeft} label="Giá web">
+                              {getFieldDecorator('fwebprice', {
+                                    initialValue:selectedRow._webprice  
+                              })(<Input placeholder="Giá web" />)}
+                            </FormItem>
+                        </Col>
+                        <Col md={{ span: 5, offset: 1 }}>
+                            <FormItem {...formItemLayoutCurrencyRight}>
+                               {getFieldDecorator('scurrency', {
+                                    initialValue:selectedRow.scurrency,   
+                                    onChange: this.changeCurrency
+                                }) (<Select >
+                                    {ls}
+                                </Select>)}
+                            </FormItem> 
+                        </Col>    
+                    </Row>
+                </Col>  
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Sale">
+                      {getFieldDecorator('fsale', {
+                        rules: [
+                          {
+                            required: true,
+                            message: ' ',
+                          },
+                        ],
+                          initialValue: selectedRow.fsale        
+                      })(<Input placeholder="sale" addonAfter="%" />)}
+                    </FormItem>
+                </Col>  
+            </Row>  
+             <Row>
+                <Col md={{ span: 12, offset: 0 }}>
+                    <Row>
+                        <Col md={{ span: 18, offset: 0 }}>
+                            <FormItem {...formItemLayoutCurrencyLeft} label="Ship Web">
+                              {getFieldDecorator('fshipweb', {
+                                initialValue:selectedRow._shipweb,  
+                              })(<Input placeholder=" " />)}
+                            </FormItem>
+                        </Col>
+                        <Col md={{ span: 5, offset: 1 }}>
+                            <FormItem {...formItemLayoutCurrencyRight}>
+                               { getFieldDecorator('scurrency', {
+                                    initialValue:selectedRow.scurrency
+                                }) (<Select
+                                    onChange={this.changeCurrency} disabled
+                                  > 
+                                    {ls}
+                                </Select>)}
+                            </FormItem> 
+                        </Col>    
+                    </Row>
+                </Col>  
+                <Col md={{ span: 12, offset: 0 }}>
+                     
+                    <Row>
+                        <Col md={{ span: 18, offset: 0 }}>
+                            <FormItem {...formItemLayoutCurrencyLeft} label="Phụ thu">
+                              {getFieldDecorator('ssurcharge', {
+                                rules: [
+                                  {
+                                    message: ' ',
+                                  },
+                                ],
+                                initialValue:selectedRow.ssurcharge
+                              })(<Input placeholder="Phụ thu" />)}
+                            </FormItem>
+                        </Col>
+                        <Col md={{ span: 5, offset: 1 }}>
+                            <FormItem {...formItemLayoutCurrencyRight}>
+                               {getFieldDecorator('scurrency', {
+                                    initialValue:selectedRow._surcharge
+                                }) (<Select
+                                    onChange={this.changeCurrency} disabled
+                                  >
+                                    {ls}
+                                </Select>)}
+                            </FormItem> 
+                        </Col>    
+                    </Row>
+                </Col>  
+            </Row>
+            <Row>
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Tỷ giá báo khách">
+                      {getFieldDecorator('fexchangerate', {
+                            initialValue:list[currency]
+                      })(<Input placeholder=" " addonAfter="VND" disabled />)}
+                    </FormItem>
+                </Col>  
+                <Col md={{ span: 12, offset: 0 }}>
+                <FormItem {...formItemLayout} label="Vận chuyển báo khách">
+                  {getFieldDecorator('fdeliveryprice', {
+                        initialValue:selectedRow._deliveryprice
+                  })(<Input placeholder=" " addonAfter="VND"  />)}
+                </FormItem>
+                </Col>  
+            </Row>
+            <Row>
+                <Col md={{ span: 12 , offset: 0}}>
+                    <FormItem {...formItemLayout} label="% dịch vụ">
+                      {getFieldDecorator('fservicerate', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Bắt buộc ',
+                          },
+                        ],
+                        initialValue:selectedRow.fservicerate
+                      })(<Input placeholder=" " addonAfter="%" />)}
+                    </FormItem>
+                </Col>  
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Giá báo khách">
+                      {getFieldDecorator('fprice', {
+                        rules: [
+                          {
+                            required: true,
+                            message: ' ',
+                          },
+                        
+                        ],
+                        initialValue:price,
+                        onChange: this.handleFormatCurrency
+                      })(<Input placeholder=" " addonAfter="VND"  />)}
+                    </FormItem>
+                </Col>  
+            </Row>
+            <Row>
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Đặt cọc">
+                      {getFieldDecorator('fdeposit', {
+                         initialValue:deposit,   
+                      })(<Input placeholder=" "  addonAfter="VND"/>)}
+                    </FormItem>
+                </Col>  
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Cần thu">
+                      {getFieldDecorator('frealpayprice', {
+                        rules: [
+                          {
+                            required: true,
+                            message: ' ',
+                          },
+                        ], 
+                        initialValue:payprice
+                      })(<Input placeholder=" " addonAfter="VND"/>)}
+                    </FormItem> 
+                </Col>  
+            </Row>
+            <Row>
+                    <Col md={{ span: 12, offset: 0 }}>
+                            <FormItem {...formItemLayout} label="Trạng thái">
+                               {getFieldDecorator('sstatus', {
+                                    initialValue:selectedRow.sstatus
+                                }) (<Select disabled
+                                    style={{width:'60%'}}
+                                  >
+                                    {lsStatus}
+                                </Select>)}
+                            </FormItem> 
+                        </Col> 
+            </Row>
+            <Row>
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Ghi chú">
+                      {getFieldDecorator('scomment', {
+                            initialValue:selectedRow.scomment,
+                      })(
+                        <TextArea
+                          style={{ minHeight: 32 }}
+                          placeholder=" "
+                          rows={4}
+                        />
+                      )}
+                    </FormItem>
+                </Col>
+            </Row>               
+        </Form>            
+        </Card> 
+        </div>
+        </Modal>  
+           
+        );
+    }
+}
 
 /* eslint react/no-multi-comp:0 */
 @connect(({ rule, loading,order }) => ({
@@ -426,6 +984,7 @@ class OrderList extends PureComponent {
     selectedRows: [],
     selectedRow:{},
     formValues: {},
+    edit:false,
     stepFormValues: {},
     data:{
         list:[],
@@ -435,7 +994,9 @@ class OrderList extends PureComponent {
     statusText:{
       pending  :'Chờ',
       paid      :'Đã mua',
-      cancel    :'Cancel'
+      cancel    :'Cancel',
+      back      :'Back cọc',
+      tranfer   :'Chuyển cọc'   
     }
   };  
    
@@ -502,7 +1063,7 @@ class OrderList extends PureComponent {
         key:'snameproduct',
         width: 150,
         render: (text, record) => (
-             <span>{text.substring(0,10)}...</span>
+             <span>{(text) ? text.substring(0,10)+" ..." : '' }</span>
         ),
     },  
     {
@@ -612,7 +1173,7 @@ class OrderList extends PureComponent {
              <span>{(text) ? text.substring(0,10)+" ..." : ''}</span>
         ),
     },
-      /*
+      /* 
     {
       title: ' ', 
       width: 50,
@@ -640,11 +1201,35 @@ class OrderList extends PureComponent {
     dispatch({
         type: 'order/fetch',
         payload:values,
-    })    
+    })   
+    dispatch({
+        type: 'order/fetchRaito',
+        payload:{},
+    })
   }
   componentWillUpdate(){
       //console.log(this.props);
+      
+      
+      
   }
+            
+  handleUpdateOrder = (e) =>{
+      const {dispatch,form}=this.props;
+      form.validateFields((err, fieldsValue) => {
+          if (err) return; 
+          /*
+          this.setState({
+              changeStatus: false,
+          })  
+          
+          dispatch({
+                type: 'order/editCeil',
+                payload:{...fieldsValue},  
+            }
+          )  */    
+        });
+  }            
   handleDelete=(row)=>{
       const { dispatch } = this.props;
       dispatch({
@@ -687,7 +1272,7 @@ class OrderList extends PureComponent {
       const { dispatch } = this.props;
       
       dispatch({
-          type:'order/editCeil',
+          type:'order/saveOrder',
           payload:{
               ...row
           }
@@ -738,14 +1323,15 @@ class OrderList extends PureComponent {
     }
   };
 
-  handleSelectRows = rows => {
+  handleSelectRows = (rows,flag) => {
     this.setState({
       selectedRows: rows,
+        
     });
   };
-  handleRowSelect = row =>{
+  handleRowSelect = (row,flag) =>{
       this.setState({
-          visible: true,
+          modalVisible: true,  
           selectedRow:row,
         });
        
@@ -789,7 +1375,7 @@ class OrderList extends PureComponent {
 
   handleUpdateModalVisible = (flag, record) => {
     this.setState({
-      updateModalVisible: !!flag,
+      modalVisible: !!flag,
       stepFormValues: record || {},
     });
   };
@@ -810,15 +1396,11 @@ class OrderList extends PureComponent {
   handleUpdate = fields => {
     const { dispatch } = this.props;
     dispatch({
-      type: 'rule/update',
+      type: 'order/saveOrder',
       payload: {
-        name: fields.name,
-        desc: fields.desc,
-        key: fields.key,
+        ...fields
       },
     });
-
-    message.success('配置成功');
     this.handleUpdateModalVisible();
   };
   handleOk = (e) => {
@@ -841,9 +1423,6 @@ class OrderList extends PureComponent {
     this.setState({
         visibleFullScreenTable: false,
     });
-  }
-  onPanelChange= ()=>{
-      
   }
   onChangeRangPicker =(e)=>{  
       const { formValues } = this.state;
@@ -904,16 +1483,7 @@ class OrderList extends PureComponent {
       form: { getFieldDecorator },
     } = this.props;
     return (
-        <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
-          <Col md={9} sm={24}>
-                <Calendar fullscreen={false} onPanelChange={this.onPanelChange} />
-          </Col>
-          <Col md={9} sm={24}>
-                <Calendar fullscreen={false} onPanelChange={this.onPanelChange} />
-          </Col>
-          <Col md={6} sm={24}>
-                
-          </Col>
+        <Row gutter={{ md: 8, lg: 24, xl: 48 }}> 
         </Row>
     );
   }
@@ -928,6 +1498,9 @@ class OrderList extends PureComponent {
         cell: EditableCell,
       },
     };
+    const {
+      form: { getFieldDecorator, getFieldValue },
+    } = this.props;  
     const columns = this.columns.map((col) => {
       if (!col.editable) {
         return col;
@@ -944,17 +1517,16 @@ class OrderList extends PureComponent {
         }),
       };
     });
+    
+      
     const {
       order: { data },
       loading,
+      order
     } = this.props;
-    const { selectedRows, modalVisible, updateModalVisible, stepFormValues,selectedRow,statusText } = this.state;
-    const menu = (
-      <Menu onClick={this.handleMenuClick} selectedKeys={[]}>
-        <Menu.Item key="remove">删除</Menu.Item>
-        <Menu.Item key="approval">批量审批</Menu.Item>
-      </Menu>
-    );
+    const { selectedRows, modalVisible,selectedRow,statusText,edit } = this.state;
+
+      
     const parentMethods = {
       handleAdd: this.handleAdd,
       handleModalVisible: this.handleModalVisible,
@@ -963,7 +1535,11 @@ class OrderList extends PureComponent {
       handleUpdateModalVisible: this.handleUpdateModalVisible,
       handleUpdate: this.handleUpdate,
     };
-    
+    const viewMethods={
+        handleModalVisible: this.handleModalVisible,
+    }
+
+      
     return (
       <PageHeaderWrapper title="Danh sách đơn đặt hàng">
         <Card>
@@ -1006,144 +1582,12 @@ class OrderList extends PureComponent {
               onHeaderRow={this.handleHeaderRow}
               onChangeRangPicker={this.onChangeRangPicker}
             />
-        </Modal>      
-        <Modal 
-          title={selectedRow.sname}
-          visible={this.state.visible}
-          onOk={this.handleOk}
-          onCancel={this.handleCancel}
-          width="80%"
-          style={{ top: 20 }}
-          zIndex="1001"    
-        >
-        <div className="gutter-example">
-          <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Mã bill</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.sbill_code} showIcon={false} banner /> </Col>
-          </Row>
-          <Row>   
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Tên</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.sname} showIcon={false} banner /> </Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Số điện thoại</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.sphone} showIcon={false} banner /> </Col>
-          </Row>
-          <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Địa chỉ</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.saddress} showIcon={false} banner /></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Email</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.semail} showIcon={false} banner /></Col>
-          </Row>    
-          <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>LinkSP</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={<a href={selectedRow.slinkproduct} target="_blank">Link SP</a>} showIcon={false} banner /></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Mã SP</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.scode} showIcon={false} banner/></Col>  
-          </Row>
-          <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Tên SP</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.snameproduct} showIcon={false} banner/></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Màu</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.scolor} showIcon={false} banner/></Col>
-          </Row>    
-           <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Size</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.ssize} showIcon={false} banner/></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Số lượng</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.iquality} showIcon={false} banner/></Col>
-          </Row> 
-           <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Giá Web</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow._webprice} showIcon={false} banner/></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Sale</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow._sale} showIcon={false} banner/></Col>
-          </Row>  
-            <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Ship Web</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow._shipweb} showIcon={false} banner/></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Phụ thu</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow._surcharge} showIcon={false} banner/></Col>
-          </Row>
-          <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Tỷ giá báo khách</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow._exchangerate} showIcon={false} banner/></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Vận chuyển báo khách</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow._deliveryprice} showIcon={false} banner/></Col>
-          </Row>
-         <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>% dịch vu</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow._servicerate} showIcon={false} banner/></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Giá báo khách</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow._price} showIcon={false} banner/></Col>
-          </Row> 
-            <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Đặt cọc</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow._deposit} showIcon={false} banner/></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
-                <span className={styles.label}>Cần thu</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={`${selectedRow._realpayprice}`} showIcon={false} banner/>
-            </Col>
-          </Row>
-            <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><span className={styles.label}>Trạng thái</span></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}><Alert message={statusText[selectedRow.sstatus]} showIcon={false} banner/></Col>
-
-          </Row>
-            <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 12, offset: 0 }}><b>Ghi chú</b></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 12, offset: 0 }}>{selectedRow.scomment}</Col>
-          </Row>
-          </div>
-        </Modal>
-          
-        <CreateForm {...parentMethods} modalVisible={modalVisible} />
-        {stepFormValues && Object.keys(stepFormValues).length ? (
-          <UpdateForm
-            {...updateMethods}
-            updateModalVisible={updateModalVisible}
-            values={stepFormValues}
-          />
-        ) : null}
+        </Modal>   
+        { (selectedRow.sstatus=='pending') ? (<ModalEditForm selectedRow={selectedRow} modalVisible={modalVisible} order={order.currency} {...updateMethods} />) : (<ModalViewOrder ModalEditForm selectedRow={selectedRow} modalVisible={modalVisible} order={order.currency} {...viewMethods}/>)
+      
+        }
+        
+        
       </PageHeaderWrapper>
     );
   }

@@ -140,9 +140,9 @@ export async function getOrderList(e){
         headers:{'X-Access-Token':getAuthority()[0].token}
     })
 }
-export async function editCeil(params){
+export async function updateOrder(params){
     
-    return request(`/api/order/edit_ceil`,{
+    return request(`/api/order/update_order`,{
         method:'PUT',
         body: params,
         headers:{'X-Access-Token':getAuthority()[0].token}
