@@ -115,7 +115,7 @@ export async function register(params) {
     method: 'POST',
     body: params,
   });
-}
+} 
 
 export async function queryNotices() {
   return request('/api/notices');
@@ -134,7 +134,7 @@ export async function addOrder(params){
 }
 export async function getOrderList(e){
     console.log(e);
-    return request(`/api/order/list`,{
+    return request(`/api/order/list?ref=${new Date().getTime()}`,{
         method:'POST',
         body:e,
         headers:{'X-Access-Token':getAuthority()[0].token}
@@ -142,7 +142,7 @@ export async function getOrderList(e){
 }
 export async function updateOrder(params){
     
-    return request(`/api/order/update_order`,{
+    return request(`/api/order/update_order?ref=${new Date().getTime()}`,{
         method:'PUT',
         body: params,
         headers:{'X-Access-Token':getAuthority()[0].token}

@@ -276,8 +276,7 @@ class OrderForm extends PureComponent {
         sm: { span: 10, offset: 7 },
       },
     };
-    
-      
+                                     
     return (
       <PageHeaderWrapper
         title="Đặt hàng"

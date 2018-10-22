@@ -376,10 +376,6 @@ function getOrder(req,res){
             if(req.body.sstatus){
                 query['sstatus']=req.body.sstatus;
             }
-            if(req.body.status){
-                query['status']='confirm';
-            }
-            
             query['$limit']=limit 
             callback(null,null);    
        },
@@ -402,6 +398,29 @@ function getOrder(req,res){
                    
        },
         function(callback){
+            if(req.body.status){
+                
+                console.log(req.body);
+                if(req.body.status=='paid'){
+                    query['status']='confirm';
+                }else{
+                    models.instance.orders_by_status.find({status: {'$in': ['comfirm','processing']}},function(err,items){
+                        if(items){
+                            let billOrderStatus=[];
+                            items.forEach(function(e){
+                                billOrderStatus.push(e.sbill_code)
+                            });
+                            query['sbill_code']={'$in' : billOrderStatus}
+                        }
+                        callback(err,null); 
+                    } )
+                    }
+            }else{
+                 callback(null,null); 
+            }
+            
+       },
+        function(callback){
            const listAddmin=[
                 'admin','superadmin'
             ]
@@ -410,7 +429,9 @@ function getOrder(req,res){
             }
             callback(null,null)  
         },
+        
        function(callback){
+           
             models.instance.orders.find(query,{raw: true,allow_filtering: true},function(err,items){
                 _list=items;
                 //let newList=[];
@@ -464,6 +485,166 @@ function getOrder(req,res){
     
 }
 
+function getOrderAdmin(req,res){
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+        return res.send({status: 'expired'}); 
+    }
+    const listStatus={
+        paid: "Đã đặt hàng",
+        processing: "Đang xử lý",
+        confirm : "Đã xác nhận",
+        tranfer : "Đang chuyển hàng",
+        completed: "Đã hoàn thành",
+    }
+    const listSstatus={
+      pending   :'Chờ',
+      paid      :'Đã mua',
+      cancel    :'Cancel',
+      back      :'Back cọc',
+      tranfer   :'Chuyển cọc'   
+    }
+    let filter_params={};
+    let currentPage=1;
+    let pageSize=10;
+    let total=1;
+    let limit=10000;
+    var query={};
+    var list=[],_list=[];
+    var list_billCode=[];
+    const locale={
+      'USD':'en-US',
+      'GBP':'en-GB',
+      'VND':'vi-VN',
+      'JPY':'ja-JP',
+      'EUR':'de-DE',
+    }
+    var result=[];
+    var billOrderStatus=[];
+    async.series([
+       function(callback){
+            currentPage=(req.body.currentPage) ? req.body.currentPage : 1;
+            pageSize=(req.body.pageSize) ? req.body.pageSize : 10;
+            
+            let _total=(currentPage*pageSize+pageSize) ;
+            limit = (_total > 10000) ? (limit+_total) : 10000;
+           
+            if(req.body.name){
+                query['sname']={ '$like': '%'+req.body.name+'%' };
+            } 
+            if(req.body.phone){
+                query['sphone']={'$like': '%'+req.body.phone+'%'};
+            }
+            if(req.body.sstatus){
+                query['sstatus']=req.body.sstatus;
+            }
+            query['$limit']=limit 
+            callback(null,null);    
+       },
+       function(callback){
+           let from=moment().format("YYYY-MM-DD");
+           let to=moment().format("YYYY-MM-DD");
+           if(req.body.from){
+               from=req.body.from;
+           }
+           if(req.body.to){
+               to=req.body.to;
+           }
+            var start = new Date(from); // Your timezone!
+            var estart = start.getTime();
+            var end = new Date(to); // Your timezone!
+            var eend = (end.getTime()/1000.0 + 86400)*1000;
+            query['semployee']=legit.username;
+            query['ddate']={ '$gt':estart, '$lte':eend };
+            callback(null,null);
+                   
+       },
+       function(callback){
+           const listAddmin=[
+                'admin','superadmin'
+            ]
+            if(listAddmin.indexOf(legit.rule) > -1){
+                delete query['semployee'];
+            }
+            callback(null,null)  
+        },
+       function(callback){
+            if(req.body.status){
+                
+                models.instance.orders_by_status.find({status: {'$in': ['comfirm','processing']}},function(err,item){
+                    if(items){
+                        items.forEach(function(e){
+                            billOrderStatus.push(e.sbill_code)
+                        });
+                        query['sbill_code']={'$in' : billOrderStatus}
+                    }
+                    callback(err,null); 
+                } )
+            }else{
+                 callback(null,null); 
+            }
+            
+       },
+       function(callback){
+            console.log(query)
+            models.instance.orders.find(query,{raw: true,allow_filtering: true},function(err,items){
+                _list=items;
+                //let newList=[];
+                try{
+                    items.map((e,i)=>{
+                        let n=JSON.stringify(e);
+                        let l=JSON.parse(n);
+                        l['_deposit']=currencyFormatter.format(e.fdeposit, { locale: 'en-US',code: "VND"});
+                        l['_price']=currencyFormatter.format(e.fprice, { locale: 'en-US',code: "VND"  });
+                        l['_realpayprice']=currencyFormatter.format(e.frealpayprice, { locale: 'en-US',code: "VND" });
+                        l['_deliveryprice']=currencyFormatter.format(e.fdeliveryprice, { locale: 'en-US',code: "VND" });
+                        l['_exchangerate']=currencyFormatter.format(e.fexchangerate, { locale: 'en-US',code: "VND" });
+                        l['_sale']=(e.fsale) ? e.fsale+"%" : "0%"
+                        l['_servicerate']=(e.fservicerate) ? e.fservicerate+"%" : "0%"
+                        l['_webprice']=currencyFormatter.format(e.fwebprice, { locale:'en-US',code: e.scurrency });
+                        l['_shipweb']=currencyFormatter.format(e.fshipweb, { locale:'en-US',code:e.scurrency });
+                        l['_surcharge']=currencyFormatter.format(e.fsurcharge, { locale:'en-US',code:e.scurrency  });
+                        l['ssize']=(e.ssize) ? e.ssize : ' ';
+                        l['_sstatus']=listSstatus[e.sstatus];
+                        l['_status']=listStatus[e.status] || 'Đang xử lý';
+                        list.push(l)
+                    })
+                }catch(e){
+                    
+                }
+                callback(err,null);
+                
+            })
+            
+       },
+      
+       function(callback){
+            
+            total=list.length;
+            let start=currentPage*pageSize-pageSize;
+            let end=currentPage*pageSize-1;
+            
+            result = list.slice(start, end)
+            list.sort(function(a,b){
+                return a.ddate > b.ddate;
+            })
+            callback(null,null)
+        }
+    ],function(err,result){
+        if(err) return res.send({status:'error'});
+        res.send({
+            list:list,
+            pagination:{total: total, pageSize: pageSize, current: currentPage}
+        })
+    });
+}
 function addOrder(req,res){
     const { body } = req;
     
@@ -547,6 +728,19 @@ function addOrder(req,res){
                 return save;
            }    
            queries.push(order_by_member());
+            const orders_by_status=()=>{
+                   let object      ={
+                       sbill_code: PARAM_IS_VALID['sbill_code'],
+                       semployee: PARAM_IS_VALID['semployee'] ,
+                       ddate: PARAM_IS_VALID['ddate'] ,
+                       sstatus:PARAM_IS_VALID['sstatus'],
+                       status: PARAM_IS_VALID['status']
+                   };
+                    let instance    =new models.instance.orders_by_status(object);
+                    let save        =instance.save({return_query: true});
+                    return save;
+               }
+            queries.push(orders_by_status())
            callback(null,null);
         },
     ],function(err,result){
@@ -596,9 +790,10 @@ function updateOrder(req,res){
             
             callback(null,null);
         },
-        function(callback){
+        function(callback){ 
             try{
-                console.log(PARAM_IS_VALID);
+                delete PARAM_IS_VALID['name'];
+                delete PARAM_IS_VALID['phone'];
                 const orders=()=>{
                 let object      =PARAM_IS_VALID;
                 let instance    =new models.instance.orders(object);
@@ -617,22 +812,36 @@ function updateOrder(req,res){
                     return save;
                 } 
                queries.push(orders_update());
-                
+               const orders_by_status=()=>{
+                    let object      ={
+                        sbill_code: PARAM_IS_VALID.sbill_code,
+                        sstatus: PARAM_IS_VALID.sstatus,
+                        status: PARAM_IS_VALID.status
+                    };
+                    object['semployee']  =legit.username;
+                    object['ddate']  =new Date();
+                    let instance    =new models.instance.orders_by_status(object);
+                    let save        =instance.save({return_query: true});
+                    return save;
+               }
+               queries.push(orders_by_status())
             }catch(e){
-                return res.send({status: 'error'});
+                return res.send({status: 'error_01'});
             }
             
            callback(null,null);
         },
     ],function(err,result){
-           if(err) return res.send({status: 'error'});
+           if(err) return res.send({status: 'error_02'});
          try{
              models.doBatch(queries,function(err){
-                if(err) return res.send({status: 'error'});
+                 
+                console.log(err);
+                if(err) return res.send({status: 'error_03'});
                 return res.send({ status: 'ok'});
             });
          }catch(e){
-             return res.send({status: 'error'});
+             return res.send({status: 'error_04'});
          }
             
     });
@@ -846,6 +1055,7 @@ export default {
   'PUT /api/order/update_order':updateOrder,    
   'POST /api/order/add':addOrder,
   'POST /api/order/list':getOrder,
+  'POST /api/order/orderadmin':getOrderAdmin,
   'DELETE /api/order/del_row':delOrder,
   'POST /api/user/check_account':checkAccount , 
   'GET /api/generate/bill_code':generateOrderBillCode,       

@@ -65,6 +65,7 @@ module.exports={
             options: {}
         }
     ],
+    
     //CREATE CUSTOM INDEX  orders_index ON orders (sname) USING 'org.apache.cassandra.index.sasi.SASIIndex';
     
 } 

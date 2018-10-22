@@ -645,7 +645,7 @@ class OrderStatus extends PureComponent {
     const values={
         from,
         to,
-        status
+        status  
     }   
     dispatch({
         type: 'order/fetch',
@@ -977,6 +977,13 @@ class OrderStatus extends PureComponent {
                 <FormItem>
                   {getFieldDecorator('ddate',{
                       initialValue:selectedRow.ddate,
+                  })(
+                    <Input type="hidden" />
+                  )}
+                </FormItem>
+                <FormItem>
+                  {getFieldDecorator('status',{
+                      initialValue:selectedRow.status,
                   })(
                     <Input type="hidden" />
                   )}

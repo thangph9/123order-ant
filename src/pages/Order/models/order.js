@@ -65,6 +65,7 @@ export default {
             },
           });
     },
+        
     *deleteRow({ payload },{call ,put}){
           const response = yield call(deleteRow, payload);
           console.log(response);
@@ -92,7 +93,7 @@ export default {
             },
           });
     },
-   *saveCurrencyRaito({payload},{call,put}){
+    *saveCurrencyRaito({payload},{call,put}){
        const response = yield call(saveCurrencyRaito, payload);
        
        if(response.status=='ok'){
@@ -139,6 +140,7 @@ export default {
               ...row,
             });
         }
+                           
         if(payload.status ==='ok'){
             return {
                 data: {list: newData,pagination},
