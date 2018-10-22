@@ -395,12 +395,9 @@ function getOrder(req,res){
             query['semployee']=legit.username;
             query['ddate']={ '$gt':estart, '$lte':eend };
             callback(null,null);
-                   
        },
         function(callback){
             if(req.body.status){
-                
-                console.log(req.body);
                 if(req.body.status=='paid'){
                     query['status']='confirm';
                 }else{
@@ -989,10 +986,9 @@ function generateOrderBillCode(req,res){
     }catch(e){
        return  res.send({status: 'expired'}); 
     }
-    
     async.series([
         function(callback){
-            models.instance.order_by_bill_code.find({types: 'KL'},{raw:true, allow_filtering: true},function(err,r){
+            models.instance.order_by_bill_code.find({types: req.query.type},{raw:true, allow_filtering: true},function(err,r){
                 bill_code=r;
                 callback(err,null);
             })
@@ -1012,7 +1008,7 @@ function generateOrderBillCode(req,res){
             models.instance.order_by_bill_code.update({id:idBill,types:'KL'}, {bill_code: code}, function(err){
                     callback(err,null);
             });
-            billCode='KL'+_code;
+            billCode=_code;
         }
         
     ],function(err,result){

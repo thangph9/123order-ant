@@ -1198,6 +1198,10 @@ class OrderList extends PureComponent {
         from,
         to
     } 
+    this.setState({
+        from,
+        to
+    })
     dispatch({
         type: 'order/fetch',
         payload:values,
@@ -1245,20 +1249,23 @@ class OrderList extends PureComponent {
   }
   handleStandardTableChange = (pagination, filtersArg, sorter) => {
     const { dispatch } = this.props;
-    const { formValues } = this.state;
+    const { formValues,from,to } = this.state;
     
     const filters = Object.keys(filtersArg).reduce((obj, key) => {
       const newObj = { ...obj };
       newObj[key] = getValue(filtersArg[key]);
       return newObj;
     }, {});
- 
+      
     const params = {
       currentPage: pagination.current,
       pageSize: pagination.pageSize,
       ...formValues,
       ...filters,
+        from,
+        to
     };
+    console.log(formValues);
     if (sorter.field) {
       params.sorter = sorter.field+"_"+sorter.order;
     }

@@ -892,7 +892,7 @@ class OrderConfirm extends PureComponent {
                 <span className={styles.label}>Vận chuyển báo khách</span></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
                 <Alert message={selectedRow._deliveryprice} showIcon={false} banner/></Col>
-          </Row>
+          </Row>  
          <Row> 
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
                 <span className={styles.label}>% dịch vu</span></Col>

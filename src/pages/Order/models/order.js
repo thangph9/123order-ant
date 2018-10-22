@@ -41,7 +41,14 @@ export default {
     *fetch({ payload }, { call, put }) {
       const response = yield call(getOrderList, payload);
       let newlist =[];
-      let list = Array.isArray(response.list) ? response : []  ;
+             
+      let list = [];
+        try{
+            list=Array.isArray(response.list) ? response : []  ;
+        }catch(e){
+            list=[];
+        }
+      
       yield put({
         type: 'orderList',
         payload: list,

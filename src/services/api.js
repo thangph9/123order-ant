@@ -155,7 +155,7 @@ export async function deleteRow(params){
     });
 }
 export async function generateBillCode(){
-    return request(`/api/generate/bill_code`,{
+    return request(`/api/generate/bill_code?ref=${new Date().getTime()}&type=KL`,{
         method:'GET',
         headers:{'X-Access-Token':getAuthority()[0].token}
     });
