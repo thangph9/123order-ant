@@ -1,6 +1,7 @@
 module.exports={
     fields:{
         sbill_code  : 'text',
+        billcode    : 'int',
         ddate       : 'timestamp',
         sname       : 'text',
         sphone      : 'varchar',

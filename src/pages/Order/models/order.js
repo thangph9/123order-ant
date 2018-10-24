@@ -48,7 +48,6 @@ export default {
         }catch(e){
             list=[];
         }
-      
       yield put({
         type: 'orderList',
         payload: list,

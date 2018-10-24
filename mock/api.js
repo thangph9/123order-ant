@@ -334,6 +334,7 @@ function getOrder(req,res){
         processing: "Đang xử lý",
         confirm : "Đã xác nhận",
         tranfer : "Đang chuyển hàng",
+        arrived : "Đã về",
         completed: "Đã hoàn thành",
     }
     const listSstatus={
@@ -368,6 +369,10 @@ function getOrder(req,res){
     let sphone="";
     let sname="";
     let emp="";
+    let snameproduct="";
+    let ssize="";
+    let scolor="";
+    let scode="";
     async.series([
        function(callback){
             currentPage=(req.body.currentPage) ? req.body.currentPage : 2;
@@ -386,6 +391,20 @@ function getOrder(req,res){
             }
             if(req.body.sstatus){
                 sstatus="sstatus:"+req.body.sstatus
+                //query['sstatus']=req.body.sstatus;
+            }
+            if(req.body.snameproduct){
+                snameproduct="snameproduct: *"+req.body.snameproduct+"*"
+                //query['sstatus']=req.body.sstatus;
+            }
+            if(req.body.ssize){
+                ssize="ssize:*"+req.body.ssize+"*"
+                //query['sstatus']=req.body.sstatus;
+            }if(req.body.scolor){
+                scolor="scolor:*"+req.body.scolor+"*"
+                //query['sstatus']=req.body.sstatus;
+            }if(req.body.scode){
+                scolor="scode:*"+req.body.scode+"*"
                 //query['sstatus']=req.body.sstatus;
             }
             query['$limit']=limit 
@@ -415,23 +434,38 @@ function getOrder(req,res){
             ddate= "ddate:["+_from+"T00:00:00Z TO "+_to+"T00:00:00Z]";
             callback(null,null);
        },
-        function(callback){
+       function(callback){
             
             if(req.body.status){
-                if(req.body.status=='paid'){
-                    query['status']='confirm';
-                    status="status:confirm";
-                    callback(null,null);
-                }else{
-                   status='{!q.op=OR df=status}confirm processing'
-                   callback(null,null);
+                switch(req.body.status){
+                    case 'paid':
+                        status="status:confirm";
+                        callback(null,null);
+                        break;
+                    case 'delivery':
+                        status="sstatus:paid";
+                        callback(null,null);
+                        break;
+                    case 'confirm':
+                        status='{!q.op=OR df=status}confirm processing'
+                        callback(null,null);
+                        break
+                    case 'arrived':
+                        status="status:arrived";
+                        callback(null,null);
+                        break
+                        
+                    default:
+                        status='{!q.op=OR df=status}confirm processing'
+                        callback(null,null);
+                        break
                 }
             }else{
                  callback(null,null); 
             }
             
        },
-        function(callback){
+       function(callback){
            const listAddmin=[
                 'admin','superadmin','view_order_confirm','view_order_status'
             ]
@@ -463,6 +497,21 @@ function getOrder(req,res){
                sstatus=(q.length >0) ? " AND "+sstatus : sstatus;
                q=q+sstatus;
            }
+           if(snameproduct.length > 0){
+               snameproduct=(q.length >0) ? " AND "+snameproduct : snameproduct;
+               q=q+snameproduct;
+           }
+           if(scolor.length > 0){
+               scolor=(q.length >0) ? " AND "+scolor : scolor;
+               q=q+scolor;
+           }
+           if(ssize.length > 0){
+               ssize=(q.length >0) ? " AND "+ssize : ssize;
+               q=q+ssize;
+           }if(scode.length > 0){
+               ssize=(q.length >0) ? " AND "+scode : scode;
+               q=q+scode;
+           }
            if(ddate.length > 0){
                ddate=(q.length >0) ? " AND "+ddate : ddate;
                q=q+ddate;
@@ -474,8 +523,7 @@ function getOrder(req,res){
            }
            let paging=',"start":'+istart+',"rows":'+irows;
            
-           
-           query={
+            query={
                 $solr_query:'{"q":"'+q+'","sort":"'+sort+'","paging":"driver"}',
             }
             console.log(query);
@@ -659,7 +707,7 @@ function updateOrder(req,res){
         function(callback){
             PARAM_IS_VALID=req.body;
             let listRuleAccount=[
-                'update_sstatus','update_status'
+                'update_sstatus','update_status','update_delevery'
             ]
             if(req.body.sstatus){
                     if(listRuleAccount.indexOf('update_sstatus')  > -1){
@@ -723,8 +771,6 @@ function updateOrder(req,res){
            if(err) return res.send({status: 'error_02'});
          try{
              models.doBatch(queries,function(err){
-                 
-                console.log(err);
                 if(err) return res.send({status: 'error_03'});
                 return res.send({ status: 'ok'});
             });

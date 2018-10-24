@@ -120,6 +120,16 @@ export default [
             name: 'orderconfirm',
             component: './Order/OrderConfirm',
           },
+         {
+            path: '/order/order-delivery',
+            name: 'confirmdelivery',
+            component: './Order/ConfirmDelivery',
+          },
+            {
+            path: '/order/order-arrived',
+            name: 'orderarrived',
+            component: './Order/OrderArrived',
+          },
         ],
       },
       // list

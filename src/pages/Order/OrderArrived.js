@@ -28,7 +28,7 @@ import {
 import StandardTable from '@/components/StandardTable';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 var currencyFormatter = require('currency-formatter');
-import styles from './OrderList.less';
+import styles from './style.less';
 const RangePicker = DatePicker.RangePicker;
 const FormItem = Form.Item;
 const { Step } = Steps;
@@ -48,7 +48,7 @@ const statusMap = ['default', 'processing', 'success', 'error'];
   order,
 }))
 @Form.create()
-class OrderConfirm extends PureComponent {
+class OrderArrived extends PureComponent {
   state = {
     modalVisible: false,
     updateModalVisible: false,
@@ -144,6 +144,7 @@ class OrderConfirm extends PureComponent {
         dataIndex: 'ssize',
         key:'ssize',
         width: 150,
+        
     },
     
     
@@ -277,12 +278,12 @@ class OrderConfirm extends PureComponent {
         <Option value="back" key="4">Back cọc</Option>  ,
         <Option value="tranfer" key="5">Chuyển cọc</Option> , 
     ]
-  listStatusObj={
+   listStatusObj={
         paid: "Đã đặt hàng",
         processing: "Đang xử lý",
         confirm : "Đã xác nhận",
         tranfer : "Đang chuyển hàng",
-        delivery: "Đã về",
+        arrived : "Đã về",
         completed: "Đã hoàn thành",
     }
     listSstatusObj={
@@ -297,7 +298,7 @@ class OrderConfirm extends PureComponent {
     const { dispatch } = this.props;  
     let from=moment().format('YYYY/MM/DD');
     let to=moment().format('YYYY/MM/DD');
-    let status='confirm';
+    let status='arrived';
     const values={
         from,
         to,
@@ -353,7 +354,7 @@ class OrderConfirm extends PureComponent {
       pageSize: pagination.pageSize,
       ...formValues,
       ...filters,
-      status: "confirm"
+      status: "arrived"
     };
     if (sorter.field) {
       params.sorter = sorter.field+"_"+sorter.order;
@@ -381,7 +382,7 @@ class OrderConfirm extends PureComponent {
     form.resetFields();
     this.setState({
       formValues: {},
-    });
+    }); 
     dispatch({
       type: 'rule/fetch',
       payload: {},
@@ -453,7 +454,7 @@ class OrderConfirm extends PureComponent {
     e.preventDefault();
     const { from,to } =this.state;  
     const { dispatch, form } = this.props;
-    const status="confirm";
+    const status="arrived";
     form.validateFields((err, fieldsValue) => {
         console.log(fieldsValue);
       if (err) return; 
@@ -559,12 +560,12 @@ class OrderConfirm extends PureComponent {
       const { dispatch } = this.props;
       
       
-      if(e.status=='processing'){
+      if(e.status=='arrived'){
           e['status']='confirm';
       }else{
-          e['status']='processing';
+          e['status']='arrived';
       }
-      e['_status']=listStatusObj[e['status']]
+      e['_status']=this.listStatusObj[e['status']];
       dispatch({
                 type: 'order/saveOrder',
                 payload:{
@@ -590,7 +591,7 @@ class OrderConfirm extends PureComponent {
               ...formValues,
               from,
               to,
-              status:"confirm"
+              status:"arrived"
           }
           dispatch({
             type: 'order/fetch',
@@ -753,13 +754,15 @@ class OrderConfirm extends PureComponent {
     const { selectedRows, modalVisible, updateModalVisible, stepFormValues,selectedRow,statusText,changeStatus } = this.state; 
     
     let confirm=[];
-    if(selectedRow.sstatus=='pending'){
+    if(selectedRow.sstatus=='paid'){
         
-        if(selectedRow.status=='processing') {
-        confirm=[<Button type="primary" key="processing" onClick={()=>this.handleConfirm(selectedRow)}>Xác nhận  đặt cọc</Button>]
+        if(selectedRow.sstatus=='paid' && selectedRow.status=='confirm' ) {
+        confirm=[<Button type="primary" key="paid" onClick={()=>this.handleConfirm(selectedRow)}>Xác nhận hàng về</Button>]
+        }else if(selectedRow.status=='arrived'){
+            confirm=[<Button type="button" key="cancel" onClick={()=>this.handleConfirm(selectedRow)}>Huỷ xác nhận</Button>]
         }else{
-            confirm=[<Button type="button" key="confirm" onClick={()=>this.handleConfirm(selectedRow)}>Huỷ xác nhận</Button>]
-        }
+            confirm='';
+        }            
     }else{
         confirm='';
     }
@@ -868,13 +871,13 @@ class OrderConfirm extends PureComponent {
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
                 <span className={styles.label}>Màu</span></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.scolor} showIcon={false} banner/></Col>
+                <Alert message={(selectedRow.scolor && selectedRow.scolor.length > 2)? selectedRow.scolor : " 0"} showIcon={false} banner/></Col>
           </Row>    
            <Row>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
                 <span className={styles.label}>Size</span></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                <Alert message={selectedRow.ssize} showIcon={false} banner/></Col>
+                <Alert message={(selectedRow.ssize ) ? selectedRow.ssize+" " : "0" } showIcon={false} banner/></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
                 <span className={styles.label}>Số lượng</span></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
@@ -934,9 +937,9 @@ class OrderConfirm extends PureComponent {
             <Row>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><span className={styles.label}>Trạng thái</span></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}><Alert message={`${selectedRow._sstatus}`} showIcon={false} banner/></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}> </Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><span className={styles.label}>Tình trạng</span></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
-                    {confirm}
+                <Alert message={`${selectedRow._status}`} showIcon={false} banner/>
             </Col>
             
           </Row>
@@ -951,4 +954,4 @@ class OrderConfirm extends PureComponent {
   }
 }
 
-export default OrderConfirm;
+export default OrderArrived;
