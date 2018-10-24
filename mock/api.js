@@ -359,22 +359,34 @@ function getOrder(req,res){
       'EUR':'de-DE',
     }
     var result=[];
+    let q="";
+    let fq="";
+    let sort="ddate desc";
+    let status="";
+    let sstatus="";
+    let ddate="";
+    let sphone="";
+    let sname="";
+    let emp="";
     async.series([
        function(callback){
-            currentPage=(req.body.currentPage) ? req.body.currentPage : 1;
+            currentPage=(req.body.currentPage) ? req.body.currentPage : 2;
             pageSize=(req.body.pageSize) ? req.body.pageSize : 10;
             
             let _total=(currentPage*pageSize+pageSize) ;
             limit = (_total > 10000) ? (limit+_total) : 10000;
            
             if(req.body.name){
-                query['sname']={ '$like': '%'+req.body.name+'%' };
+                sname="sname:*"+req.body.name+"*";
+                //query['sname']={ '$like': '%'+req.body.name+'%' };
             } 
             if(req.body.phone){
-                query['sphone']={'$like': '%'+req.body.phone+'%'};
+                sphone="sphone:*"+req.body.phone+"*";
+                //query['sphone']={'$like': '%'+req.body.phone+'%'};
             }
             if(req.body.sstatus){
-                query['sstatus']=req.body.sstatus;
+                sstatus="sstatus:"+req.body.sstatus
+                //query['sstatus']=req.body.sstatus;
             }
             query['$limit']=limit 
             callback(null,null);    
@@ -382,36 +394,38 @@ function getOrder(req,res){
        function(callback){
            let from=moment().format("YYYY-MM-DD");
            let to=moment().format("YYYY-MM-DD");
+           let _from="";
+           let _to="";
            if(req.body.from){
                from=req.body.from;
+               
            }
            if(req.body.to){
                to=req.body.to;
+               
            }
             var start = new Date(from); // Your timezone!
             var estart = start.getTime();
             var end = new Date(to); // Your timezone!
             var eend = (end.getTime()/1000.0 + 86400)*1000;
-            query['semployee']=legit.username;
-            query['ddate']={ '$gt':estart, '$lte':eend };
+            _from=moment(estart).format("YYYY-MM-DD");
+            _to=moment(eend).format("YYYY-MM-DD");
+           
+            emp="semployee:"+legit.username;
+            ddate= "ddate:["+_from+"T00:00:00Z TO "+_to+"T00:00:00Z]";
             callback(null,null);
        },
         function(callback){
+            
             if(req.body.status){
                 if(req.body.status=='paid'){
                     query['status']='confirm';
+                    status="status:confirm";
+                    callback(null,null);
                 }else{
-                    models.instance.orders_by_status.find({status: {'$in': ['comfirm','processing']}},function(err,items){
-                        if(items){
-                            let billOrderStatus=[];
-                            items.forEach(function(e){
-                                billOrderStatus.push(e.sbill_code)
-                            });
-                            query['sbill_code']={'$in' : billOrderStatus}
-                        }
-                        callback(err,null); 
-                    } )
-                    }
+                   status='{!q.op=OR df=status}confirm processing'
+                   callback(null,null);
+                }
             }else{
                  callback(null,null); 
             }
@@ -419,21 +433,55 @@ function getOrder(req,res){
        },
         function(callback){
            const listAddmin=[
-                'admin','superadmin'
+                'admin','superadmin','view_order_confirm','view_order_status'
             ]
             if(listAddmin.indexOf(legit.rule) > -1){
-                delete query['semployee'];
+                emp="";
             }
             callback(null,null)  
         },
         
        function(callback){
+            if(status.length > 0  ){
+                status=status;
+                q=status;
+            }
+            if(emp.length > 0){
+                
+                emp=(q.length >0) ? " AND "+emp : emp;
+                q=q+emp;
+            }
+            if(sname.length > 0){ 
+                sname=(q.length >0) ? " AND "+sname : sname;
+                q=q+sname;
+            }
+           if(sphone.length > 0){
+               sphone=(q.length >0) ? " AND "+sphone : sphone;
+               q=q+sphone;
+           }
+           if(sstatus.length > 0){
+               sstatus=(q.length >0) ? " AND "+sstatus : sstatus;
+               q=q+sstatus;
+           }
+           if(ddate.length > 0){
+               ddate=(q.length >0) ? " AND "+ddate : ddate;
+               q=q+ddate;
+           }
+           let istart=(currentPage-1)*pageSize;
+           let irows=pageSize;
+           if(currentPage==1){
+               istart=0
+           }
+           let paging=',"start":'+istart+',"rows":'+irows;
            
-            models.instance.orders.find(query,{raw: true,allow_filtering: true},function(err,items){
-                _list=items;
-                //let newList=[];
+           
+           query={
+                $solr_query:'{"q":"'+q+'","sort":"'+sort+'","paging":"driver"}',
+            }
+            console.log(query);
+            models.instance.orders.find(query,function(err,items){
                 try{
-                    items.map((e,i)=>{
+                    items.map((e)=>{
                         let n=JSON.stringify(e);
                         let l=JSON.parse(n);
                         l['_deposit']=currencyFormatter.format(e.fdeposit, { locale: 'en-US',code: "VND"});
@@ -454,22 +502,20 @@ function getOrder(req,res){
                 }catch(e){
                     
                 }
-                callback(err,null);
-                
-            })
+             callback(err,null);
+            });
             
        },
       
        function(callback){
-            
             total=list.length;
             let start=currentPage*pageSize-pageSize;
             let end=currentPage*pageSize-1;
-            
+            /*
             result = list.slice(start, end)
             list.sort(function(a,b){
                 return a.ddate > b.ddate;
-            })
+            })*/
             callback(null,null)
         }
     ],function(err,result){
@@ -482,166 +528,6 @@ function getOrder(req,res){
     
 }
 
-function getOrderAdmin(req,res){
-    var token=req.headers['x-access-token'];
-    var verifyOptions = {
-     expiresIn:  '30d',
-     algorithm:  ["RS256"]
-    };
-    var legit={};
-    try{
-        legit   = jwt.verify(token, publicKEY, verifyOptions);
-    }catch(e){
-        return res.send({status: 'expired'}); 
-    }
-    const listStatus={
-        paid: "Đã đặt hàng",
-        processing: "Đang xử lý",
-        confirm : "Đã xác nhận",
-        tranfer : "Đang chuyển hàng",
-        completed: "Đã hoàn thành",
-    }
-    const listSstatus={
-      pending   :'Chờ',
-      paid      :'Đã mua',
-      cancel    :'Cancel',
-      back      :'Back cọc',
-      tranfer   :'Chuyển cọc'   
-    }
-    let filter_params={};
-    let currentPage=1;
-    let pageSize=10;
-    let total=1;
-    let limit=10000;
-    var query={};
-    var list=[],_list=[];
-    var list_billCode=[];
-    const locale={
-      'USD':'en-US',
-      'GBP':'en-GB',
-      'VND':'vi-VN',
-      'JPY':'ja-JP',
-      'EUR':'de-DE',
-    }
-    var result=[];
-    var billOrderStatus=[];
-    async.series([
-       function(callback){
-            currentPage=(req.body.currentPage) ? req.body.currentPage : 1;
-            pageSize=(req.body.pageSize) ? req.body.pageSize : 10;
-            
-            let _total=(currentPage*pageSize+pageSize) ;
-            limit = (_total > 10000) ? (limit+_total) : 10000;
-           
-            if(req.body.name){
-                query['sname']={ '$like': '%'+req.body.name+'%' };
-            } 
-            if(req.body.phone){
-                query['sphone']={'$like': '%'+req.body.phone+'%'};
-            }
-            if(req.body.sstatus){
-                query['sstatus']=req.body.sstatus;
-            }
-            query['$limit']=limit 
-            callback(null,null);    
-       },
-       function(callback){
-           let from=moment().format("YYYY-MM-DD");
-           let to=moment().format("YYYY-MM-DD");
-           if(req.body.from){
-               from=req.body.from;
-           }
-           if(req.body.to){
-               to=req.body.to;
-           }
-            var start = new Date(from); // Your timezone!
-            var estart = start.getTime();
-            var end = new Date(to); // Your timezone!
-            var eend = (end.getTime()/1000.0 + 86400)*1000;
-            query['semployee']=legit.username;
-            query['ddate']={ '$gt':estart, '$lte':eend };
-            callback(null,null);
-                   
-       },
-       function(callback){
-           const listAddmin=[
-                'admin','superadmin'
-            ]
-            if(listAddmin.indexOf(legit.rule) > -1){
-                delete query['semployee'];
-            }
-            callback(null,null)  
-        },
-       function(callback){
-            if(req.body.status){
-                
-                models.instance.orders_by_status.find({status: {'$in': ['comfirm','processing']}},function(err,item){
-                    if(items){
-                        items.forEach(function(e){
-                            billOrderStatus.push(e.sbill_code)
-                        });
-                        query['sbill_code']={'$in' : billOrderStatus}
-                    }
-                    callback(err,null); 
-                } )
-            }else{
-                 callback(null,null); 
-            }
-            
-       },
-       function(callback){
-            console.log(query)
-            models.instance.orders.find(query,{raw: true,allow_filtering: true},function(err,items){
-                _list=items;
-                //let newList=[];
-                try{
-                    items.map((e,i)=>{
-                        let n=JSON.stringify(e);
-                        let l=JSON.parse(n);
-                        l['_deposit']=currencyFormatter.format(e.fdeposit, { locale: 'en-US',code: "VND"});
-                        l['_price']=currencyFormatter.format(e.fprice, { locale: 'en-US',code: "VND"  });
-                        l['_realpayprice']=currencyFormatter.format(e.frealpayprice, { locale: 'en-US',code: "VND" });
-                        l['_deliveryprice']=currencyFormatter.format(e.fdeliveryprice, { locale: 'en-US',code: "VND" });
-                        l['_exchangerate']=currencyFormatter.format(e.fexchangerate, { locale: 'en-US',code: "VND" });
-                        l['_sale']=(e.fsale) ? e.fsale+"%" : "0%"
-                        l['_servicerate']=(e.fservicerate) ? e.fservicerate+"%" : "0%"
-                        l['_webprice']=currencyFormatter.format(e.fwebprice, { locale:'en-US',code: e.scurrency });
-                        l['_shipweb']=currencyFormatter.format(e.fshipweb, { locale:'en-US',code:e.scurrency });
-                        l['_surcharge']=currencyFormatter.format(e.fsurcharge, { locale:'en-US',code:e.scurrency  });
-                        l['ssize']=(e.ssize) ? e.ssize : ' ';
-                        l['_sstatus']=listSstatus[e.sstatus];
-                        l['_status']=listStatus[e.status] || 'Đang xử lý';
-                        list.push(l)
-                    })
-                }catch(e){
-                    
-                }
-                callback(err,null);
-                
-            })
-            
-       },
-      
-       function(callback){
-            
-            total=list.length;
-            let start=currentPage*pageSize-pageSize;
-            let end=currentPage*pageSize-1;
-            
-            result = list.slice(start, end)
-            list.sort(function(a,b){
-                return a.ddate > b.ddate;
-            })
-            callback(null,null)
-        }
-    ],function(err,result){
-        if(err) return res.send({status:'error'});
-        res.send({
-            list:list,
-            pagination:{total: total, pageSize: pageSize, current: currentPage}
-        })
-    });
-}
 function addOrder(req,res){
     const { body } = req;
     
@@ -661,37 +547,42 @@ function addOrder(req,res){
     let PARAM_IS_VALID={};
     async.series([
         function(callback){
-            PARAM_IS_VALID['sbill_code']    =body.bill, 
-            PARAM_IS_VALID['ddate']         =new Date(),
-            PARAM_IS_VALID['sname']         =body.name,
-            PARAM_IS_VALID['sphone']        =body.phone,
-            PARAM_IS_VALID['saddress']      =body.address,
-            PARAM_IS_VALID['semail']        =body.email,
-            PARAM_IS_VALID['scode']         =body.code,
-            PARAM_IS_VALID['slinkproduct']  =body.link,
-            PARAM_IS_VALID['snameproduct']  =body.product_name, 
-            PARAM_IS_VALID['ssize']         =body.size, 
-            PARAM_IS_VALID['scolor']        =body.color, 
-            PARAM_IS_VALID['iquality']      =(body.amount) ? parseInt(body.amount,10) : 0 ,
-            PARAM_IS_VALID['fwebprice']     =(body.web_price) ? parseFloat(body.web_price) : 0,
-            PARAM_IS_VALID['fsale']         =(body.sale) ? parseFloat(body.sale) : 0, 
-            PARAM_IS_VALID['fshipweb']      =(body.shipWeb) ? parseFloat(body.shipWeb) : 0 ,
-            PARAM_IS_VALID['fexchangerate'] =(body.rate) ? parseFloat(body.rate) : 0 ,
-            PARAM_IS_VALID['fprice']        =(body.price) ? parseFloat(body.price) : 0 ,
-                
-            PARAM_IS_VALID['fdeposit']      =(body.deposit) ? parseFloat(body.deposit) : 0 ,
-            PARAM_IS_VALID['frealpayprice'] =(body.realpayprice) ? parseFloat(body.realpayprice) : 0 ,
-            PARAM_IS_VALID['fdelivery']     =(body.delivery) ? parseFloat(body.delivery) : 0 ,
-            PARAM_IS_VALID['fdeliveryprice']=(body.deliveryprice) ? parseFloat(body.deliveryprice) : 0 ,
-            PARAM_IS_VALID['fservicerate']  =(body.servicerate && !Number.isNaN(body.servicerate) ) ? parseFloat(body.servicerate) : 0 ,
-            PARAM_IS_VALID['semployee']     =legit.username,
-            PARAM_IS_VALID['sstatus']       =body.status,
-            PARAM_IS_VALID['scomment']      =body.comment,
-            PARAM_IS_VALID['scurrency']      =body.currency,
-            PARAM_IS_VALID['surcharge']     =(body.surcharge) ? parseFloat(body.surcharge) : 0 ,
-            PARAM_IS_VALID['ssurcharge']    =body.ssurcharge,
-            PARAM_IS_VALID['scomment']      =body.comment,
-            PARAM_IS_VALID['status']        ="processing";
+            try{
+                PARAM_IS_VALID['sbill_code']    =body.bill, 
+                PARAM_IS_VALID['ddate']         =new Date(),
+                PARAM_IS_VALID['sname']         =body.name,
+                PARAM_IS_VALID['sphone']        =body.phone,
+                PARAM_IS_VALID['saddress']      =body.address,
+                PARAM_IS_VALID['semail']        =body.email,
+                PARAM_IS_VALID['scode']         =body.code,
+                PARAM_IS_VALID['slinkproduct']  =body.link,
+                PARAM_IS_VALID['snameproduct']  =body.product_name, 
+                PARAM_IS_VALID['ssize']         =body.size, 
+                PARAM_IS_VALID['scolor']        =body.color, 
+                PARAM_IS_VALID['iquality']      =(body.amount) ? parseInt(body.amount,10) : 0 ,
+                PARAM_IS_VALID['fwebprice']     =(body.web_price) ? parseFloat(body.web_price) : 0,
+                PARAM_IS_VALID['fsale']         =(body.sale) ? parseFloat(body.sale) : 0, 
+                PARAM_IS_VALID['fshipweb']      =(body.shipWeb) ? parseFloat(body.shipWeb) : 0 ,
+                PARAM_IS_VALID['fexchangerate'] =(body.rate) ? parseFloat(body.rate) : 0 ,
+                PARAM_IS_VALID['fprice']        =(body.price) ? parseFloat(body.price) : 0 ,
+
+                PARAM_IS_VALID['fdeposit']      =(body.deposit) ? parseFloat(body.deposit) : 0 ,
+                PARAM_IS_VALID['frealpayprice'] =(body.realpayprice) ? parseFloat(body.realpayprice) : 0 ,
+                PARAM_IS_VALID['fdelivery']     =(body.delivery) ? parseFloat(body.delivery) : 0 ,
+                PARAM_IS_VALID['fdeliveryprice']=(body.deliveryprice) ? parseFloat(body.deliveryprice) : 0 ,
+                PARAM_IS_VALID['fservicerate']  =(body.servicerate && !Number.isNaN(body.servicerate) ) ? parseFloat(body.servicerate) : 0 ,
+                PARAM_IS_VALID['semployee']     =legit.username,
+                PARAM_IS_VALID['sstatus']       =body.status,
+                PARAM_IS_VALID['scomment']      =body.comment,
+                PARAM_IS_VALID['scurrency']      =body.currency,
+                PARAM_IS_VALID['surcharge']     =(body.surcharge) ? parseFloat(body.surcharge) : 0 ,
+                PARAM_IS_VALID['ssurcharge']    =body.ssurcharge,
+                PARAM_IS_VALID['scomment']      =body.comment,
+                PARAM_IS_VALID['status']        ="processing";
+            }catch(e){
+                return res.send({status: 'error'})
+            }
+            
             callback(null,null);
             
         },
@@ -1051,7 +942,6 @@ export default {
   'PUT /api/order/update_order':updateOrder,    
   'POST /api/order/add':addOrder,
   'POST /api/order/list':getOrder,
-  'POST /api/order/orderadmin':getOrderAdmin,
   'DELETE /api/order/del_row':delOrder,
   'POST /api/user/check_account':checkAccount , 
   'GET /api/generate/bill_code':generateOrderBillCode,       

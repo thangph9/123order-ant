@@ -8,7 +8,11 @@ module.exports={
         address: 'text',
         createat: 'timestamp',
         updateat: 'timestamp',
-        last_login: 'timestamp'
+        last_login: 'timestamp',
+        rule: {
+            type: "set",
+            typeDef: "<text>"
+        }
     },
     key:[["user_id"]] ,
 } 

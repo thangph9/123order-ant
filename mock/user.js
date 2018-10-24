@@ -34,9 +34,15 @@ export default {
             
          },
      ],function(err,result){
+         let name='';
+        try{
+            name=user[0].name
+        } catch(e){
+            
+        }
         if(err) res.send({status: 'error'})  
         res.send({
-        name: user[0].name,
+        name: name,
         avatar: 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png',
         userid: '00000001',
         email: 'antdesign@alipay.com',

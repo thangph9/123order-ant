@@ -440,6 +440,7 @@ class OrderConfirm extends PureComponent {
     const { dispatch, form } = this.props;
     const status="confirm";
     form.validateFields((err, fieldsValue) => {
+        console.log(fieldsValue);
       if (err) return; 
       const values = {
         ...fieldsValue,
@@ -553,7 +554,7 @@ class OrderConfirm extends PureComponent {
                 payload:{
                     ...e
                 },  
-            }
+            } 
         )
       
   }
@@ -683,7 +684,7 @@ class OrderConfirm extends PureComponent {
           </Col> 
           <Col md={6} sm={24}>
             <FormItem label="Trạng thái">
-              {getFieldDecorator('status',{
+              {getFieldDecorator('sstatus',{
                   initialValue:status,
                   onChange: this.handleChangeStatus
               })(
@@ -804,7 +805,7 @@ class OrderConfirm extends PureComponent {
           onCancel={this.handleCancel}
           width="80%"
           style={{ top: 20 }}
-          zIndex="1001"    
+          zIndex="1001"     
         >
         <div className="gutter-example">
           <Row>
@@ -832,8 +833,8 @@ class OrderConfirm extends PureComponent {
                 <span className={styles.label}>Email</span></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
                 <Alert message={selectedRow.semail} showIcon={false} banner /></Col>
-          </Row>    
-          <Row>
+          </Row>     
+          <Row>     
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
                 <span className={styles.label}>LinkSP</span></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
@@ -842,7 +843,7 @@ class OrderConfirm extends PureComponent {
                 <span className={styles.label}>Mã SP</span></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
                 <Alert message={selectedRow.scode} showIcon={false} banner/></Col>  
-          </Row>
+          </Row> 
           <Row>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
                 <span className={styles.label}>Tên SP</span></Col>
@@ -892,7 +893,7 @@ class OrderConfirm extends PureComponent {
                 <span className={styles.label}>Vận chuyển báo khách</span></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>
                 <Alert message={selectedRow._deliveryprice} showIcon={false} banner/></Col>
-          </Row>  
+          </Row>   
          <Row> 
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}>
                 <span className={styles.label}>% dịch vu</span></Col>

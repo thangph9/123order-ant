@@ -294,7 +294,7 @@ class OrderForm extends PureComponent {
 
                           },
                         ],
-                        initialValue:bill_code
+                        initialValue:"KL"+bill_code
                       })(<Input placeholder=" " disabled  />)}
                     </FormItem>
                 </Col>

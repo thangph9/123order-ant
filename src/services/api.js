@@ -101,17 +101,17 @@ export async function updateFakeList(params) {
       method: 'update',
     },
   });
-}
-
+}  
+    
 export async function accountLogin(params) {
   return request('/api/login/account', {
-    method: 'POST',
-    body: params,
-  });
+    method: 'POST', 
+    body: params, 
+  });   
 }
 
 export async function register(params) {
-  return request('/api/register', {
+  return request('/api/register', { 
     method: 'POST',
     body: params,
   });
@@ -131,7 +131,7 @@ export async function addOrder(params){
         body:params,
         headers:{'X-Access-Token':getAuthority()[0].token}
     })
-}
+}   
 export async function getOrderList(e){
     console.log(e);
     return request(`/api/order/list?ref=${new Date().getTime()}`,{
@@ -146,21 +146,21 @@ export async function updateOrder(params){
         method:'PUT',
         body: params,
         headers:{'X-Access-Token':getAuthority()[0].token}
-    })
-}
+    }) 
+} 
 export async function deleteRow(params){
     return request(`/api/order/del_row?id=${params}`,{
         method:'DELETE',
         headers:{'X-Access-Token':getAuthority()[0].token}
-    });
-}
+    });  
+} 
 export async function generateBillCode(){
     return request(`/api/generate/bill_code?ref=${new Date().getTime()}&type=KL`,{
         method:'GET',
         headers:{'X-Access-Token':getAuthority()[0].token}
     });
-}
-
+} 
+  
 export async function checkAccount(params){
     return request(`/api/user/check_account`,{
         method:'POST',
