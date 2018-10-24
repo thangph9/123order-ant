@@ -687,38 +687,44 @@ class OrderArrived extends PureComponent {
     return (
       <Form onSubmit={this.handleSearch} layout="inline">
         <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
-          <Col md={6} sm={24}>
-            <FormItem label="Tên KH">
-              {getFieldDecorator('name')(<Input placeholder="" />)}
+            <Col md={6} sm={24}>
+            <FormItem label="Tên SP">
+              {getFieldDecorator('snameproduct')(<Input placeholder="" />)}
             </FormItem>
           </Col>
-          <Col md={8} sm={24}>
-            <FormItem label="Số điện thoại">
-              {getFieldDecorator('phone')(
+          <Col md={6} sm={24}>
+            <FormItem label="Code SP">
+              {getFieldDecorator('scode')(
+                <Input placeholder="" />
+              )}
+          </FormItem>
+          </Col> 
+          
+          <Col md={6} sm={24}>
+            <FormItem label="Size">
+              {getFieldDecorator('ssize')(
+                <Input placeholder="" />
+              )}
+            </FormItem>
+          </Col>   
+          <Col md={6} sm={24}>
+            <FormItem label="Color">
+              {getFieldDecorator('scolor')(
                 <Input placeholder="" />
               )}
             </FormItem>
           </Col> 
-          <Col md={6} sm={24}>
-            <FormItem label="Trạng thái">
-              {getFieldDecorator('sstatus',{
-                  initialValue:status,
-                  onChange: this.handleChangeStatus
-              })(
-                <Select>
-                    {this.listStatus}
-                </Select>
-              )}
-            </FormItem>
-          </Col> 
-        <Col md={4} sm={24}>
+        
+        </Row>
+        <Row>
+            <Col md={4} sm={24}>
                 <span className={styles.submitButtons}>
                   <Button type="primary" htmlType="submit">
                     Tìm kiếm
                   </Button>
                 </span>
-              </Col> 
-        </Row> 
+             </Col> 
+        </Row>
       </Form>
     );
   }
