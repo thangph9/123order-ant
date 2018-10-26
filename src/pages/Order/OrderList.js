@@ -971,7 +971,7 @@ class ModalEditForm extends PureComponent{
 /* eslint react/no-multi-comp:0 */
 @connect(({ rule, loading,order }) => ({
   rule,
-  loading: loading.models.rule,
+  loading: loading.models.order,
   order,
 }))
 @Form.create()
@@ -1156,13 +1156,20 @@ class OrderList extends PureComponent {
         width: 150,
     },
     {
-        title: 'Tình trạng',
+        title: 'Trạng thái',
         dataIndex: 'sstatus',
         key: 'sstatus',
         width: 150,
         render: (text, record) => {
            return (<span>{this.state.statusText[text]}</span>)  
         },
+    },
+    {
+        title: 'Tình trạng',
+        dataIndex: '_status',
+        key: '_status',
+        width: 150,
+        
     },
     {
         title: 'Ghi chú',

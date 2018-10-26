@@ -44,7 +44,7 @@ const statusMap = ['default', 'processing', 'success', 'error'];
 /* eslint react/no-multi-comp:0 */
 @connect(({ rule, loading,order }) => ({
   rule,
-  loading: loading.models.rule,
+  loading: loading.models.order,
   order,
 }))
 @Form.create()
@@ -290,7 +290,7 @@ class ConfirmDelivery extends PureComponent {
   }
   handleDelete=(row)=>{
       const { dispatch } = this.props;
-      dispatch({
+      dispatch({ 
         type: 'order/deleteRow',
         payload:row,  
     }) 
@@ -650,8 +650,8 @@ class ConfirmDelivery extends PureComponent {
                      )
                 }
             </Col>
-        </Row>    
-    </Form> );    
+        </Row>     
+    </Form> );     
   }
   renderSimpleForm() {
     
@@ -668,7 +668,7 @@ class ConfirmDelivery extends PureComponent {
             </FormItem>
           </Col>
           <Col md={6} sm={24}>
-            <FormItem label="Code SP">
+            <FormItem label="Code">
               {getFieldDecorator('scode')(
                 <Input placeholder="" />
               )}

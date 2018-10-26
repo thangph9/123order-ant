@@ -44,7 +44,7 @@ const statusMap = ['default', 'processing', 'success', 'error'];
 /* eslint react/no-multi-comp:0 */
 @connect(({ rule, loading,order }) => ({
   rule,
-  loading: loading.models.rule,
+  loading: loading.models.order,
   order,
 }))
 @Form.create()
@@ -693,7 +693,7 @@ class OrderArrived extends PureComponent {
             </FormItem>
           </Col>
           <Col md={6} sm={24}>
-            <FormItem label="Code SP">
+            <FormItem label="Code">
               {getFieldDecorator('scode')(
                 <Input placeholder="" />
               )}

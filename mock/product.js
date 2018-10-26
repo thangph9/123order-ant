@@ -5,328 +5,7 @@ const Uuid      = require("cassandra-driver").types.Uuid;
 const jwt       = require('jsonwebtoken');
 const fs        =require('fs');
 import moment from 'moment';
-var currencyFormatter = require('currency-formatter');
 var publicKEY  = fs.readFileSync('./ssl/jwtpublic.pem', 'utf8');  
-const titles = [
-  'Alipay',
-  'Angular',
-  'Ant Design',
-  'Ant Design Pro',
-  'Bootstrap',
-  'React',
-  'Vue',
-  'Webpack',
-];
-const avatars = [
-  'https://gw.alipayobjects.com/zos/rmsportal/WdGqmHpayyMjiEhcKoVE.png', // Alipay
-  'https://gw.alipayobjects.com/zos/rmsportal/zOsKZmFRdUtvpqCImOVY.png', // Angular
-  'https://gw.alipayobjects.com/zos/rmsportal/dURIMkkrRFpPgTuzkwnB.png', // Ant Design
-  'https://gw.alipayobjects.com/zos/rmsportal/sfjbOqnsXXJgNCjCzDBL.png', // Ant Design Pro
-  'https://gw.alipayobjects.com/zos/rmsportal/siCrBXXhmvTQGWPNLBow.png', // Bootstrap
-  'https://gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png', // React
-  'https://gw.alipayobjects.com/zos/rmsportal/ComBAopevLwENQdKWiIn.png', // Vue
-  'https://gw.alipayobjects.com/zos/rmsportal/nxkuOJlFJuAUhzlMTCEe.png', // Webpack
-];
-
-const avatars2 = [
-  'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/cnrhVkzwxjPwAaCfPbdc.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/gaOngJwsRYRaVAuXXcmB.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/ubnKSIfAJTxIgXOKlciN.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/WhxKECPNujWoWEFNdnJE.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/jZUIxmJycoymBprLOUbT.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/psOgztMplJMGpVEqfcgF.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/ZpBqSxLxVEXfcUNoPKrz.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/laiEnJdGHVOhJrUShBaJ.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/UrQsqscbKEpNuJcvBZBu.png',
-];
-
-const covers = [
-  'https://gw.alipayobjects.com/zos/rmsportal/uMfMFlvUuceEyPpotzlq.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/iZBVOIhGJiAnhplqjvZW.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/iXjVmWVHbCJAyqvDxdtx.png',
-  'https://gw.alipayobjects.com/zos/rmsportal/gLaIAoVWTtLbBWZNYEMg.png',
-];
-const desc = [
-  '那是一种内在的东西， 他们到达不了，也无法触及的',
-  '希望是一个好东西，也许是最好的，好东西是不会消亡的',
-  '生命就像一盒巧克力，结果往往出人意料',
-  '城镇中有那么多的酒馆，她却偏偏走进了我的酒馆',
-  '那时候我只会想自己想要什么，从不想自己拥有什么',
-]; 
-
-const user = [
-  '付小小',
-  '曲丽丽',
-  '林东东',
-  '周星星',
-  '吴加好',
-  '朱偏右',
-  '鱼酱',
-  '乐哥',
-  '谭小仪',
-  '仲尼',
-];
-
-function fakeList(count) {
-  const list = [];
-  for (let i = 0; i < count; i += 1) {
-    list.push({
-      id: `fake-list-${i}`,
-      owner: user[i % 10],
-      title: titles[i % 8],
-      avatar: avatars[i % 8],
-      cover: parseInt(i / 4, 10) % 2 === 0 ? covers[i % 4] : covers[3 - (i % 4)],
-      status: ['active', 'exception', 'normal'][i % 3],
-      percent: Math.ceil(Math.random() * 50) + 50,
-      logo: avatars[i % 8],
-      href: 'https://ant.design',
-      updatedAt: new Date(new Date().getTime() - 1000 * 60 * 60 * 2 * i),
-      createdAt: new Date(new Date().getTime() - 1000 * 60 * 60 * 2 * i),
-      subDescription: desc[i % 5],
-      description:
-        '在中台产品的研发过程中，会出现不同的设计规范和实现方式，但其中往往存在很多类似的页面和组件，这些类似的组件会被抽离成一套标准规范。',
-      activeUser: Math.ceil(Math.random() * 100000) + 100000,
-      newUser: Math.ceil(Math.random() * 1000) + 1000,
-      star: Math.ceil(Math.random() * 100) + 100,
-      like: Math.ceil(Math.random() * 100) + 100,
-      message: Math.ceil(Math.random() * 10) + 10,
-      content:
-        '段落示意：蚂蚁金服设计平台 ant.design，用最小的工作量，无缝接入蚂蚁金服生态，提供跨越设计与开发的体验解决方案。蚂蚁金服设计平台 ant.design，用最小的工作量，无缝接入蚂蚁金服生态，提供跨越设计与开发的体验解决方案。',
-      members: [
-        {
-          avatar: 'https://gw.alipayobjects.com/zos/rmsportal/ZiESqWwCXBRQoaPONSJe.png',
-          name: '曲丽丽',
-          id: 'member1',
-        },
-        {
-          avatar: 'https://gw.alipayobjects.com/zos/rmsportal/tBOxZPlITHqwlGjsJWaF.png',
-          name: '王昭君',
-          id: 'member2',
-        },
-        {
-          avatar: 'https://gw.alipayobjects.com/zos/rmsportal/sBxjgqiuHMGRkIjqlQCd.png',
-          name: '董娜娜',
-          id: 'member3',
-        },
-      ],
-    });
-  }
-
-  return list;
-}
-
-let sourceData;
-
-function getFakeList(req, res) {
-  const params = req.query;
-
-  const count = params.count * 1 || 20;
-
-  const result = fakeList(count);
-  sourceData = result;
-  return res.json(result);
-}
-
-function postFakeList(req, res) {
-  const { /* url = '', */ body } = req;
-  // const params = getUrlParams(url);
-  const { method, id } = body;
-  // const count = (params.count * 1) || 20;
-  let result = sourceData;
-
-  switch (method) {
-    case 'delete':
-      result = result.filter(item => item.id !== id);
-      break;
-    case 'update':
-      result.forEach((item, i) => {
-        if (item.id === id) {
-          result[i] = Object.assign(item, body);
-        }
-      });
-      break;
-    case 'post':
-      result.unshift({
-        body,
-        id: `fake-list-${result.length}`,
-        createdAt: new Date().getTime(),
-      });
-      break;
-    default:
-      break;
-  }
-
-  return res.json(result);
-}
-
-const getNotice = [
-  {
-    id: 'xxx1',
-    title: titles[0],
-    logo: avatars[0],
-    description: '那是一种内在的东西，他们到达不了，也无法触及的',
-    updatedAt: new Date(),
-    member: '科学搬砖组',
-    href: '',
-    memberLink: '',
-  },
-  {
-    id: 'xxx2',
-    title: titles[1],
-    logo: avatars[1],
-    description: '希望是一个好东西，也许是最好的，好东西是不会消亡的',
-    updatedAt: new Date('2017-07-24'),
-    member: '全组都是吴彦祖',
-    href: '',
-    memberLink: '',
-  },
-  {
-    id: 'xxx3',
-    title: titles[2],
-    logo: avatars[2],
-    description: '城镇中有那么多的酒馆，她却偏偏走进了我的酒馆',
-    updatedAt: new Date(),
-    member: '中二少女团',
-    href: '',
-    memberLink: '',
-  },
-  {
-    id: 'xxx4',
-    title: titles[3],
-    logo: avatars[3],
-    description: '那时候我只会想自己想要什么，从不想自己拥有什么',
-    updatedAt: new Date('2017-07-23'),
-    member: '程序员日常',
-    href: '',
-    memberLink: '',
-  },
-  {
-    id: 'xxx5',
-    title: titles[4],
-    logo: avatars[4],
-    description: '凛冬将至',
-    updatedAt: new Date('2017-07-23'),
-    member: '高逼格设计天团',
-    href: '',
-    memberLink: '',
-  },
-  {
-    id: 'xxx6',
-    title: titles[5],
-    logo: avatars[5],
-    description: '生命就像一盒巧克力，结果往往出人意料',
-    updatedAt: new Date('2017-07-23'),
-    member: '骗你来学计算机',
-    href: '',
-    memberLink: '',
-  },
-];
-
-const getActivities = [
-  {
-    id: 'trend-1',
-    updatedAt: new Date(),
-    user: {
-      name: '曲丽丽',
-      avatar: avatars2[0],
-    },
-    group: {
-      name: '高逼格设计天团',
-      link: 'http://github.com/',
-    },
-    project: {
-      name: '六月迭代',
-      link: 'http://github.com/',
-    },
-    template: '在 @{group} 新建项目 @{project}',
-  },
-  {
-    id: 'trend-2',
-    updatedAt: new Date(),
-    user: {
-      name: '付小小',
-      avatar: avatars2[1],
-    },
-    group: {
-      name: '高逼格设计天团',
-      link: 'http://github.com/',
-    },
-    project: {
-      name: '六月迭代',
-      link: 'http://github.com/',
-    },
-    template: '在 @{group} 新建项目 @{project}',
-  },
-  {
-    id: 'trend-3',
-    updatedAt: new Date(),
-    user: {
-      name: '林东东',
-      avatar: avatars2[2],
-    },
-    group: {
-      name: '中二少女团',
-      link: 'http://github.com/',
-    },
-    project: {
-      name: '六月迭代',
-      link: 'http://github.com/',
-    },
-    template: '在 @{group} 新建项目 @{project}',
-  },
-  {
-    id: 'trend-4',
-    updatedAt: new Date(),
-    user: {
-      name: '周星星',
-      avatar: avatars2[4],
-    },
-    project: {
-      name: '5 月日常迭代',
-      link: 'http://github.com/',
-    },
-    template: '将 @{project} 更新至已发布状态',
-  },
-  {
-    id: 'trend-5',
-    updatedAt: new Date(),
-    user: {
-      name: '朱偏右',
-      avatar: avatars2[3],
-    },
-    project: {
-      name: '工程效能',
-      link: 'http://github.com/',
-    },
-    comment: {
-      name: '留言',
-      link: 'http://github.com/',
-    },
-    template: '在 @{project} 发布了 @{comment}',
-  },
-  {
-    id: 'trend-6',
-    updatedAt: new Date(),
-    user: {
-      name: '乐哥',
-      avatar: avatars2[5],
-    },
-    group: {
-      name: '程序员日常',
-      link: 'http://github.com/',
-    },
-    project: {
-      name: '品牌迭代',
-      link: 'http://github.com/',
-    },
-    template: '在 @{group} 新建项目 @{project}',
-  },
-];
-
-function getFakeCaptcha(req, res) {
-  return res.json('captcha-xxx');
-}
 function getOrder(req,res){
     var token=req.headers['x-access-token'];
     var verifyOptions = {
@@ -395,7 +74,7 @@ function getOrder(req,res){
                return res.send({status:"error_auth"})
            }
            models.instance.users.find({user_id:uuid},{select:['role']},function(err,user){
-               listRole=(user) ? user[0].role : [];
+               listRole=(user) ? user : [];
                callback(null,null);
            })
        }, 
@@ -463,7 +142,6 @@ function getOrder(req,res){
        function(callback){
             
             if(req.body.status){
-                console.log(req.body.status);
                 switch(req.body.status){
                     case 'paid':
                         status="status:confirm";
@@ -474,16 +152,16 @@ function getOrder(req,res){
                         callback(null,null);
                         break;
                     case 'confirm':
-                        status='status:(confirm OR processing)'
+                        status='{!q.op=OR df=status}confirm processing'
                         callback(null,null);
-                        break;
+                        break
                     case 'arrived':
                         status="status:arrived";
                         callback(null,null);
                         break
                         
                     default:
-                        status='status:(confirm OR processing)'
+                        status='{!q.op=OR df=status}confirm processing'
                         callback(null,null);
                         break
                 }
@@ -600,9 +278,6 @@ function getOrder(req,res){
     });
     
 }
-
-
-
 function addOrder(req,res){
     const { body } = req;
     
@@ -714,6 +389,7 @@ function addOrder(req,res){
         });
     })
 }
+
 function updateOrder(req,res){
     const { body } = req;
     var token=req.headers['x-access-token'];
@@ -727,7 +403,9 @@ function updateOrder(req,res){
     }catch(e){
        return  res.send({status: 'expired'}); 
     }
-    let listRole=[]
+    let listRole=[
+                'update_sstatus','update_status','update_delevery'
+    ]
     
     let PARAM_IS_VALID={},queries=[];
     async.series([
@@ -739,13 +417,14 @@ function updateOrder(req,res){
                return res.send({status:"error_auth"})
            }
            models.instance.users.find({user_id:uuid},{select:['role']},function(err,user){
-               
-               listRole=(user) ? user[0].role : [];
+              
+               listRole=(user) ? user : [];
                callback(null,null);
            })
         }, 
         function(callback){
             PARAM_IS_VALID=req.body;
+            
             if(req.body.sstatus){
                     if(listRole.indexOf('update_sstatus')  > -1){
 
@@ -818,234 +497,70 @@ function updateOrder(req,res){
     });
     
 }
-function delOrder(req,res){
-    var token=req.headers['x-access-token'];
-    const sbill_code=req.query.id;
-    var verifyOptions = {
-     expiresIn:  '30d',
-     algorithm:  ["RS256"]
-    };
-    var legit={};
-    try{
-        legit   = jwt.verify(token, publicKEY, verifyOptions);
-    }catch(e){
-        return res.send('expired'); 
-    }
-    let listRole=[
-                'delete_order'
-            ]
-    var list=[],_list=[];
+
+
+function getDetail(req,res){
+    let product=[];
+    let PARAMS_IS_VALID={};
     async.series([
         function(callback){
-            
-            if(listRole.indexOf('delete_order') > -1){
-                }else{
-                    return res.send({status:'error_rule'})
-            }
-            callback(null,null);
-        },
-       function(callback){
-           
-            var query_object = {sbill_code: sbill_code};
-            models.instance.orders.delete(query_object, function(err){
-                callback(err,null);
-            });
-       }
-    ],function(err,result){
-        
-        if(err) return res.send('error');
-        res.send('ok')
-    });
-    
-}
-function getCurrencyRaito(req,res){
-    let raito={};
-    async.series([
-       function(callback){
-            callback(null,null);    
-       },
-       function(callback){
-           models.instance.currency_raito.find({},function(err,items){
-               if(items){
-                   raito=items;
-               }
-               callback(err,null);
-           });
-       }
-    ],function(err,result){
-        if(err) return res.send('error');
-        res.send({raito:raito});
-    });
-}
-function saveCurrencyRaito(req,res){
-    const { body } = req;
-    var token=req.headers['x-access-token'];
-    var verifyOptions = {
-     expiresIn:  '30d',
-     algorithm:  ["RS256"]
-    };
-    var legit={};
-    try{
-        legit   = jwt.verify(token, publicKEY, verifyOptions);
-    }catch(e){
-       return  res.send({status: 'expired'}); 
-    }
-    let listRole=[]
-    
-    let PARAM_IS_VALID={},queries=[];
-    async.series([
-        function(callback){
-           let uuid='';
-           try{
-               uuid=models.uuidFromString(legit.user_id);
-           }catch(e){
-               return res.send({status:"error_auth"})
-           }
-           models.instance.users.find({user_id:uuid},{select:['role']},function(err,user){
-               
-               listRole=(user) ? user[0].role : [];
-               callback(null,null);
-           })
-       }, 
-        function(callback){
-            
-            if(listRole.indexOf('update_currency_raito') > -1){
-                    
-            }else{
-                return res.send({status:'error_rule_update_currency_raito'})
-            }
-          callback(null,null);  
+            PARAMS_IS_VALID=req.body;
+            callback(null,null)  
         },
         function(callback){
-            PARAM_IS_VALID['currency']=(req.body.currency) ? req.body.currency : '';
-            PARAM_IS_VALID['raito'] = (req.body.raito) ? parseFloat(req.body.raito) : 0;
-            
-            if(PARAM_IS_VALID['currency'] == '' || PARAM_IS_VALID['raito'] ==0 ){
-                return res.send({status: 'invalid'}); 
-            }
-            callback(null,null);
-        },
-        function(callback){
-            const currency_raito=()=>{
+            models.instance.product_detail_amazon.find({asin:PARAMS_IS_VALID.asin },function(err,items){
                 
-                let object      =PARAM_IS_VALID;
-                let instance    =new models.instance.currency_raito(object);
-                let save        =instance.save({return_query: true});
-                return save;
-            }
-           queries.push(currency_raito());
-            const currency_raito_by_date=()=>{
-                
-                let object      =PARAM_IS_VALID;
-                object['username']  =legit.username;
-                object['date']  =new Date();
-                
-                let instance    =new models.instance.currency_raito_by_date(object);
-                let save        =instance.save({return_query: true});
-                return save;
-                
-            } 
-           queries.push(currency_raito_by_date());
-           callback(null,null);
-        },
-    ],function(err,result){
-           if(err) return res.send({status: 'error'});
-            models.doBatch(queries,function(err){
-                
-                if(err) return res.send({status: 'error'});
-                res.send({ status: 'ok'});
-            });
-    });
-}
-function generateOrderBillCode(req,res){
-    let bill_code,billCode;
-    let id=Uuid.random();
-    var token=req.headers['x-access-token'];
-    
-    var verifyOptions = {
-     expiresIn:  '30d',
-     algorithm:  ["RS256"]
-    };
-    var legit={};
-    try{
-        legit   = jwt.verify(token, publicKEY, verifyOptions);
-    }catch(e){
-       return  res.send({status: 'expired'}); 
-    }
-    async.series([
-        function(callback){
-            models.instance.order_by_bill_code.find({types: req.query.type},{raw:true, allow_filtering: true},function(err,r){
-                bill_code=r;
-                callback(err,null);
+                product=(items) ? items : [];
+                callback(err,null)
             })
             
-        },
-        function(callback){
-            let types,code,idBill,_code;
-            
-            if(bill_code && bill_code.length > 0){
-                idBill=bill_code[0].id;
-                _code=parseInt(bill_code[0].bill_code)+1;
-            }else{
-                idBill=id;
-                _code=1;
-            }
-            code=models.datatypes.Long.fromInt(1);
-            models.instance.order_by_bill_code.update({id:idBill,types:'KL'}, {bill_code: code}, function(err){
-                    callback(err,null);
-            });
-            billCode=_code;
         }
-        
     ],function(err,result){
-        if(err) return res.send({status:'error'});
-        res.send({billcode:billCode})
+        if (err) return  res.send({status: "error",products:[ ]});
+        res.send({
+            detail:product,
+           
+        })
     })
-    
 }
-function checkAccount(req,res){
-    let { username }=req.body;
-    let PARAM_IS_VALID={};
-    let status='ok';
+function getProducts(req,res){
+    let products=[];
+    let pageSize=(req.query.pageSize) ? req.query.pageSize : 10;
+    let current=(req.query.current) ?  req.query.pageSize : 1; 
+    let start=( current > 1 ) ? current*pageSize : 0;
+    async.series([
+        
+        function(callback){
+            models.instance.product_by_asin.find({$solr_query: '{"q":"*:*","sort":"timestamp asc "}'},function(err,items){
+                
+                products=(items) ? items : [];
+                callback(err,null)
+            })
+            
+        }
+    ],function(err,result){
+        if (err) return  res.send({status: "error",products:[ ]});
+        res.send({
+            list:products,
+            pagination:{total: products.length, pageSize: pageSize, current: current}})
+    })
+}
+function saveProduct(req,res){
     async.series([
         function(callback){
+            //models.instance.
             callback(null,null);
         },
         function(callback){
-            models.instance.login.find({username:username},function(err,_user){
-                
-                if(_user && _user.length > 0){
-                    status='invalid';
-                }
-                callback(err,null);
-            });
             
+            callback(null,null);
         }
     ],function(err,result){
-        if(err) res.send({status:'error',username:username});
-        else res.send({status:status,username:username});
-    });
-    
+        if(err) return res.send({status: 'error'});
+        res.send({status: "ok"})
+    })
 }
-
 export default {
-  'GET /api/project/notice': getNotice,
-  'GET /api/activities': getActivities,
-  'POST /api/forms': (req, res) => {
-    res.send({ message: 'Ok' });
-  },
-  'PUT /api/order/update_order':updateOrder,    
-  'POST /api/order/add':addOrder,
-  'POST /api/order/list':getOrder,
-  'DELETE /api/order/del_row':delOrder,
-  'POST /api/user/check_account':checkAccount , 
-  'GET /api/generate/bill_code':generateOrderBillCode,       
-  'GET /api/currency/raito':   getCurrencyRaito,    
-  'POST /api/currency/raito':   saveCurrencyRaito,   
-  'GET /api/tags': mockjs.mock({
-    'list|100': [{ name: '@city', 'value|1-100': 150, 'type|0-2': 1 }],
-  }),
-  'GET /api/fake_list': getFakeList,
-  'POST /api/fake_list': postFakeList,
-  'GET /api/captcha': getFakeCaptcha,
+  'GET /api/product/list': getProducts,
+  'GET /api/product/save': saveProduct,
 };

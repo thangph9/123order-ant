@@ -12,6 +12,10 @@ module.exports={
         rule: {
             type: "set",
             typeDef: "<text>"
+        },
+        role: {
+            type: "set",
+            typeDef: "<text>"
         }
     },
     key:[["user_id"]] ,

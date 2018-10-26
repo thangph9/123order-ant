@@ -44,7 +44,7 @@ const statusMap = ['default', 'processing', 'success', 'error'];
 /* eslint react/no-multi-comp:0 */
 @connect(({ rule, loading,order }) => ({
   rule,
-  loading: loading.models.rule,
+  loading: loading.models.order,
   order,
 }))
 @Form.create()
@@ -58,6 +58,7 @@ class OrderConfirm extends PureComponent {
     selectedRow:{},
     formValues: {},
     stepFormValues: {},
+    loadingUpdate: false,  
     data:{
         list:[],
         pagination:{},
@@ -285,7 +286,7 @@ class OrderConfirm extends PureComponent {
         delivery: "Đã về",
         completed: "Đã hoàn thành",
     }
-    listSstatusObj={
+  listSstatusObj={
       pending   :'Chờ',
       paid      :'Đã mua',
       cancel    :'Cancel',
@@ -425,9 +426,11 @@ class OrderConfirm extends PureComponent {
     });
   };
   handleRowSelect = row =>{
+      
       this.setState({
           visible: true,
           selectedRow:row,
+          newRow:true,
         });
        
   }
@@ -527,18 +530,21 @@ class OrderConfirm extends PureComponent {
     if(changeStatus){
         this.setState({
             changeStatus: false,
+            newRow:false
         });
         
     }
     this.setState({ 
       visible: false,
+      newRow:false
     });
   }
   handleCancel = (e) => {
     const { changeStatus } = this.state;  
     this.setState({
       visible: false,
-      changeStatus: !!changeStatus    
+      changeStatus: !!changeStatus   ,
+        newRow:false
     });
   }
    
@@ -556,23 +562,25 @@ class OrderConfirm extends PureComponent {
       
   }
   handleConfirm =(e)=>{
+      
       const { dispatch } = this.props;
       
-      
+      let status='';
       if(e.status=='processing'){
-          e['status']='confirm';
+          status='confirm';
       }else{
-          e['status']='processing';
-      }
-      e['_status']=listStatusObj[e['status']]
+          status='processing';
+      } 
+      e['_status']=this.listStatusObj[status]
       dispatch({
                 type: 'order/saveOrder',
                 payload:{
-                    ...e
+                    ...e,
+                    status 
                 },  
             } 
         )
-      
+       
   }
   onChangeRangPicker =(e)=>{  
       const { formValues } = this.state;
@@ -747,18 +755,18 @@ class OrderConfirm extends PureComponent {
   render() {
       
     const {
-      order: { data },
+      order: { data,update },
       loading,
-    } = this.props;
-    const { selectedRows, modalVisible, updateModalVisible, stepFormValues,selectedRow,statusText,changeStatus } = this.state; 
-    
+    } = this.props; 
+    const { selectedRows, modalVisible, updateModalVisible, stepFormValues,selectedRow,statusText,changeStatus,newRow } = this.state; 
     let confirm=[];
-    if(selectedRow.sstatus=='pending'){
+    let row=(update && !newRow) ? update : selectedRow;
+    if(row.sstatus=='pending'){
         
-        if(selectedRow.status=='processing') {
-        confirm=[<Button type="primary" key="processing" onClick={()=>this.handleConfirm(selectedRow)}>Xác nhận  đặt cọc</Button>]
+        if(row.status=='processing') {
+            confirm=[<Button type="primary" key="processing" loading={loading} onClick={()=>this.handleConfirm(row)}  >Xác nhận  đặt cọc</Button>]
         }else{
-            confirm=[<Button type="button" key="confirm" onClick={()=>this.handleConfirm(selectedRow)}>Huỷ xác nhận</Button>]
+            confirm=[<Button type="button" key="confirm" loading={loading} onClick={()=>this.handleConfirm(row)} >Huỷ xác nhận</Button>]
         }
     }else{
         confirm='';

@@ -9,7 +9,7 @@ import Link from 'umi/link';
 
 const Authorized = RenderAuthorized(getAuthority());
 
-export default ({ children, route, location }) => {
+export default ({ children, route, location }) => {   
   const routes = matchRoutes(route.routes, location.pathname);
   const authorities = [];
   routes.forEach(item => {

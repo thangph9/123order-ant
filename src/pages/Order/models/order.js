@@ -54,13 +54,14 @@ export default {
       });
     },
     *saveOrder({ payload },{call, put}){
-          console.log(payload);
           const response = yield call(updateOrder, payload);
           if(response.status==='ok'){
                 message.success('Thay đổi thành công');
             }else if (response.status==='expired'){
+                
                 message.warning('Đăng nhập lại ');
             }else{
+                
                 message.error('Lỗi! không thể thay đổi');
             }
           yield put({
@@ -70,8 +71,7 @@ export default {
                 ...response
             },
           });
-    },
-        
+    },   
     *deleteRow({ payload },{call ,put}){
           const response = yield call(deleteRow, payload);
           console.log(response);
@@ -135,21 +135,21 @@ export default {
         }
     },
     save(state,{ payload }){
-        const { data: {list,pagination} } = state;
-        const row=payload.row;
-        const newData = [...list];
-        if(newData.length > 0){
-            const index = newData.findIndex(item => row.sbill_code === item.sbill_code);
-            const item = newData[index];
-            newData.splice(index, 1, {
-              ...item,
-              ...row,
-            });
-        }
-                           
         if(payload.status ==='ok'){
+            const { data: {list,pagination} } = state;
+            const row=payload.row;
+            const newData = [...list];
+            if(newData.length > 0){
+                const index = newData.findIndex(item => row.sbill_code === item.sbill_code);
+                const item = newData[index];
+                newData.splice(index, 1, {
+                  ...item,
+                  ...row,
+                });
+            }
             return {
                 data: {list: newData,pagination},
+                update: row               
             }
         }else{
             return {

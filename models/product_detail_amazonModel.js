@@ -1,0 +1,28 @@
+module.exports={
+    fields:{
+        asin: 'text', 
+        title : 'text', 
+        price : 'text',
+        link    : 'text',
+        infomation    : 'text',
+        death_clock    : 'text',
+        timestamp    : 'timestamp',
+        sale            : 'text',
+        list_price      : 'text',
+        deal_of_day      : 'text',
+        save_price      : 'text',
+        style      : 'text',
+        star                 : 'text',
+        color                 : 'text',
+        size                 : 'text',
+        nested              : 'text',
+        category          : 'text',
+        nodeID                 : 'text',
+        hugeimage                : 'int',
+        largeImage                  : 'text',
+        description    : 'text',
+        smallImage    : 'text',
+        
+    },
+    key:[["asin"]] ,
+} 

@@ -1,0 +1,27 @@
+module.exports={
+    fields:{
+        dealID: 'text', 
+        title : 'text', 
+        price : 'text',
+        link    : 'text',
+        img    : 'text',
+        death_clock    : 'text',
+        timestamp    : 'timestamp',
+        sale            : 'text',
+        base_price      : 'text',
+        offerID     : 'text',
+        asin        : 'text',
+        position        : 'text',
+        dealType        : 'text',
+        legacyDealID    : 'text',
+        dealState            : 'text',
+        star                 : 'text',
+        reviews              : 'text',
+        review_link          : 'text',
+        smid                 : 'text',
+        stt                  : 'text',
+        robot_label_track    : 'text',
+        
+    },
+    key:[["dealID"]] ,
+} 

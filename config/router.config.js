@@ -133,7 +133,7 @@ export default [
         ],
       },
       // list
-    /*    
+      /*
       {
         path: '/list',
         icon: 'table',
@@ -242,8 +242,30 @@ export default [
             component: './Exception/TriggerException',
           },
         ],
+      },*/
+     {
+        name: 'products',
+        icon: 'table',
+        path: '/products',
+        routes:[
+            {
+                path: '/products',
+                name: 'list',
+                component: './Products/ProductLists',
+                routes:[
+                    {
+                        path: '/products',
+                        redirect: '/products/list',
+                    },
+                    {
+                        path: '/products/list',
+                        component: './Products/ProductLists',
+                    },
+                ]
+            },
+            
+        ]
       },
-    */  
       {
         name: 'account',
         icon: 'user',
@@ -270,6 +292,7 @@ export default [
                 path: '/account/center/projects',
                 component: './Account/Center/Projects',
               },
+              
             ],
           },
           {
@@ -296,6 +319,21 @@ export default [
               {
                 path: '/account/settings/notification',
                 component: './Account/Settings/NotificationView',
+              },
+            ],
+          },
+          {
+            path: '/account/list',
+            name: 'list',
+            component: './Account/List/List',
+            routes: [
+              {
+                path: '/account/list',
+                redirect: '/account/list/list',
+              },
+              {
+                path: '/account/list/list',
+                component: './Account/List/List',
               },
             ],
           },

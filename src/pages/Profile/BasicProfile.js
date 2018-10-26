@@ -55,7 +55,8 @@ class BasicProfile extends Component {
 
   render() {
     const { profile, loading } = this.props;
-    const { basicGoods, basicProgress } = profile;
+    const { basicGoods , basicProgress } = profile;
+      
     let goodsData = [];
     if (basicGoods.length) {
       let num = 0;
