@@ -1108,16 +1108,6 @@ function saveComment(req,res){
             callback(null,null);
         },
         function(callback){
-            var query_object = {sbill_code: 'abc'};
-            var update_values_object = {email: 'abc@gmail.com'};
-            var options = {ttl: 86400, if_exists: true};
-            models.instance.Person.update(query_object, update_values_object, options, function(err){
-                if(err) console.log(err);
-                else console.log('Yuppiie!');
-            });
-            callback(null,null);
-        },
-        function(callback){
             const comments_by_user=()=>{
                 let object=PARAMS_IS_VALID;
                 let comment=new models.instance.comments_by_user(object);
