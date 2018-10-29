@@ -154,14 +154,17 @@ export default {
          },
      ],function(err,result){
          let name='';
+         let username='';
         try{
-            name=user[0].name
+            name=user[0].name;
+            username=user[0].username;
         } catch(e){
             
         }
         if(err) res.send({status: 'error'})  
         res.send({
         name: name,
+        username:username,    
         avatar: 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png',
         userid: '00000001',
         email: 'antdesign@alipay.com',

@@ -452,14 +452,14 @@ class ModalEditForm extends PureComponent{
         this.setState({
             currency: e,
         }) 
-    }
+    } 
     handleUpdate=()=>{
         const { form, handleUpdate } = this.props;
-        const { formVals: oldValue } = this.state;
+        const { formVals: oldValue,currency } = this.state;
         
         form.validateFields((err, fieldsValue) => {
           if (err) return;
-          const formVals = { ...oldValue, ...fieldsValue };
+          const formVals = { ...oldValue, ...fieldsValue,currency };
           this.setState(
             {
               formVals,
@@ -482,7 +482,7 @@ class ModalEditForm extends PureComponent{
       let deliveryprice=this.props.form.getFieldValue('fdeliveryprice');
       let shipWeb=this.props.form.getFieldValue('fshipweb');
       let deposit=this.props.form.getFieldValue('fdeposit');
-      let rprice=this.props.form.getFieldValue('fprice');
+      let rprice=this.props.form.getFieldValue('fprice'); 
       let fexchangerate=this.props.form.getFieldValue('fexchangerate');
       
       
@@ -510,7 +510,7 @@ class ModalEditForm extends PureComponent{
       _deposit= Number.isNaN(_deposit) ? 0 : _deposit
       _rprice= Number.isNaN(_rprice) ? 0 : _rprice
       let _rate= Number.isNaN(_fexchangerate) ? 1 : _fexchangerate
-      
+         
       let _web_price=currencyFormatter.unformat(web_price, { locale: locale[currency]})  
       let _surcharge=currencyFormatter.unformat(fsurcharge, { locale: locale[currency]})  
       let _shipWeb=currencyFormatter.unformat(shipWeb, { locale: locale[currency]}) 
@@ -524,7 +524,6 @@ class ModalEditForm extends PureComponent{
       let i=_deliveryprice;
       let e=_rate*_shipWeb;
       
-      console.log(_web_price,_amount,_sale,_rate);
         
       if (changePrice){
           price=_rprice;
@@ -551,7 +550,6 @@ class ModalEditForm extends PureComponent{
     render(){
         const {modalVisible, handleUpdateModalVisible , selectedRow} = this.props;
         const { form: { getFieldDecorator} } = this.props;
-        
         const {
               loading,
               order,
@@ -645,6 +643,11 @@ class ModalEditForm extends PureComponent{
                         ],
                         initialValue:selectedRow.sbill_code
                       })(<Input placeholder=" " disabled  />)}
+                    </FormItem>
+                    <FormItem>
+                      {getFieldDecorator('status', {
+                        initialValue:selectedRow.status
+                      })(<Input placeholder=" " disabled type="hidden" />)}
                     </FormItem>
                 </Col>
             </Row>
@@ -1551,9 +1554,11 @@ class OrderList extends PureComponent {
     };
     const viewMethods={
         handleModalVisible: this.handleModalVisible,
+    };
+    let showUpdateForm=false;
+    if(selectedRow.sstatus=='pending' && selectedRow.status=='processing' )  {
+      showUpdateForm=true;
     }
-
-      
     return (
       <PageHeaderWrapper title="Danh sách đơn đặt hàng">
         <Card>
@@ -1597,7 +1602,7 @@ class OrderList extends PureComponent {
               onChangeRangPicker={this.onChangeRangPicker}
             />
         </Modal>   
-        { (selectedRow.sstatus=='pending') ? (<ModalEditForm selectedRow={selectedRow} modalVisible={modalVisible} order={order.currency} {...updateMethods} />) : (<ModalViewOrder ModalEditForm selectedRow={selectedRow} modalVisible={modalVisible} order={order.currency} {...viewMethods}/>)
+        { (showUpdateForm) ? (<ModalEditForm selectedRow={selectedRow} modalVisible={modalVisible} order={order.currency} {...updateMethods} />) : (<ModalViewOrder ModalEditForm selectedRow={selectedRow} modalVisible={modalVisible} order={order.currency} {...viewMethods}/>)
       
         }
         

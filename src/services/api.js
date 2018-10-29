@@ -179,5 +179,20 @@ export async function saveCurrencyRaito(params){
         headers:{'X-Access-Token':getAuthority()[0].token}
     })
 }
+export async function getComment(params){ 
+    
+    return request(`/api/comment/list?sbill_code=${params.sbill_code}&username=${params.username}&ref=${new Date().getTime()}`,{
+        method:'GET',
+        headers:{'X-Access-Token':getAuthority()[0].token}
+    })
+}
+export async function saveComment(params){
+    return request(`/api/comment/save?ref=${new Date().getTime()}`,{
+        method:'POST',
+        body: params,
+        headers:{'X-Access-Token':getAuthority()[0].token}
+    })
+}
+
 
 

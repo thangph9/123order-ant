@@ -52,7 +52,7 @@ export default {
         type: 'orderList',
         payload: list,
       });
-    },
+    },   
     *saveOrder({ payload },{call, put}){
           const response = yield call(updateOrder, payload);
           if(response.status==='ok'){

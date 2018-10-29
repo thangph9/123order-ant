@@ -6,6 +6,12 @@ export async function query() {
       headers:{'X-Access-Token':getAuthority()[0].token}
   });
     
+}export async function queryUsers() {
+  return request('/api/users',{
+      method:'GET',
+      headers:{'X-Access-Token':getAuthority()[0].token}
+  });
+    
 }
 
 export async function queryCurrent() {

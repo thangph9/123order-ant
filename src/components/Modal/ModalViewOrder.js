@@ -36,10 +36,15 @@ class ModalViewOrder extends React.Component{
     componentDidMount(){
         
     }
+    renderComment=()=>{
+        return (
+            <div>Xin Chao Comment moi</div>
+        )
+    }
     render(){
         const {selectedRow,modalVisible,handleModalVisible, renderUpdateStatusForm } = this.props;
         return(
-            <Modal 
+        <Modal 
           title={selectedRow.sname}
           visible={modalVisible}
           onOk={()=>{handleModalVisible()}}
@@ -161,9 +166,11 @@ class ModalViewOrder extends React.Component{
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}><Alert message={`${selectedRow._sstatus}`} showIcon={false} banner/></Col>
             
           </Row>
-            <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 12, offset: 0 }}><b>Ghi chú</b></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 12, offset: 0 }}>{selectedRow.scomment}</Col>
+            <Row> 
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><b>Ghi chú</b></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>{selectedRow.scomment}</Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><b>Ghi chú</b></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>{this.renderComment()}</Col>
           </Row>
           </div>
         </Modal>

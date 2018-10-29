@@ -41,11 +41,110 @@ const getValue = obj =>
     .join(',');
 const statusMap = ['default', 'processing', 'success', 'error'];
 
+const CreateFormComment = Form.create()(props => {
+    const {  form, handleSaveComment,row ,loading } = props;
+    const handleSave = (e) => {
+        e.preventDefault();
+        form.validateFields((err, fieldsValue) => {
+          if (err) return;
+          form.resetFields();
+          handleSaveComment(fieldsValue);
+        });
+      };
+     const {  getFieldDecorator } = form
+     const formLayout={
+              labelCol: {
+                xs: { span: 24 },
+                sm: { span: 9 },
+              },
+              wrapperCol: {
+                xs: { span: 24 },
+                sm: { span: 24 },
+                md: { span: 24 },
+              },
+        }
+     let comment='';
+     let sbill_code='';
+     
+     if(row){
+         comment=row.comment;
+         sbill_code=row.sbill_code;
+     }
+      return (
+        <Form onSubmit={handleSave} layout="inline">
+            <Row gutter={{ md: 24, lg: 24, xl: 48 }}>
+              <Col md={24} sm={24}>
+                <FormItem {...formLayout}>
+                  {getFieldDecorator('scomment',{
+                    rules: [
+                          {
+                            required: true,
+                            message: ' ',
+                          },
+                    ],
+                    initialValue:comment,
+          })(<TextArea placeholder="" style={{ minHeight: 32 }} rows={4} />)}
+                </FormItem>
+                <FormItem>
+                  {getFieldDecorator('sbill_code',{
+                    initialValue:sbill_code,
+                    })(<Input type="hidden" />)}
+                </FormItem>
+              </Col>
+            <Col md={24} sm={24}>
+                    <span className={styles.submitButtons}>
+                      <Button type="primary" htmlType="submit" loading ={loading} >
+                        Gửi
+                      </Button>
+                    </span>
+                  </Col> 
+            </Row> 
+          </Form> 
+        ) 
+});
+class CommentList extends PureComponent{
+    state={
+        editable:false,
+    }
+    componentDidMount(){
+    }
+    handleEditComment=(e)=>{
+        const { handleEditComment,form } = this.props;
+        console.log(form);
+        //form.resetFields();
+        //handleEditComment(e);
+    }
+    
+    render(){
+        
+        const { data,handleEditComment,currentUser } =this.props;
+        let editable=(data.username == currentUser.username) ? true : false;
+        
+        return (
+            <div>
+                <Row>
+                    <Col xs={{ span: 12, offset: 0 }} lg={{ span: 5, offset: 0 }}>{data.username}</Col>
+                    <Col xs={{ span: 12, offset: 0 }} lg={{ span: 16, offset: 0 }}>
+                        <span><b>{data.comment}</b></span><br/>
+                        <span><i>{moment(data.createat).format('DD-MM-YYYY h:mm:ss')}</i></span>
+                    </Col>
+                        
+        {editable &&
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><Button type="button" onClick={()=>handleEditComment(data)}>Edit</Button></Col>
+        }
+                </Row>
+            </div>
+        )
+    }
+}
+
 /* eslint react/no-multi-comp:0 */
-@connect(({ rule, loading,order }) => ({
+@connect(({ rule, loading,order ,comment,user}) => ({
   rule,
   loading: loading.models.order,
   order,
+  comment,
+  user,       
 }))
 @Form.create()
 class OrderConfirm extends PureComponent {
@@ -59,6 +158,7 @@ class OrderConfirm extends PureComponent {
     formValues: {},
     stepFormValues: {},
     loadingUpdate: false,  
+    editComment: false,  
     data:{
         list:[],
         pagination:{},
@@ -310,7 +410,6 @@ class OrderConfirm extends PureComponent {
     })    
   }
   componentWillUpdate(){
-      //console.log(this.props);
   }
   handleDelete=(row)=>{
       const { dispatch } = this.props;
@@ -423,15 +522,23 @@ class OrderConfirm extends PureComponent {
   handleSelectRows = rows => {
     this.setState({
       selectedRows: rows,
+        
     });
   };
   handleRowSelect = row =>{
-      
+      const {dispatch} = this.props;
       this.setState({
           visible: true,
           selectedRow:row,
           newRow:true,
         });
+      dispatch({
+          type: 'comment/fetch',
+          payload: {
+              sbill_code:row.sbill_code,
+              username  :row.semployee,
+          }
+      })
        
   }
   handleHeaderRow = (e)=>{
@@ -458,7 +565,6 @@ class OrderConfirm extends PureComponent {
     const { dispatch, form } = this.props;
     const status="confirm";
     form.validateFields((err, fieldsValue) => {
-        console.log(fieldsValue);
       if (err) return; 
       const values = {
         ...fieldsValue,
@@ -525,26 +631,27 @@ class OrderConfirm extends PureComponent {
     this.handleUpdateModalVisible();
   };
   handleOk = (e) => {
+    
     const {form} = this.props;
-    const {changeStatus} = this.state;  
+    const {changeStatus,editComment} = this.state;  
+    
     if(changeStatus){
         this.setState({
             changeStatus: false,
-            newRow:false
         });
         
     }
     this.setState({ 
       visible: false,
-      newRow:false
+      editComment: false,
     });
   }
   handleCancel = (e) => {
-    const { changeStatus } = this.state;  
+    const { changeStatus,editComment } = this.state;  
     this.setState({
       visible: false,
-      changeStatus: !!changeStatus   ,
-        newRow:false
+      changeStatus: !!changeStatus ,
+      editComment: !!editComment,
     });
   }
    
@@ -729,7 +836,29 @@ class OrderConfirm extends PureComponent {
       </Form>
     );
   }
-  
+/* COMMENT CODE */      
+  handleEditComment = e =>{
+    
+    this.setState({
+      editComment: true,
+      commentEdit: e
+    })   
+  }      
+  handleSaveComment =(values)=>{
+      const {dispatch} = this.props;  
+      this.setState({
+            editComment: false,
+            commentEdit:{}
+      })
+      dispatch({
+        type: 'comment/save',
+        payload: values,
+      });
+  }
+  loadComment = data =>{
+      const {dispatch} = this.props;  
+  }
+  /* COMMENT CODE END*/      
   renderAdvancedForm() {
     const {
       form: { getFieldDecorator },
@@ -752,26 +881,27 @@ class OrderConfirm extends PureComponent {
     const { expandForm } = this.state;
     return expandForm ? this.renderAdvancedForm() : this.renderSimpleForm();
   }
+      
   render() {
       
     const {
       order: { data,update },
+      comment: {comment},
       loading,
+      user: {currentUser},
     } = this.props; 
-    const { selectedRows, modalVisible, updateModalVisible, stepFormValues,selectedRow,statusText,changeStatus,newRow } = this.state; 
+    const { selectedRows, modalVisible, updateModalVisible, stepFormValues,selectedRow,statusText,changeStatus,editComment,commentEdit } = this.state; 
     let confirm=[];
-    let row=(update && !newRow) ? update : selectedRow;
+    let row=(update && update.sbill_code == selectedRow.sbill_code) ? update : selectedRow;
     if(row.sstatus=='pending'){
-        
         if(row.status=='processing') {
-            confirm=[<Button type="primary" key="processing" loading={loading} onClick={()=>this.handleConfirm(row)}  >Xác nhận  đặt cọc</Button>]
+            confirm=[<Button type="primary" style={{"margin":"3px"}} key="processing" loading={loading} onClick={()=>this.handleConfirm(row)}  >Xác nhận  đặt cọc</Button>]
         }else{
-            confirm=[<Button type="button" key="confirm" loading={loading} onClick={()=>this.handleConfirm(row)} >Huỷ xác nhận</Button>]
+            confirm=[<Button type="button" style={{"margin":"3px"}} key="confirm" loading={loading} onClick={()=>this.handleConfirm(row)} >Huỷ xác nhận</Button>]
         }
     }else{
         confirm='';
     }
-                 
     const parentMethods = {
       handleAdd: this.handleAdd,
       handleModalVisible: this.handleModalVisible,
@@ -780,7 +910,30 @@ class OrderConfirm extends PureComponent {
       handleUpdateModalVisible: this.handleUpdateModalVisible,
       handleUpdate: this.handleUpdate,
     };
+    /*COMMENT RENDER*/                 
+    let rowData={};
     
+    if(editComment){
+               
+        rowData=  commentEdit  ;      
+    }else{
+        rowData = {
+            sbill_code: selectedRow.sbill_code,
+            username: selectedRow.semployee
+        }            
+    } 
+    
+    let CommentForm=<CreateFormComment key={(rowData) ?  rowData.sbill_code : 0 }  handleSaveComment={this.handleSaveComment} row={rowData} loading={loading}  />;
+    let commentList=[]
+            
+    if(comment){
+        commentList=(comment.list) ? comment.list : [];
+    }        
+    let commentUI=[];    
+            
+    commentList.map((e,i)=>{
+        commentUI.push(<CommentList data={e} key={i}  handleEditComment={this.handleEditComment} currentUser={currentUser}/>);
+    })        
     return (
       <PageHeaderWrapper title="Danh sách đơn đặt hàng">
         <Card>
@@ -949,8 +1102,9 @@ class OrderConfirm extends PureComponent {
             
           </Row>
             <Row>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 12, offset: 0 }}><b>Ghi chú</b></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 12, offset: 0 }}>{selectedRow.scomment}</Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><span className={styles.label}><b>Ghi chú</b></span></Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>{CommentForm}</Col>
+            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 12, offset: 0 }}>{commentUI}</Col>
           </Row>
           </div>
         </Modal>

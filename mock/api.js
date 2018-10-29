@@ -354,9 +354,7 @@ function getOrder(req,res){
       back      :'Back cọc',
       tranfer   :'Chuyển cọc'   
     }
-    let listRole=[
-        'admin','superadmin','view_order_confirm','view_order_status'
-    ];
+    let listRole=[];
     let filter_params={};
     let currentPage=1;
     let pageSize=10;
@@ -387,7 +385,7 @@ function getOrder(req,res){
     let scolor="";
     let scode="";
     async.series([
-        function(callback){
+       function(callback){
            let uuid='';
            try{
                uuid=models.uuidFromString(legit.user_id);
@@ -434,8 +432,7 @@ function getOrder(req,res){
             }
             query['$limit']=limit 
             callback(null,null);    
-       },
-          
+       },   
        function(callback){
            let from=moment().format("YYYY-MM-DD");
            let to=moment().format("YYYY-MM-DD");
@@ -463,7 +460,6 @@ function getOrder(req,res){
        function(callback){
             
             if(req.body.status){
-                console.log(req.body.status);
                 switch(req.body.status){
                     case 'paid':
                         status="status:confirm";
@@ -551,7 +547,6 @@ function getOrder(req,res){
             query={
                 $solr_query:'{"q":"'+q+'","sort":"'+sort+'","paging":"driver"}',
             }
-            console.log(query);
             models.instance.orders.find(query,function(err,items){
                 try{
                     items.map((e)=>{
@@ -578,6 +573,12 @@ function getOrder(req,res){
              callback(err,null);
             });
             
+       },
+       function(callback){
+            models.instance.comment_by_user.find({},function(err,comment){
+                
+            });
+           callback(null,null);
        },
       
        function(callback){
@@ -652,8 +653,8 @@ function addOrder(req,res){
                 PARAM_IS_VALID['scurrency']      =body.currency,
                 PARAM_IS_VALID['surcharge']     =(body.surcharge) ? parseFloat(body.surcharge) : 0 ,
                 PARAM_IS_VALID['ssurcharge']    =body.ssurcharge,
-                PARAM_IS_VALID['scomment']      =body.comment,
                 PARAM_IS_VALID['status']        ="processing";
+                
             }catch(e){
                 return res.send({status: 'error'})
             }
@@ -661,8 +662,7 @@ function addOrder(req,res){
             callback(null,null);
             
         },
-        function(callback){
-            
+        function(callback){            
             const orders=()=>{
                 let object      =PARAM_IS_VALID;
                 let instance    =new models.instance.orders(object);
@@ -679,8 +679,7 @@ function addOrder(req,res){
                 return save;
             }  
            queries.push(orders_update());
-            
-           const order_by_member=()=>{
+            const order_by_member=()=>{
                 let object      ={
                     sbill_code: PARAM_IS_VALID['sbill_code'] ,
                     semployee: PARAM_IS_VALID['semployee'] ,
@@ -692,7 +691,7 @@ function addOrder(req,res){
            }    
            queries.push(order_by_member());
             const orders_by_status=()=>{
-                   let object      ={
+                   let object ={
                        sbill_code: PARAM_IS_VALID['sbill_code'],
                        semployee: PARAM_IS_VALID['semployee'] ,
                        ddate: PARAM_IS_VALID['ddate'] ,
@@ -703,9 +702,33 @@ function addOrder(req,res){
                     let save        =instance.save({return_query: true});
                     return save;
                }
-            queries.push(orders_by_status())
-           callback(null,null);
-        },
+           queries.push(orders_by_status())
+           const comments_by_user=()=>{
+                let object={
+                    commentid    : Uuid.random(),
+                    createat     : new Date(),
+                    comment      : req.body.comment,
+                    sbill_code   : PARAM_IS_VALID['sbill_code'],
+                    username     : PARAM_IS_VALID['semployee'],
+                }
+                let instance    =new models.instance.comment_by_user(object);
+                let save        =instance.save({return_query: true});
+                return save;
+            } 
+           queries.push(comments_by_user());
+            const comment_by_user=()=>{
+                let object={};
+                 object['username']=PARAMS_IS_VALID.semployee;
+                 object['sbill_code']=PARAMS_IS_VALID.sbill_code;
+                 object['comment']=PARAMS_IS_VALID.scomment;
+                 object['createat']=new Date();
+                let comment=new models.instance.comment_by_user(object);
+                let save   =comment.save({return_query: true});
+                return save;
+            }
+            queries.push(comment_by_user())
+            callback(null,null);
+        }, 
     ],function(err,result){
         if(err) return res.send({status: 'error'});
         models.doBatch(queries,function(err){
@@ -728,7 +751,13 @@ function updateOrder(req,res){
        return  res.send({status: 'expired'}); 
     }
     let listRole=[]
-    
+    let locale={
+                  'USD':'en-US',
+                  'GBP':'en-GB',
+                  'VND':'vi-VN',
+                  'JPY':'ja-JP',
+                  'EUR':'de-DE',
+            }
     let PARAM_IS_VALID={},queries=[];
     async.series([
         function(callback){
@@ -739,13 +768,22 @@ function updateOrder(req,res){
                return res.send({status:"error_auth"})
            }
            models.instance.users.find({user_id:uuid},{select:['role']},function(err,user){
-               
                listRole=(user) ? user[0].role : [];
                callback(null,null);
            })
         }, 
         function(callback){
-            PARAM_IS_VALID=req.body;
+                PARAM_IS_VALID=req.body;
+                PARAM_IS_VALID['fwebprice']     =(body.fwebprice) ? currencyFormatter.unformat(body.fwebprice, { locale: locale[PARAM_IS_VALID.scurrency]})  : 0;
+                PARAM_IS_VALID['fshipweb']      =(body.fshipweb) ? currencyFormatter.unformat(body.fshipweb, { locale: locale[PARAM_IS_VALID.scurrency]}) : 0 ;
+                PARAM_IS_VALID['fexchangerate'] =(body.fexchangerate) ? currencyFormatter.unformat(body.fexchangerate, { locale: locale[PARAM_IS_VALID.scurrency]}) : 0 ;
+                PARAM_IS_VALID['fprice']        =(body.fprice) ? currencyFormatter.unformat(body.fprice, { locale: locale[PARAM_IS_VALID.scurrency]}) : 0 ;
+
+                PARAM_IS_VALID['fdeposit']      =(body.fdeposit) ? currencyFormatter.unformat(body.fdeposit, { locale: locale[PARAM_IS_VALID.scurrency]}) : 0 ;
+                PARAM_IS_VALID['frealpayprice'] =(body.frealpayprice) ? currencyFormatter.unformat(body.frealpayprice, { locale: locale[PARAM_IS_VALID.scurrency]}) : 0 ;
+                PARAM_IS_VALID['fdelivery']     =(body.fdelivery) ? currencyFormatter.unformat(body.fdelivery, { locale: locale[PARAM_IS_VALID.scurrency]}) : 0 ;
+                PARAM_IS_VALID['fdeliveryprice']=(body.fdeliveryprice) ? currencyFormatter.unformat(body.fdeliveryprice, { locale: locale[PARAM_IS_VALID.scurrency]}) : 0 ; 
+                PARAM_IS_VALID['scurrency']=body.currency;
             if(req.body.sstatus){
                     if(listRole.indexOf('update_sstatus')  > -1){
 
@@ -768,10 +806,10 @@ function updateOrder(req,res){
                 delete PARAM_IS_VALID['name'];
                 delete PARAM_IS_VALID['phone'];
                 const orders=()=>{
-                let object      =PARAM_IS_VALID;
-                let instance    =new models.instance.orders(object);
-                let save        =instance.save({return_query: true,if_exists: true});
-                return save;
+                    let object      =PARAM_IS_VALID;
+                    let instance    =new models.instance.orders(object);
+                    let save        =instance.save({return_query: true,if_exists: true});
+                    return save;
                 }
                queries.push(orders());
                 const orders_update=()=>{
@@ -798,10 +836,23 @@ function updateOrder(req,res){
                     return save;
                }
                queries.push(orders_by_status())
+               const comment_by_user=()=>{
+                let object={
+                    commentid    : Uuid.random(),
+                    createat     : new Date(),
+                    comment      : req.body.scomment,
+                    sbill_code   : PARAM_IS_VALID['sbill_code'],
+                    username     : PARAM_IS_VALID['semployee'],
+                }
+                let instance    =new models.instance.comment_by_user(object);
+                let save        =instance.save({return_query: true});
+                return save;
+            } 
+           queries.push(comment_by_user());
             }catch(e){
+                console.log(e)
                 return res.send({status: 'error_01'});
             }
-            
            callback(null,null);
         },
     ],function(err,result){
@@ -1027,6 +1078,124 @@ function checkAccount(req,res){
     });
     
 }
+function saveComment(req,res){
+    let PARAMS_IS_VALID={};
+    const { body } = req;
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+       return  res.send({status: 'expired'}); 
+    }
+    let listRole=[];
+    let queries=[];
+    async.series([
+        function(callback){
+            try{
+                PARAMS_IS_VALID['commentid']=(body.commentid) ?  models.uuidFromString(legit.user_id) : Uuid.random();
+                PARAMS_IS_VALID['comment']=body.scomment;
+                PARAMS_IS_VALID['username']=legit.username;
+                PARAMS_IS_VALID['sbill_code']=body.sbill_code;
+                PARAMS_IS_VALID['createat']=new Date();
+            }catch(e){
+                return res.send({status: 'error'})
+            }
+            callback(null,null);
+        },
+        function(callback){
+            var query_object = {sbill_code: 'abc'};
+            var update_values_object = {email: 'abc@gmail.com'};
+            var options = {ttl: 86400, if_exists: true};
+            models.instance.Person.update(query_object, update_values_object, options, function(err){
+                if(err) console.log(err);
+                else console.log('Yuppiie!');
+            });
+            callback(null,null);
+        },
+        function(callback){
+            const comments_by_user=()=>{
+                let object=PARAMS_IS_VALID;
+                let comment=new models.instance.comments_by_user(object);
+                let save   =comment.save({return_query: true});
+                return save;
+            }
+            queries.push(comments_by_user())
+            const comment_by_user=()=>{
+                let object={};
+                 object['username']=PARAMS_IS_VALID.username;
+                 object['sbill_code']=PARAMS_IS_VALID.sbill_code;
+                 object['comment']=PARAMS_IS_VALID.comment;
+                 object['createat']=PARAMS_IS_VALID.createat;
+                let comment=new models.instance.comment_by_user(object);
+                let save   =comment.save({return_query: true});
+                return save;
+            }
+            queries.push(comment_by_user())
+            
+            callback(null,null);
+        }
+    ],function(err,result){
+        if(err) return res.send({status:"error"})
+        try{
+             models.doBatch(queries,function(err){
+                if(err) return res.send({status: 'error_03'});
+                res.send({status: "ok",result:PARAMS_IS_VALID })
+            });
+         }catch(e){
+             return res.send({status: 'error_04'});
+         }
+    });
+}
+function getComment(req,res){
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+       return  res.send({status: 'expired'}); 
+    }
+    const params=req.query; 
+    let listRole=[];
+    let queries=[];
+    let list=[];
+    let PARAMS_IS_VALID={}
+    async.series([
+        function(callback){
+            try{
+                PARAMS_IS_VALID['sbill_code']=params.sbill_code;
+            }catch(e){
+            return res.send({status: 'error'})
+            }
+            callback(null,null);
+        },
+        function(callback){
+            callback(null,null);
+        },
+        function(callback){
+            var query={$solr_query: '{"q":" sbill_code:'+PARAMS_IS_VALID.sbill_code+'"}'}
+            
+            models.instance.comment_by_user.find(query,function(err,items){
+               if(items){
+                   list=items;
+               }
+               callback(err,null);
+           });
+        }
+    ],function(err,result){
+        if(err) return res.send({status:"error"})
+        res.send({status : 'ok',list: list})
+    });
+    
+}
 
 export default {
   'GET /api/project/notice': getNotice,
@@ -1048,4 +1217,6 @@ export default {
   'GET /api/fake_list': getFakeList,
   'POST /api/fake_list': postFakeList,
   'GET /api/captcha': getFakeCaptcha,
+  'POST /api/comment/save': saveComment,
+  'GET /api/comment/list': getComment,
 };
