@@ -180,7 +180,7 @@ class ConfirmDelivery extends PureComponent {
     },   
     {
         title: 'Ngày',
-        dataIndex: 'ddate',
+        dataIndex: 'ddate_paid',
         width: 150,
         fixed: 'left',
         sorter: true,

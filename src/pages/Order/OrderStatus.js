@@ -550,7 +550,7 @@ class OrderStatus extends PureComponent {
     },   
     {
         title: 'Ngày',
-        dataIndex: 'ddate',
+        dataIndex: 'ddate_confirm',
         width: 150,
         fixed: 'left',
         sorter: true,

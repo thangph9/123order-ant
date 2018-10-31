@@ -181,7 +181,7 @@ class OrderArrived extends PureComponent {
     },   
     {
         title: 'Ngày',
-        dataIndex: 'ddate',
+        dataIndex: 'ddate_arrived',
         width: 150,
         fixed: 'left',
         sorter: true,

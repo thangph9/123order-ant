@@ -384,6 +384,8 @@ function getOrder(req,res){
     let ssize="";
     let scolor="";
     let scode="";
+    let _from="";
+    let _to="";
     async.series([
        function(callback){
            let uuid='';
@@ -436,8 +438,7 @@ function getOrder(req,res){
        function(callback){
            let from=moment().format("YYYY-MM-DD");
            let to=moment().format("YYYY-MM-DD");
-           let _from="";
-           let _to="";
+           
            if(req.body.from){
                from=req.body.from;
                
@@ -453,7 +454,7 @@ function getOrder(req,res){
             _from=moment(estart).format("YYYY-MM-DD");
             _to=moment(eend).format("YYYY-MM-DD");
             emp="semployee:"+legit.username;
-            ddate= "ddate:["+_from+"T00:00:00Z TO "+_to+"T00:00:00Z]";
+            
             callback(null,null);
        },
        function(callback){
@@ -464,6 +465,8 @@ function getOrder(req,res){
                         try{
                             if(listRole.indexOf('view_paid')){
                                 status="status:confirm";
+                                ddate= "ddate_confirm:["+_from+"T00:00:00Z TO "+_to+"T00:00:00Z]";
+                                sort="ddate_confirm desc";
                             }else{
                                 return res.send({status: 'invalid_view_paid'})
                             }
@@ -476,6 +479,8 @@ function getOrder(req,res){
                         try{
                             if(listRole.indexOf('view_delivery')){
                                status="sstatus:paid";
+                               ddate= "ddate_paid:["+_from+"T00:00:00Z TO "+_to+"T00:00:00Z]";
+                               sort="ddate_paid desc";
                             }else{
                                 return res.send({status: 'invalid_view_delivery'})
                             }
@@ -488,7 +493,9 @@ function getOrder(req,res){
                     case 'confirm':
                         try{
                             if(listRole.indexOf('view_confirm')){
-                               status='status:(confirm OR processing)'
+                               status='status:(confirm OR processing)';
+                               ddate= "ddate:["+_from+"T00:00:00Z TO "+_to+"T00:00:00Z]";
+                               sort="ddate desc";
                             }else{
                                 return res.send({status: 'invalid_view_confirm'})
                             }
@@ -501,6 +508,8 @@ function getOrder(req,res){
                         try{
                             if(listRole.indexOf('view_arrived')){
                                status="status:arrived";
+                               ddate= "ddate_arrived:["+_from+"T00:00:00Z TO "+_to+"T00:00:00Z]";
+                               sort="ddate_arrived desc";
                             }else{
                                 return res.send({status: 'invalid_view_arrived'})
                             }
@@ -510,7 +519,9 @@ function getOrder(req,res){
                         callback(null,null);
                         break;
                     default:
+                        ddate= "ddate:["+_from+"T00:00:00Z TO "+_to+"T00:00:00Z]";
                         status='status:(confirm OR processing)'
+                        sort="ddate desc";
                         callback(null,null);
                         break
                 }
@@ -523,7 +534,9 @@ function getOrder(req,res){
           
             try{
                 if(listRole.indexOf(legit.rule) > -1){
-                    emp="";
+                    
+                    emp="semployee:*";
+                
                 }
             }catch(e){
                 
@@ -582,6 +595,7 @@ function getOrder(req,res){
             query={
                 $solr_query:'{"q":"'+q+'","sort":"'+sort+'","paging":"driver"}',
             }
+            
             models.instance.orders.find(query,function(err,items){
                 try{
                     items.map((e)=>{
@@ -795,6 +809,7 @@ function updateOrder(req,res){
             }
     let PARAM_IS_VALID={},queries=[];
     let submit='add';
+    var update_values_object = {};
     async.series([
         function(callback){
            let uuid='';
@@ -826,7 +841,11 @@ function updateOrder(req,res){
                     case 'update_status_confirm':
                         try{
                             if(listRole.indexOf('update_status_confirm') > -1 ){
-
+                                PARAM_IS_VALID['ddate_confirm']=new Date().getTime();
+                                update_values_object={
+                                    ddate_confirm:PARAM_IS_VALID['ddate_confirm'],
+                                    status: PARAM_IS_VALID.status
+                                }
                             }else{
                                 return res.send({status: 'invalid_rule_update_status_confirm'});
                             }
@@ -838,7 +857,11 @@ function updateOrder(req,res){
                      case 'update_status_delivery':
                         try{
                             if(listRole.indexOf('update_status_delivery') > -1 ){
-
+                                PARAM_IS_VALID['ddate_arrived']=new Date();  
+                                update_values_object={
+                                    ddate_arrived:   PARAM_IS_VALID['ddate_arrived'],
+                                    status: PARAM_IS_VALID.status
+                                }
                             }else{
                                 return res.send({status: 'invalid_rule_update_status_delivery'});
                             }
@@ -850,7 +873,11 @@ function updateOrder(req,res){
                     case 'update_sstatus':    
                         try{
                             if(listRole.indexOf('update_sstatus')  > -1){
-
+                                PARAM_IS_VALID['ddate_paid']=new Date();
+                                update_values_object={
+                                    ddate_paid:   PARAM_IS_VALID['ddate_paid'],
+                                    sstatus: PARAM_IS_VALID.sstatus
+                                }
                             }else{
                                 return res.send({status:'invalid_rule_update_sstatus'})
                             }
@@ -880,9 +907,9 @@ function updateOrder(req,res){
                 }
                 if(submit=='update'){
                     const orders=()=>{
-                        let object      =PARAM_IS_VALID;
-                        let instance    =new models.instance.orders(object);
-                        let save        =instance.save({return_query: true,if_exists: true});
+                        var query_object_update = {sbill_code:PARAM_IS_VALID.sbill_code};
+                        var options = {return_query: true};
+                        let save        =models.instance.orders.update(query_object_update, update_values_object, options )
                         return save;
                     }
                     queries.push(orders());
@@ -927,6 +954,7 @@ function updateOrder(req,res){
                    queries.push(comment_by_user());
                 }
             }catch(e){
+                
                 return res.send({status: 'error_01'});
             }
            callback(null,null);
