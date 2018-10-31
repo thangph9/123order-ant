@@ -101,15 +101,16 @@ class CurrencyForm extends PureComponent {
     let list=[];
     const { defaultCurrency } = this.state;
     if(order.currency){
+        try{
         order.currency.raito.forEach(function(e){
             ls.push(<Option value={e.currency} key={e.currency}>{e.currency}</Option>);
-            try{
+            
                 list[[e.currency]]=currencyFormatter.format(e.raito, { locale: 'en-US',symbol: '' });
-            }catch(e){
-                return;
-            }
             
         });
+        }catch(e){
+                
+            }
     }
     const formItemLayout = {
       labelCol: {
@@ -124,7 +125,7 @@ class CurrencyForm extends PureComponent {
     };
     
     const formItemLayoutCurrencyRight={
-        labelCol: {
+        labelCol: { 
             xs: { span: 24 },
             sm: { span: 9 },
           },

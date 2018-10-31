@@ -582,7 +582,6 @@ function getOrder(req,res){
             query={
                 $solr_query:'{"q":"'+q+'","sort":"'+sort+'","paging":"driver"}',
             }
-            
             models.instance.orders.find(query,function(err,items){
                 try{
                     items.map((e)=>{
@@ -637,9 +636,6 @@ function getOrder(req,res){
     });
     
 }
-
-
-
 function addOrder(req,res){
     const { body } = req;
     
@@ -798,6 +794,7 @@ function updateOrder(req,res){
                   'EUR':'de-DE',
             }
     let PARAM_IS_VALID={},queries=[];
+    let submit='add';
     async.series([
         function(callback){
            let uuid='';
@@ -823,45 +820,73 @@ function updateOrder(req,res){
                 PARAM_IS_VALID['fdelivery']     =(body.fdelivery) ? currencyFormatter.unformat(body.fdelivery, { locale: locale[PARAM_IS_VALID.scurrency]}) : 0 ;
                 PARAM_IS_VALID['fdeliveryprice']=(body.fdeliveryprice) ? currencyFormatter.unformat(body.fdeliveryprice, { locale: locale[PARAM_IS_VALID.scurrency]}) : 0 ; 
                 PARAM_IS_VALID['scurrency']=body.currency;
-            if(req.body.sstatus){
-                try{
-                    if(listRole.indexOf('update_sstatus')  > -1){
+            if(req.body.submit){
+                submit='update';
+                switch(req.body.submit){
+                    case 'update_status_confirm':
+                        try{
+                            if(listRole.indexOf('update_status_confirm') > -1 ){
 
-                    }else{
-                        return res.send({status:'error_rule_update_sstatus'})
-                    }
-                }catch(e){
-                    return res.send({status:'error_rule_update_sstatus'})
+                            }else{
+                                return res.send({status: 'invalid_rule_update_status_confirm'});
+                            }
+
+                        }catch(e){
+                            return res.send({status: 'error_rule_update_status'});
+                        } 
+                        break;
+                     case 'update_status_delivery':
+                        try{
+                            if(listRole.indexOf('update_status_delivery') > -1 ){
+
+                            }else{
+                                return res.send({status: 'invalid_rule_update_status_delivery'});
+                            }
+
+                        }catch(e){
+                            return res.send({status: 'error_rule_update_status'});
+                        }
+                        break;  
+                    case 'update_sstatus':    
+                        try{
+                            if(listRole.indexOf('update_sstatus')  > -1){
+
+                            }else{
+                                return res.send({status:'invalid_rule_update_sstatus'})
+                            }
+                        }catch(e){
+                            return res.send({status:'error_rule_update_sstatus'})
+                        }
+                        break;
+                    default:
+                        return res.send({status:'invalid_submit'})
+                        break;
+                        
                 }
-                    
              }
-            if(req.body.status){
-                try{
-                    if(listRole.indexOf('update_status') > -1 ){
-
-                    }else{
-                        return res.send({status: 'error_rule_update_status'});
-                    }
-                    
-                }catch(e){
-                    return res.send({status: 'error_rule_update_status'});
-                }
-                 
-            }
             
             callback(null,null);
         },
         function(callback){ 
             try{
-                delete PARAM_IS_VALID['name'];
-                delete PARAM_IS_VALID['phone'];
-                const orders=()=>{
-                    let object      =PARAM_IS_VALID;
-                    let instance    =new models.instance.orders(object);
-                    let save        =instance.save({return_query: true,if_exists: true});
-                    return save;
+                if(submit=='add'){
+                    const orders=()=>{
+                        let object      =PARAM_IS_VALID;
+                        let instance    =new models.instance.orders(object);
+                        let save        =instance.save({return_query: true,if_exists: true});
+                        return save;
+                    }
+                    queries.push(orders());
                 }
-               queries.push(orders());
+                if(submit=='update'){
+                    const orders=()=>{
+                        let object      =PARAM_IS_VALID;
+                        let instance    =new models.instance.orders(object);
+                        let save        =instance.save({return_query: true,if_exists: true});
+                        return save;
+                    }
+                    queries.push(orders());
+                }
                 const orders_update=()=>{
                     const uid=Uuid.random();
                     let object      =PARAM_IS_VALID;
@@ -886,21 +911,22 @@ function updateOrder(req,res){
                     return save;
                }
                queries.push(orders_by_status())
-               const comment_by_user=()=>{
-                let object={
-                    commentid    : Uuid.random(),
-                    createat     : new Date(),
-                    comment      : req.body.scomment,
-                    sbill_code   : PARAM_IS_VALID['sbill_code'],
-                    username     : PARAM_IS_VALID['semployee'],
+               if(req.body.scomment){
+                   const comment_by_user=()=>{
+                        let object={
+                            commentid    : Uuid.random(),
+                            createat     : new Date(),
+                            comment      : req.body.scomment,
+                            sbill_code   : PARAM_IS_VALID['sbill_code'],
+                            username     : PARAM_IS_VALID['semployee'],
+                        }
+                        let instance    =new models.instance.comment_by_user(object);
+                        let save        =instance.save({return_query: true});
+                        return save;
+                    } 
+                   queries.push(comment_by_user());
                 }
-                let instance    =new models.instance.comment_by_user(object);
-                let save        =instance.save({return_query: true});
-                return save;
-            } 
-           queries.push(comment_by_user());
             }catch(e){
-                
                 return res.send({status: 'error_01'});
             }
            callback(null,null);
@@ -1254,8 +1280,7 @@ function getComment(req,res){
 }
 
 export default {
-  'GET /api/project/notice': getNotice,
-  'GET /api/activities': getActivities,
+  
   'POST /api/forms': (req, res) => {
     res.send({ message: 'Ok' });
   },
@@ -1267,12 +1292,15 @@ export default {
   'GET /api/generate/bill_code':generateOrderBillCode,       
   'GET /api/currency/raito':   getCurrencyRaito,    
   'POST /api/currency/raito':   saveCurrencyRaito,   
+  'POST /api/comment/save': saveComment,
+  'GET /api/comment/list': getComment,
+    
   'GET /api/tags': mockjs.mock({
     'list|100': [{ name: '@city', 'value|1-100': 150, 'type|0-2': 1 }],
   }),
   'GET /api/fake_list': getFakeList,
   'POST /api/fake_list': postFakeList,
   'GET /api/captcha': getFakeCaptcha,
-  'POST /api/comment/save': saveComment,
-  'GET /api/comment/list': getComment,
+  'GET /api/project/notice': getNotice,
+  'GET /api/activities': getActivities,
 };

@@ -230,11 +230,15 @@ class OrderForm extends PureComponent {
     const {status, currency,surcharge,price,payprice,deposit,amount,servicerate} = this.state;
       let ls=[];
       let list=[];
-    if(order.currency){
-        order.currency.raito.forEach(function(e){
-            ls.push(<Option value={e.currency} key={e.currency}>{e.currency}</Option>);
-            list[[e.currency]]=e.raito;
-        });
+    try{  
+        if(order.currency){
+            order.currency.raito.forEach(function(e){
+                ls.push(<Option value={e.currency} key={e.currency}>{e.currency}</Option>);
+                list[[e.currency]]=e.raito;
+            });
+        }
+    }catch(e){
+        
     }
     let bill_code=order.billcode;
     const formItemLayout = {

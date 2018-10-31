@@ -402,10 +402,11 @@ class ConfirmDelivery extends PureComponent {
           if (err) return; 
           this.setState({
               changeStatus: false,
-          })      
+          })
+          let submit="update_status_delivery";
           dispatch({
                 type: 'order/saveOrder',
-                payload:{...fieldsValue},  
+                payload:{...fieldsValue,submit},  
             }
           )      
         });
@@ -641,22 +642,27 @@ class ConfirmDelivery extends PureComponent {
   }
   handleConfirm =(e)=>{
       const { dispatch } = this.props;
-      
-      
+      let old_data=e;
+      let submit='update_status_delivery';
+      let status='';
       if(e.status=='arrived'){
-          e['status']='confirm';
+          status='confirm';
       }else{
-          e['status']='arrived';
-      }
-      e['_status']=this.listStatusObj[e['status']];
+          status='arrived';
+      } 
+      let old_status=old_data['_status'];
+      old_data['_old_status']=old_status;
+      
+      //old_data['_status']=this.listStatusObj[status];
       dispatch({
                 type: 'order/saveOrder',
                 payload:{
-                    ...e
+                    ...old_data,
+                    status,
+                    submit
                 },  
             } 
         )
-      
   }
   onChangeRangPicker =(e)=>{  
       const { formValues } = this.state;
@@ -868,7 +874,7 @@ class ConfirmDelivery extends PureComponent {
     if(row.sstatus=='paid'){
         
         if(row.sstatus=='paid' && row.status=='confirm' ) {
-        confirm=[<Button type="primary" style={{"margin": "3px"}} key="paid" onClick={()=>this.handleConfirm(row)} loading={loading}>Xác nhận hàng về</Button>]
+            confirm=[<Button type="primary" style={{"margin": "3px"}} key="paid" onClick={()=>this.handleConfirm(row)} loading={loading}>Xác nhận hàng về</Button>]
         }else if(row.status=='arrived'){
             confirm=[<Button type="button" style={{"margin": "3px"}} key="cancel" onClick={()=>this.handleConfirm(row)} loading={loading}>Huỷ xác nhận</Button>]
         }else{

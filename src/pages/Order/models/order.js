@@ -62,6 +62,7 @@ export default {
                 message.warning('Đăng nhập lại ');
             }else{
                 
+                payload['_status']=payload['_old_status'];
                 message.error('Lỗi! không thể thay đổi');
             }
           yield put({
@@ -152,6 +153,7 @@ export default {
                 update: row               
             }
         }else{
+        //console.log(state);
             return {
                 ...state
             }

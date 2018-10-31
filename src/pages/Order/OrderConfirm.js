@@ -110,7 +110,7 @@ class CommentList extends PureComponent{
     }
     handleEditComment=(e)=>{
         const { handleEditComment,form } = this.props;
-        console.log(form);
+        //console.log(form);
         //form.resetFields();
         //handleEditComment(e);
     }
@@ -671,19 +671,21 @@ class OrderConfirm extends PureComponent {
   handleConfirm =(e)=>{
       
       const { dispatch } = this.props;
-      
+      let submit='update_status_confirm';
       let status='';
       if(e.status=='processing'){
           status='confirm';
       }else{
           status='processing';
       } 
+      e['_old_status']=e['_status'];
       e['_status']=this.listStatusObj[status]
       dispatch({
                 type: 'order/saveOrder',
                 payload:{
                     ...e,
-                    status 
+                    status,
+                    submit
                 },  
             } 
         )

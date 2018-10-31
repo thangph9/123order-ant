@@ -127,9 +127,7 @@ function users(req,res){
         return res.send({status: "ok",users});
     })
 }
-export default {
-    
-  'GET /api/currentUser': (req,res) =>{
+function getCurrentUser(req,res){
     var token=req.headers['x-access-token'];
     var verifyOptions = {
      expiresIn:  '30d',
@@ -263,9 +261,12 @@ export default {
      })
     
     
-  },
-  // GET POST 可省略
+  
+}
+export default {
     
+  'GET /api/currentUser': getCurrentUser,
+  // GET POST 可省略
   'GET /api/users': users,
   'POST /api/login/account': (req, res) => {
     var privateKEY  = fs.readFileSync('./ssl/jwtprivate.pem', 'utf8');

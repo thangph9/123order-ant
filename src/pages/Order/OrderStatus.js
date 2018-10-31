@@ -777,10 +777,11 @@ class OrderStatus extends PureComponent {
           if (err) return; 
           this.setState({
               changeStatus: false,
-          })      
+          })
+          let submit="update_sstatus";
           dispatch({
                 type: 'order/saveOrder',
-                payload:{...fieldsValue},  
+                payload:{...fieldsValue,submit},  
             }
           )      
         }); 
