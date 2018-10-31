@@ -189,7 +189,7 @@ class OrderForm extends PureComponent {
       
       let price=0;
       
-      let j=_web_price*((100-_sale)/100)*((100+_servicerate)/100)*_amount;
+      let j=_web_price*((_sale)/100)*((100+_servicerate)/100)*_amount;
       
       let s=_rate*j; 
       let a=_rate*_surcharge;  
