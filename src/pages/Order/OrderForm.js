@@ -276,7 +276,10 @@ class OrderForm extends PureComponent {
         sm: { span: 10, offset: 7 },
       },
     };
-                                     
+    let sbill_code='';
+    if(bill_code){
+            sbill_code="KL"+bill_code
+        }                        
     return (
       <PageHeaderWrapper
         title="Đặt hàng"
@@ -294,7 +297,7 @@ class OrderForm extends PureComponent {
 
                           },
                         ],
-                        initialValue:"KL"+bill_code
+                        initialValue:sbill_code
                       })(<Input placeholder=" " disabled  />)}
                     </FormItem>
                 </Col>

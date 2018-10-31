@@ -520,7 +520,7 @@ function getOrder(req,res){
             
        },
        function(callback){
-          console.log(listRole,legit.rule);
+          
             try{
                 if(listRole.indexOf(legit.rule) > -1){
                     emp="";
@@ -582,7 +582,7 @@ function getOrder(req,res){
             query={
                 $solr_query:'{"q":"'+q+'","sort":"'+sort+'","paging":"driver"}',
             }
-            console.log(query);
+            
             models.instance.orders.find(query,function(err,items){
                 try{
                     items.map((e)=>{
@@ -900,7 +900,7 @@ function updateOrder(req,res){
             } 
            queries.push(comment_by_user());
             }catch(e){
-                console.log(e)
+                
                 return res.send({status: 'error_01'});
             }
            callback(null,null);
