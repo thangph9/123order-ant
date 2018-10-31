@@ -51,18 +51,23 @@ export default {
             const newData = [...list];
            
             if(newData.length > 0){
-                const index = newData.findIndex(item =>(row.sbill_code === item.sbill_code && row.username === item.username)   );
+                const index = newData.findIndex(item =>(row.sbill_code === item.sbill_code && row.username === item.username));
                 const item = newData[index];
-                newData.splice(index, 1, {
-                  ...item,
-                  ...row,
-                });
+                if(item){
+                    newData.splice(index, 1, {
+                      ...item,
+                      ...row,
+                    });
+                }else{
+                    newData.push(row);
+                }
                 return {
                     comment: {list : newData},           
                 } 
             }else{
+                
                 return {
-                    comment: {list : [payload.row]},           
+                    comment: {list : [row]},           
                 } 
             }
             

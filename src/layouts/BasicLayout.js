@@ -21,6 +21,7 @@ const { Content } = Layout;
 
 // Conversion router to menu.
 function formatter(data, parentPath = '', parentAuthority, parentName) {
+  
   return data.map(item => {
     let locale = 'menu';
     if (parentName && item.name) {
@@ -36,6 +37,7 @@ function formatter(data, parentPath = '', parentAuthority, parentName) {
       authority: item.authority || parentAuthority,
     };
     if (item.routes) {
+          
       const children = formatter(item.routes, `${parentPath}${item.path}/`, item.authority, locale);
       // Reduce memory usage
       result.children = children;

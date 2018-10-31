@@ -972,10 +972,11 @@ class ModalEditForm extends PureComponent{
 }
 
 /* eslint react/no-multi-comp:0 */
-@connect(({ rule, loading,order }) => ({
+@connect(({ rule, loading,order,user }) => ({
   rule,
   loading: loading.models.order,
   order,
+  user
 }))
 @Form.create()
 class OrderList extends PureComponent {
@@ -1539,7 +1540,8 @@ class OrderList extends PureComponent {
     const {
       order: { data },
       loading,
-      order
+      order,
+      user : { currentUser }
     } = this.props;
     const { selectedRows, modalVisible,selectedRow,statusText,edit } = this.state;
 
@@ -1556,7 +1558,8 @@ class OrderList extends PureComponent {
         handleModalVisible: this.handleModalVisible,
     };
     let showUpdateForm=false;
-    if(selectedRow.sstatus=='pending' && selectedRow.status=='processing' )  {
+    console.log(selectedRow);  
+    if(selectedRow.sstatus=='pending' && selectedRow.status=='processing' && selectedRow.semployee == currentUser.username) {
       showUpdateForm=true;
     }
     return (
@@ -1591,18 +1594,18 @@ class OrderList extends PureComponent {
         <StandardTable
               selectedRows={selectedRows}
               loading={loading}
-              components={components}
+              components={components} 
               data={data}
               rowKey="sbill_code"
               columns={columns}
-              onSelectRow={this.handleSelectRows}
+              onSelectRow={this.handleSelectRows} 
               onChange={this.handleStandardTableChange}
               onRowSelect={this.handleRowSelect}
               onHeaderRow={this.handleHeaderRow}
               onChangeRangPicker={this.onChangeRangPicker}
             />
         </Modal>   
-        { (showUpdateForm) ? (<ModalEditForm selectedRow={selectedRow} modalVisible={modalVisible} order={order.currency} {...updateMethods} />) : (<ModalViewOrder ModalEditForm selectedRow={selectedRow} modalVisible={modalVisible} order={order.currency} {...viewMethods}/>)
+        { (showUpdateForm) ? (<ModalEditForm key={(selectedRow) ? selectedRow.sbill_code : 0 } selectedRow={selectedRow} modalVisible={modalVisible} order={order.currency} {...updateMethods} />) : (<ModalViewOrder ModalEditForm selectedRow={selectedRow} modalVisible={modalVisible} order={order.currency} {...viewMethods}/>)
       
         }
         

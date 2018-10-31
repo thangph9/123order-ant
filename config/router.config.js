@@ -243,7 +243,8 @@ export default [
           },
         ],
       },*/
-     {
+      
+      {
         name: 'products',
         icon: 'table',
         path: '/products',
@@ -337,6 +338,7 @@ export default [
               },
             ],
           },
+             
         ],
       },
       {

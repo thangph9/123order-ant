@@ -169,8 +169,6 @@ class ModalViewOrder extends React.Component{
             <Row> 
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><b>Ghi chú</b></Col>
             <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>{selectedRow.scomment}</Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 3, offset: 0 }}><b>Ghi chú</b></Col>
-            <Col xs={{ span: 12, offset: 0 }} lg={{ span: 9, offset: 0 }}>{this.renderComment()}</Col>
           </Row>
           </div>
         </Modal>

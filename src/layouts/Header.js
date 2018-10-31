@@ -64,6 +64,10 @@ class HeaderView extends PureComponent {
       router.push('/account/settings/base');
       return;
     }
+    if (key === 'register') {
+      router.push('/user/register');
+      return;
+    }  
     if (key === 'logout') {
       dispatch({
         type: 'login/logout',

@@ -22,8 +22,10 @@ export default class GlobalHeader extends PureComponent {
     onCollapse(!collapsed);
     this.triggerResizeEvent();
   };
+    
   render() {
     const { collapsed, isMobile, logo } = this.props;
+    
     return (
       <div className={styles.header}>
         {isMobile && (

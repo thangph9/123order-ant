@@ -31,8 +31,7 @@ module.exports={
         scurrency   :'text',
         status      :'text',
     },
-    key:[["sbill_code"],"ddate"] ,
-    clustering_order: {"ddate": "desc"},
+    key:[["sbill_code"]] ,
     //CREATE CUSTOM INDEX  orders_index ON orders (sname) USING 'org.apache.cassandra.index.sasi.SASIIndex';
     
 } 

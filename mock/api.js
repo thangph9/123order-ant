@@ -452,7 +452,6 @@ function getOrder(req,res){
             var eend = (end.getTime()/1000.0 + 86400)*1000;
             _from=moment(estart).format("YYYY-MM-DD");
             _to=moment(eend).format("YYYY-MM-DD");
-           
             emp="semployee:"+legit.username;
             ddate= "ddate:["+_from+"T00:00:00Z TO "+_to+"T00:00:00Z]";
             callback(null,null);
@@ -462,22 +461,54 @@ function getOrder(req,res){
             if(req.body.status){
                 switch(req.body.status){
                     case 'paid':
-                        status="status:confirm";
+                        try{
+                            if(listRole.indexOf('view_paid')){
+                                status="status:confirm";
+                            }else{
+                                return res.send({status: 'invalid_view_paid'})
+                            }
+                        }catch(e){
+                            return res.send({status: 'error_view_paid'})
+                        }
                         callback(null,null);
                         break;
                     case 'delivery':
-                        status="sstatus:paid";
+                        try{
+                            if(listRole.indexOf('view_delivery')){
+                               status="sstatus:paid";
+                            }else{
+                                return res.send({status: 'invalid_view_delivery'})
+                            }
+                        }catch(e){
+                            return res.send({status: 'error_view_delivery'})
+                        }
+                        
                         callback(null,null);
                         break;
                     case 'confirm':
-                        status='status:(confirm OR processing)'
+                        try{
+                            if(listRole.indexOf('view_confirm')){
+                               status='status:(confirm OR processing)'
+                            }else{
+                                return res.send({status: 'invalid_view_confirm'})
+                            }
+                        }catch(e){
+                            return res.send({status: 'error_view_confirm'})
+                        }
                         callback(null,null);
                         break;
                     case 'arrived':
-                        status="status:arrived";
+                        try{
+                            if(listRole.indexOf('view_arrived')){
+                               status="status:arrived";
+                            }else{
+                                return res.send({status: 'invalid_view_arrived'})
+                            }
+                        }catch(e){
+                            return res.send({status: 'error_view_arrived'})
+                        }
                         callback(null,null);
-                        break
-                        
+                        break;
                     default:
                         status='status:(confirm OR processing)'
                         callback(null,null);
@@ -489,9 +520,13 @@ function getOrder(req,res){
             
        },
        function(callback){
-           
-            if(listRole.indexOf(legit.rule) > -1){
-                emp="";
+          console.log(listRole,legit.rule);
+            try{
+                if(listRole.indexOf(legit.rule) > -1){
+                    emp="";
+                }
+            }catch(e){
+                
             }
             callback(null,null)  
         },
@@ -547,6 +582,7 @@ function getOrder(req,res){
             query={
                 $solr_query:'{"q":"'+q+'","sort":"'+sort+'","paging":"driver"}',
             }
+            console.log(query);
             models.instance.orders.find(query,function(err,items){
                 try{
                     items.map((e)=>{
@@ -703,7 +739,8 @@ function addOrder(req,res){
                     return save;
                }
            queries.push(orders_by_status())
-           const comments_by_user=()=>{
+           if(body.comment){
+               const comments_by_user=()=>{
                 let object={
                     commentid    : Uuid.random(),
                     createat     : new Date(),
@@ -714,19 +751,21 @@ function addOrder(req,res){
                 let instance    =new models.instance.comment_by_user(object);
                 let save        =instance.save({return_query: true});
                 return save;
-            } 
-           queries.push(comments_by_user());
-            const comment_by_user=()=>{
-                let object={};
-                 object['username']=PARAMS_IS_VALID.semployee;
-                 object['sbill_code']=PARAMS_IS_VALID.sbill_code;
-                 object['comment']=PARAMS_IS_VALID.scomment;
-                 object['createat']=new Date();
-                let comment=new models.instance.comment_by_user(object);
-                let save   =comment.save({return_query: true});
-                return save;
-            }
-            queries.push(comment_by_user())
+                } 
+               queries.push(comments_by_user());
+                const comment_by_user=()=>{
+                    let object={};
+                     object['username']=legit.username;
+                     object['sbill_code']=PARAM_IS_VALID.sbill_code;
+                     object['comment']=PARAM_IS_VALID.scomment;
+                     object['createat']=new Date();
+                    let comment=new models.instance.comment_by_user(object);
+                    let save   =comment.save({return_query: true});
+                    return save;
+                }
+                queries.push(comment_by_user())
+           } 
+           
             callback(null,null);
         }, 
     ],function(err,result){
@@ -785,18 +824,29 @@ function updateOrder(req,res){
                 PARAM_IS_VALID['fdeliveryprice']=(body.fdeliveryprice) ? currencyFormatter.unformat(body.fdeliveryprice, { locale: locale[PARAM_IS_VALID.scurrency]}) : 0 ; 
                 PARAM_IS_VALID['scurrency']=body.currency;
             if(req.body.sstatus){
+                try{
                     if(listRole.indexOf('update_sstatus')  > -1){
 
                     }else{
                         return res.send({status:'error_rule_update_sstatus'})
                     }
+                }catch(e){
+                    return res.send({status:'error_rule_update_sstatus'})
+                }
+                    
              }
             if(req.body.status){
-                 if(listRole.indexOf('update_status') > -1 ){
+                try{
+                    if(listRole.indexOf('update_status') > -1 ){
 
-                }else{
+                    }else{
+                        return res.send({status: 'error_rule_update_status'});
+                    }
+                    
+                }catch(e){
                     return res.send({status: 'error_rule_update_status'});
                 }
+                 
             }
             
             callback(null,null);
@@ -888,11 +938,15 @@ function delOrder(req,res){
     var list=[],_list=[];
     async.series([
         function(callback){
-            
-            if(listRole.indexOf('delete_order') > -1){
-                }else{
+            try{
+                if(listRole.indexOf('delete_order') > -1){
+                    }else{
                     return res.send({status:'error_rule'})
+                }
+            }catch(e){
+                return res.send({status:'error_rule'})
             }
+            
             callback(null,null);
         },
        function(callback){
@@ -959,12 +1013,16 @@ function saveCurrencyRaito(req,res){
            })
        }, 
         function(callback){
-            
-            if(listRole.indexOf('update_currency_raito') > -1){
+            try{
+                if(listRole.indexOf('update_currency_raito') > -1){
                     
-            }else{
+                }else{
+                    return res.send({status:'error_rule_update_currency_raito'})
+                }
+            }catch(e){
                 return res.send({status:'error_rule_update_currency_raito'})
             }
+            
           callback(null,null);  
         },
         function(callback){
@@ -1125,8 +1183,16 @@ function saveComment(req,res){
                 let save   =comment.save({return_query: true});
                 return save;
             }
-            queries.push(comment_by_user())
             
+            queries.push(comment_by_user())
+            const update_orders_comment=()=>{
+                var query_object = {sbill_code: PARAMS_IS_VALID.sbill_code};
+                var update_values_object = {scomment: PARAMS_IS_VALID.comment};
+                var options = {ttl: 86400, return_query: true};
+                var orders= models.instance.orders.update(query_object,update_values_object,options);
+                return orders;
+            }
+            queries.push(update_orders_comment())
             callback(null,null);
         }
     ],function(err,result){

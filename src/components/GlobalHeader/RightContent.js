@@ -56,7 +56,7 @@ export default class GlobalHeaderRight extends PureComponent {
       onMenuClick,
       onNoticeClear,
       theme,
-    } = this.props;
+    } = this.props;  
     const menu = (
       <Menu className={styles.menu} selectedKeys={[]} onClick={onMenuClick}>
         <Menu.Item key="userCenter">
@@ -70,6 +70,10 @@ export default class GlobalHeaderRight extends PureComponent {
         <Menu.Item key="triggerError">
           <Icon type="close-circle" />
           <FormattedMessage id="menu.account.trigger" defaultMessage="Trigger Error" />
+        </Menu.Item>
+        <Menu.Item key="register">
+          <Icon type="user-add" />
+          <FormattedMessage id="menu.account.register" defaultMessage="Register" />
         </Menu.Item>
         <Menu.Divider />
         <Menu.Item key="logout">

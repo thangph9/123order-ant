@@ -15,7 +15,7 @@ export async function query() {
 }
 
 export async function queryCurrent() {
-  return request(`/api/currentUser`,{
+  return request(`/api/currentUser?ref=${new Date().getTime()}`,{
         method:'GET',
         headers:{'X-Access-Token':getAuthority()[0].token}
     });

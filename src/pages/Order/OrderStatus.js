@@ -136,7 +136,7 @@ class CommentList extends PureComponent{
     }
     handleEditComment=(e)=>{
         const { handleEditComment,form } = this.props;
-        console.log(form);
+        //console.log(form);
         //form.resetFields();
         //handleEditComment(e);
     }
