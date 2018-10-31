@@ -531,7 +531,6 @@ function getOrder(req,res){
             
        },
        function(callback){
-          
             try{
                 if(listRole.indexOf(legit.rule) > -1){
                     
@@ -595,7 +594,7 @@ function getOrder(req,res){
             query={
                 $solr_query:'{"q":"'+q+'","sort":"'+sort+'","paging":"driver"}',
             }
-            
+            console.log(query);
             models.instance.orders.find(query,function(err,items){
                 try{
                     items.map((e)=>{
