@@ -653,7 +653,7 @@ class ConfirmDelivery extends PureComponent {
       let old_status=old_data['_status'];
       old_data['_old_status']=old_status;
       
-      //old_data['_status']=this.listStatusObj[status];
+      old_data['_status']=this.listStatusObj[status];
       dispatch({
                 type: 'order/saveOrder',
                 payload:{
