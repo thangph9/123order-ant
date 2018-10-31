@@ -1,10 +1,13 @@
 module.exports={
     fields:{
-        uid         : 'uuid',
+        uid         :'uuid',
         sbill_code  : 'text',
-        supdateat   : 'text',
-        dupdateat   : 'timestamp',
+        billcode    : 'int',
         ddate       : 'timestamp',
+        ddate_paid  :   'timestamp',
+        ddate_confirm:  'timestamp',
+        ddate_ship  :   'timestamp',
+        ddate_arrived:  'timestamp',
         sname       : 'text',
         sphone      : 'varchar',
         saddress    : 'text',
@@ -17,6 +20,7 @@ module.exports={
         iquality    : 'int',
         fwebprice   : 'float',
         fsale       : 'float',
+        fsale_extra       : 'float',
         fshipweb    : 'float',
         fexchangerate :'float',
         fprice      :'float',
@@ -28,7 +32,15 @@ module.exports={
         semployee   :'text',
         sstatus     :'text',
         scomment    :'text',  
+        fsurcharge  :'float',
+        ssurcharge  :'text',
+        scurrency   :'text',
+        dupdateat   :'timestamp',
+        supdateat   :'text',
+        status      :'text',
     },
-    key:[["uid"]] ,
+    key:[["uuid"]] ,
+    //CREATE CUSTOM INDEX  orders_index ON orders (sname) USING 'org.apache.cassandra.index.sasi.SASIIndex';
+    
 } 
     

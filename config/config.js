@@ -77,7 +77,7 @@ export default {
   manifest: {
     name: '123Order',
     background_color: '#FFF',
-    description: 'An out-of-box UI solution for enterprise applications as a React boilerplate.',
+    description: '123order webadmin.',
     display: 'standalone',
     start_url: '/index.html',
     icons: [

@@ -19,6 +19,7 @@ module.exports={
         iquality    : 'int',
         fwebprice   : 'float',
         fsale       : 'float',
+        fsale_extra       : 'float',
         fshipweb    : 'float',
         fexchangerate :'float',
         fprice      :'float',

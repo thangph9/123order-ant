@@ -6,9 +6,9 @@ const { Footer } = Layout;
 const FooterView = () => (
   <Footer style={{ padding: 0 }}>
     <GlobalFooter
-      links={[
+      links={[ /*
         {
-          key: 'Pro 首页',
+          key: 'Pro,
           title: 'Pro 首页',
           href: 'https://pro.ant.design',
           blankTarget: true,
@@ -24,11 +24,11 @@ const FooterView = () => (
           title: 'Ant Design',
           href: 'https://ant.design',
           blankTarget: true,
-        },
+        },*/
       ]}
       copyright={
         <Fragment>
-          Copyright <Icon type="copyright" /> 2018 蚂蚁金服体验技术部出品
+          Copyright <Icon type="copyright" /> 2018 123Order Group
         </Fragment>
       }
     />

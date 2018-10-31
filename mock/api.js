@@ -683,6 +683,7 @@ function addOrder(req,res){
                 PARAM_IS_VALID['iquality']      =(body.amount) ? parseInt(body.amount,10) : 0 ,
                 PARAM_IS_VALID['fwebprice']     =(body.web_price) ? parseFloat(body.web_price) : 0,
                 PARAM_IS_VALID['fsale']         =(body.sale) ? parseFloat(body.sale) : 0, 
+                PARAM_IS_VALID['fsale_extra']         =(body.sale_extra) ? parseFloat(body.sale_extra) : 0, 
                 PARAM_IS_VALID['fshipweb']      =(body.shipWeb) ? parseFloat(body.shipWeb) : 0 ,
                 PARAM_IS_VALID['fexchangerate'] =(body.rate) ? parseFloat(body.rate) : 0 ,
                 PARAM_IS_VALID['fprice']        =(body.price) ? parseFloat(body.price) : 0 ,
@@ -972,6 +973,7 @@ function updateOrder(req,res){
     });
     
 }
+
 function delOrder(req,res){
     var token=req.headers['x-access-token'];
     const sbill_code=req.query.id;

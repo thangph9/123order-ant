@@ -476,6 +476,7 @@ class ModalEditForm extends PureComponent{
       
       let web_price=this.props.form.getFieldValue('fwebprice');
       let sale=this.props.form.getFieldValue('fsale');
+      let sale_extra=this.props.form.getFieldValue('fsale_extra');
       let servicerate=this.props.form.getFieldValue('fservicerate');
       let amount=this.props.form.getFieldValue('iquality');
       let fsurcharge=this.props.form.getFieldValue('fsurcharge');
@@ -488,6 +489,7 @@ class ModalEditForm extends PureComponent{
       
       //let _web_price=Number.isNaN(web_price) ? 0 : parseInt(web_price);
       let _sale=Number.isNaN(sale) ? 0 : parseInt(sale);
+      let _sale_extra=Number.isNaN(sale_extra) ? 0 : parseInt(sale_extra);
       let _servicerate=Number.isNaN(servicerate) ? 0 : parseFloat(servicerate);
       let _amount=Number.isNaN(amount) ? 0 : parseFloat(amount);
       //let _surcharge=Number.isNaN(fsurcharge) ? 0 : parseFloat(fsurcharge);
@@ -502,6 +504,7 @@ class ModalEditForm extends PureComponent{
       
       //_web_price= Number.isNaN(_web_price) ? 0 : _web_price
       _sale= Number.isNaN(_sale) ? 0 : _sale
+      _sale_extra= Number.isNaN(_sale_extra) ? 0 : _sale_extra
       _servicerate= Number.isNaN(_servicerate) ? 0 : _servicerate
       _amount= Number.isNaN(_amount) ? 1 : _amount
       //_surcharge= Number.isNaN(_surcharge) ? 0 : _surcharge
@@ -517,18 +520,16 @@ class ModalEditForm extends PureComponent{
       
       let price=0;
       
-      let j=Number(_web_price)*((100-_sale)/100)*((100+_servicerate)/100)*_amount;
-      
-      let s=_rate*j;
-      let a=_rate*_surcharge;
+      let j=_web_price*((100-_sale)/100)*((100-_sale_extra)/100)*_amount;
+        
+      let usd=(j+_shipWeb+_surcharge)*_rate*((100+_servicerate)/100)
       let i=_deliveryprice;
-      let e=_rate*_shipWeb;
       
         
       if (changePrice){
           price=_rprice;
       }else{
-          price=s+a+i+e;
+           price=usd+i;
       }
       
       let payprice=0;
@@ -800,6 +801,9 @@ class ModalEditForm extends PureComponent{
                         </Col>    
                     </Row>
                 </Col>  
+                 
+            </Row>  
+            <Row>
                 <Col md={{ span: 12, offset: 0 }}>
                     <FormItem {...formItemLayout} label="Sale">
                       {getFieldDecorator('fsale', {
@@ -812,8 +816,21 @@ class ModalEditForm extends PureComponent{
                           initialValue: selectedRow.fsale        
                       })(<Input placeholder="sale" addonAfter="%" />)}
                     </FormItem>
-                </Col>  
-            </Row>  
+                </Col> 
+                <Col md={{ span: 12, offset: 0 }}>
+                    <FormItem {...formItemLayout} label="Sale Extra">
+                      {getFieldDecorator('fsale_extra', {
+                        rules: [
+                          {
+                            required: true,
+                            message: ' ',
+                          },
+                        ],
+                          initialValue: selectedRow.fsale_extra        
+                      })(<Input placeholder="Sale Extra" addonAfter="%" />)}
+                    </FormItem>
+                </Col> 
+            </Row>                        
              <Row>
                 <Col md={{ span: 12, offset: 0 }}>
                     <Row>
