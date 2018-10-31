@@ -39,7 +39,7 @@ module.exports={
         supdateat   :'text',
         status      :'text',
     },
-    key:[["uuid"]] ,
+    key:[["uid"]] ,
     //CREATE CUSTOM INDEX  orders_index ON orders (sname) USING 'org.apache.cassandra.index.sasi.SASIIndex';
     
 } 
