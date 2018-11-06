@@ -7,7 +7,8 @@ const bcrypt          = require("bcryptjs");
 const Uuid            = require("cassandra-driver").types.Uuid;
 const models          = require("../settings");
 
-
+var multer  = require('multer');
+var upload = multer({ dest: 'uploads/' })
 var currencyFormatter = require('currency-formatter');
 var publicKEY  = fs.readFileSync('./ssl/jwtpublic.pem', 'utf8');  
 var router = express.Router()
@@ -2166,7 +2167,10 @@ function updateOrder(req,res){
     });
     
 }
-
+function uploadImage(req,res){
+    console.log(req);
+    res.send({status: 'oke'})
+}
 
 
 function getDetail(req,res){
@@ -2291,7 +2295,7 @@ router.get('/401',(req, res) => {
   });
 router.get('/product/list',getProducts);
 router.post('/product/save',saveProduct);
-
+router.post('/upload',upload.single('image_large'),uploadImage);
 
 /*
  'POST /api/forms': (req, res) => {

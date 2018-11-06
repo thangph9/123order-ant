@@ -248,21 +248,16 @@ export default [
         name: 'products',
         icon: 'table',
         path: '/products',
-        routes:[
+        routes:[ 
             {
-                path: '/products',
+                path: '/products/list',
                 name: 'list',
                 component: './Products/ProductLists',
-                routes:[
-                    {
-                        path: '/products',
-                        redirect: '/products/list',
-                    },
-                    {
-                        path: '/products/list',
-                        component: './Products/ProductLists',
-                    },
-                ]
+            },
+            {
+                path: '/products/detail',
+                name: 'detail',
+                component: './Products/ProductDetail',
             },
             
         ]

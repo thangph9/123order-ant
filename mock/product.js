@@ -4,8 +4,11 @@ const async     = require("async");
 const Uuid      = require("cassandra-driver").types.Uuid;
 const jwt       = require('jsonwebtoken');
 const fs        =require('fs');
+var multer  = require('multer')
 import moment from 'moment';
 var publicKEY  = fs.readFileSync('./ssl/jwtpublic.pem', 'utf8');  
+const upload          = multer();
+
 function getOrder(req,res){
     var token=req.headers['x-access-token'];
     var verifyOptions = {
@@ -497,8 +500,6 @@ function updateOrder(req,res){
     });
     
 }
-
-
 function getDetail(req,res){
     let product=[];
     let PARAMS_IS_VALID={};
@@ -531,7 +532,7 @@ function getProducts(req,res){
     async.series([
         
         function(callback){
-            models.instance.product_by_asin.find({$solr_query: '{"q":"*:*","sort":"timestamp asc "}'},function(err,items){
+            models.instance.product_detail.find({$solr_query: '{"q":"*:*","sort":"createat asc "}'},function(err,items){
                 
                 products=(items) ? items : [];
                 callback(err,null)
@@ -539,6 +540,7 @@ function getProducts(req,res){
             
         }
     ],function(err,result){
+        console.log(err);
         if (err) return  res.send({status: "error",products:[ ]});
         res.send({
             list:products,
@@ -546,21 +548,117 @@ function getProducts(req,res){
     })
 }
 function saveProduct(req,res){
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+        return res.send({status: 'expired'}); 
+    }
+    var PARAM_IS_VALID={};
+    let queries=[];
+    let params=req.body;
     async.series([
         function(callback){
             //models.instance.
+            
+            try{
+                
+                PARAM_IS_VALID=params;
+                PARAM_IS_VALID['nodeid']=params.nodeid;
+                PARAM_IS_VALID['price']=(params.price) ? parseFloat(params.price) : 0;
+                PARAM_IS_VALID['sale']=(params.sale) ? parseFloat(params.sale) : 0;
+                PARAM_IS_VALID['sale_price']=(params.sale_price) ? parseFloat(params.sale_price) : 0;
+                let dateClock=(params.death_clock) ? params.death_clock : [];
+                PARAM_IS_VALID['death_clock']={ start:dateClock[0] ,end: dateClock[1]}
+                PARAM_IS_VALID['image_huge']= params.image_huge;
+                PARAM_IS_VALID['image_large']= params.image_large;
+                PARAM_IS_VALID['image_small']= params.image_small;
+                PARAM_IS_VALID['infomation']= {
+                    dimensions:params.dimensions,
+                    item_weight:params.item_weight,
+                    asin:params.asin,
+                    model_number:params.model_number,
+                    shipping_weight:params.shipping_weight,
+                }
+                console.log(PARAM_IS_VALID);
+            }catch (e){
+                return res.send({status: 'error'})
+            }
             callback(null,null);
         },
         function(callback){
-            
+            try{
+                const product=()=>{
+                    const productid=Uuid.random();
+                    let object      =PARAM_IS_VALID;
+                    object['productid']   =productid;
+                    object['createby']  =legit.username;
+                    object['createat']  =new Date();
+                    
+                    let instance    =new models.instance.product_detail(object);
+                    let save        =instance.save({return_query: true});
+                    return save;
+                } 
+                 queries.push(product());
+            }catch(e){
+                return res.send({status: 'error'})
+            }
+                
+           
             callback(null,null);
         }
     ],function(err,result){
         if(err) return res.send({status: 'error'});
-        res.send({status: "ok"})
+        try{
+             models.doBatch(queries,function(err){
+                if(err) return res.send({status: 'error_03'});
+                return res.send({ status: 'ok'});
+            });
+         }catch(e){
+             return res.send({status: 'error_04'});
+         }
     })
 }
+function uploadFile(req,res){
+   upload.single('file')(req,res,function(err){
+       if (err) return res.send({status: 'error'});
+       let imageid= Uuid.random();
+       try{
+           let file =req.file;
+           let image=file.buffer;
+           let options={
+               filename : file.originalname,
+               size     : file.size+"",
+               encoding : file.encoding,
+               mimetype : file.mimetype,
+            };
+            var image_object={
+               imageid             : imageid,
+               image               : image,
+               options             : options,
+               createat            : new Date(),
+           }
+
+            let object   =image_object;
+            let instance =new models.instance.images(object);
+            let save     =instance.save(function(err){
+                console.log(err)
+            });
+       }catch(e){
+           console.log(e);
+           return res.send({status:'error'})
+       }
+       res.send({status:'ok',file:{imageid}})
+   })
+}
+
 export default {
   'GET /api/product/list': getProducts,
-  'GET /api/product/save': saveProduct,
+  'POST /api/product/save': saveProduct,
+  'POST /api/upload': uploadFile    
 };

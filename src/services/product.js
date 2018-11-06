@@ -7,17 +7,15 @@ export async function getProducts(params) {
 
 export async function saveProduct(params) {
   return request('/api/product/save',{
-      method : "PUT",
-      body: stringify(params),
+      method : "POST",
+      body: params,
       headers:{'X-Access-Token':getAuthority()[0].token}
   });
 }
 export async function getProductDetail(params) {
   return request('/api/product/detail',{
-      method : "PUT",
-      body: stringify(params),
+      method : "GET",
       headers:{'X-Access-Token':getAuthority()[0].token}
   });
 }
-
 

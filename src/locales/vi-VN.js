@@ -38,7 +38,7 @@ export default {
   'menu.account.register': 'Đăng ký',
   'menu.account.settings': 'Account Settings',
   'menu.account.trigger': 'Trigger Error',
-  'menu.products': 'Products',
+  'menu.products': 'Sản phẩm',
   'menu.products.list': 'Danh sách',
   'menu.products.detail': 'Chi tiết',
   'menu.order':"Đặt hàng",
