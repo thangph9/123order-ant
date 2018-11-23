@@ -37,10 +37,6 @@ app.use('/api',api);
 app.get('/*', function (req, res) {
   res.sendFile(path.join(__dirname, '../dist', 'index.html'));
 });
-// Here you can add any code.
-app.createServer()
-    .use( express.vhost( 'cms.123order.vn', express.static(path.join(__dirname, '../dist') ) ) )
-    .use( function( req, res ) {
-        res.send('Sorry, I do not know how to handle that domain.');
-    })
-    .listen( 80 );
+app.listen(3000,function(){
+    console.log('Server open port : ',80)
+})
