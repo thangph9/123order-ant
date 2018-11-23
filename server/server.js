@@ -39,5 +39,9 @@ app.get('/*', function (req, res) {
 });
 
 // Here you can add any code.
-
-app.listen(3000,()=>{console.log("Server running port: 3000!")});
+express.createServer()
+    .use( express.vhost( 'cms.123order.vn', express.static(path.join(__dirname, '../dist') ) ) )
+    .use( function( req, res ) {
+        res.send('Sorry, I do not know how to handle that domain.');
+    })
+    .listen( 80 );
