@@ -37,7 +37,6 @@ app.use('/api',api);
 app.get('/*', function (req, res) {
   res.sendFile(path.join(__dirname, '../dist', 'index.html'));
 });
-
 // Here you can add any code.
 express.createServer()
     .use( express.vhost( 'cms.123order.vn', express.static(path.join(__dirname, '../dist') ) ) )
