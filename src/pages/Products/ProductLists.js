@@ -47,8 +47,14 @@ class ProductLists extends PureComponent {
     labelCol: { span: 7 },
     wrapperCol: { span: 13 },
   };
-
-  componentDidMount() { 
+  componentWillMount(){
+      const { dispatch } = this.props;
+      dispatch({
+        type: 'category/treemap',
+        payload:{},
+    })
+  }
+  componentWillMount() { 
     const { dispatch } = this.props;
     const { pageSize,current }= this.state;  
     dispatch({
@@ -59,11 +65,9 @@ class ProductLists extends PureComponent {
         current,
       },
     });
-    dispatch({
-        type: 'category/treemap',
-        payload:{},
-    })
+    
   }
+
   onChangeNodeID = (e)=>{
      
       this.setState({
