@@ -1,7 +1,7 @@
-export function upload(req,res){
-    
-}
-export function image(req,res){
+const async     = require("async");
+var multer  = require('multer');
+
+module.exports.image=function(req,res){
     let image='';
     let imageid='';
     async.series([

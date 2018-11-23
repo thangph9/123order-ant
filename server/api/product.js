@@ -7,7 +7,7 @@ const jwt       = require('jsonwebtoken');
 const fs        =require('fs');
 var multer  = require('multer');
 var sizeOf = require('image-size');
-import moment from 'moment';
+const  moment = require('moment');
 var publicKEY  = fs.readFileSync('./ssl/jwtpublic.pem', 'utf8');  
 const upload          = multer();
 
@@ -352,6 +352,7 @@ router.post('/save',saveProduct);
 router.post('/publish',publish);
 router.post('/unpublish',unpublish);
 router.get('/image/:imageid',utils.image);
+module.exports = router;
 /*
 export default {
   'GET /api/product/list'   : getProducts,

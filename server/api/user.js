@@ -6,7 +6,6 @@ const bcrypt          = require("bcryptjs");
 const jwt             = require('jsonwebtoken');
 const models          = require('../settings');
 const Uuid            = require("cassandra-driver").types.Uuid;
-const config          = require('../ssl/jwtconfig');
 var publicKEY  = fs.readFileSync('./ssl/jwtpublic.pem', 'utf8'); 
 const express =require("express");
 
@@ -158,7 +157,8 @@ var router = express.Router();
 router.get('/add_rule',updateRule)
 router.put('/',users)
 router.put('/check_account',checkAccount)
-export default router;
+
+module.exports = router;
 /*
 export default {
     

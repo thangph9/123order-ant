@@ -6,7 +6,7 @@ const jwt       = require('jsonwebtoken');
 const fs        =require('fs');
 var multer  = require('multer');
 var sizeOf = require('image-size');
-import moment from 'moment';
+const  moment = require('moment');
 var publicKEY  = fs.readFileSync('./ssl/jwtpublic.pem', 'utf8');  
 const upload          = multer();
 var express=require("express");
@@ -422,7 +422,7 @@ router.post("/upload/thumb",uploadFileThumb);
 router.post("/login/account",login);
 router.post("/register",register);
 router.get("/currentUser",getCurrentUser);
-router.get("/500",(req,res){
+router.get("/500",(req,res)=>{
       res.status(500).send({
       timestamp: new Date().getTime(),
       status: 500,
@@ -431,7 +431,7 @@ router.get("/500",(req,res){
       path: '/base/category/list',
     });     
 })
-router.get("/404",(req,res){
+router.get("/404",(req,res)=>{
       res.status(404).send({
       timestamp: new Date().getTime(),
       status: 404,
@@ -440,7 +440,7 @@ router.get("/404",(req,res){
       path: '/base/category/list',
     });     
 })
-router.get("/403",(req,res){
+router.get("/403",(req,res)=>{
       res.status(403).send({
       timestamp: new Date().getTime(),
       status: 403,
@@ -449,7 +449,7 @@ router.get("/403",(req,res){
       path: '/base/category/list',
     });     
 })
-router.get("/401",(req,res){
+router.get("/401",(req,res)=>{
       res.status(401).send({
       timestamp: new Date().getTime(),
       status: 401,
@@ -458,7 +458,7 @@ router.get("/401",(req,res){
       path: '/base/category/list',
     });     
 })
-export default router;
+module.exports = router;
 /*
 export default {
   'GET /api/product/list'   : getProducts,

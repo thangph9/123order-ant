@@ -17,10 +17,17 @@ export default {
   effects: {
     *treemap({ payload }, { call, put }) {
       const response = yield call(getTreeMap, payload);
-      
+     let rs={ treeMap: [] };
+        try{
+            if(response.status =='ok'){
+                rs=(response && response.data) ? response.data : []
+            }
+        }catch(e){
+            
+        }
       yield put({
         type: 'map',
-        payload: (response && response.data) ? response.data : [],
+        payload: rs,
       });
     },
     *fetchDetail({payload },{call,put}){
@@ -36,12 +43,18 @@ export default {
     *fetchAll({payload },{call,put}){
         const response =yield call(getAllCategory,payload);
          let d = [];
-        if(response.status == 'ok'){
-            yield put({
-                type:'all',
-                payload: (response && response.data) ? response.data : {}
-            })
+        try{
+           if(response.status == 'ok'){
+            d=(response && response.data) ? response.data : {}
+           } 
+        }catch(e){
+            
         }
+        
+         yield put({
+                type:'all',
+                payload: d
+            })
     },  
     *search({ payload },{call,put}){
         const response =yield call(getSearch,payload);
@@ -62,6 +75,7 @@ export default {
     *save({ payload },{call, put}){
     
           const response = yield call(saveCategory, payload);
+             
           if(response.status==='ok'){
                 message.success('Thay đổi thành công');
             }else if (response.status==='expired'){

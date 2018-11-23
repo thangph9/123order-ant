@@ -4,12 +4,10 @@ const async     = require("async");
 const Uuid      = require("cassandra-driver").types.Uuid;
 const jwt       = require('jsonwebtoken');
 const fs        =require('fs');
-var multer  = require('multer');
+
 var sizeOf = require('image-size');
-import moment from 'moment';
+const  moment = require('moment');
 var publicKEY  = fs.readFileSync('./ssl/jwtpublic.pem', 'utf8');  
-const upload          = multer();
-var express=require("express");
 
 function save(req,res){
     var token=req.headers['x-access-token'];
@@ -221,7 +219,6 @@ function test(items,callback){
     
     
 }
-
 function createTreeMap(items){
     let children={};
     let parent={};
@@ -275,7 +272,6 @@ function createTreeMap(items){
     //console.log(rootItem[0].children[0].children[0])
     return rootItem;
 }
-
 function filterNode(items,node){
     return items.filter(f => {
         if(f.category && f.category.length > 0){
@@ -286,7 +282,6 @@ function filterNode(items,node){
         }
     })    
 }
-
 function createNode(items){
     let node={};
     node={
@@ -432,14 +427,17 @@ function search(req,res){
         }}})
     })
 }
-var router=express.Router();
+
+var express = require('express');
+var router = express.Router();
 router.post('/save',save);
 router.get('/treemap',treeMap);
 router.get('/LS',list);
 router.get('/DT',detail);
 router.post('/search',search);
 router.get('/image/:imageid',utils.image);
-export default router;
+
+module.exports = router;
 /*
 export default {
   'POST /api/category/save'     : save,

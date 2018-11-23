@@ -1,3 +1,5 @@
+
+const  moment   =require('moment');
 const models    = require('../settings');
 const utils    = require('./utils');
 const async     = require("async");
@@ -6,7 +8,6 @@ const jwt       = require('jsonwebtoken');
 const fs        =require('fs');
 var multer  = require('multer');
 var sizeOf = require('image-size');
-import moment from 'moment';
 var publicKEY  = fs.readFileSync('./ssl/jwtpublic.pem', 'utf8');  
 const upload          = multer();
 var express=require("express");
@@ -713,4 +714,4 @@ router.delete('/del_row',delOrder);
   'POST /api/order/list':getOrder,
   'DELETE /api/order/del_row':delOrder,
   */
-export default router;
+module.exports = router;

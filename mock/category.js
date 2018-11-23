@@ -434,7 +434,7 @@ function search(req,res){
 export default {
   'POST /api/category/save'     : save,
   'GET /api/category/treemap'   : treeMap,   
-  'GET /api/category/LS'      : list,   
-  'GET /api/category/DT'      : detail,   
-  'POST /api/category/search'      : search,   
+  'GET /api/category/LS'        : list,   
+  'GET /api/category/DT'        : detail,   
+  'POST /api/category/search'   : search,   
 };
