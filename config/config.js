@@ -69,12 +69,19 @@ export default {
           .split('/')
           .map(a => a.replace(/([A-Z])/g, '-$1'))
           .map(a => a.toLowerCase());
-        return `antd-pro${arr.join('-')}-${localName}`.replace(/--/g, '-');
+        return `cms${arr.join('-')}-${localName}`.replace(/--/g, '-');
       }
       return localName;
     },
   },
   manifest: {
+    basePath: '/',
+  },
+
+  chainWebpack: webpackplugin,
+};
+/*
+manifest: {
     name: '123Order',
     background_color: '#FFF',
     description: '123order webadmin.',
@@ -92,5 +99,4 @@ export default {
   chainWebpack: webpackplugin,
   cssnano: {
     mergeRules: false,
-  },
-};
+  },*/

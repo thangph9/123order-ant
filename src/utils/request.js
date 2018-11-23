@@ -49,8 +49,14 @@ const cachedSave = (response, hashcode) => {
       .clone()
       .text()
       .then(content => {
-        sessionStorage.setItem(hashcode, content);
-        sessionStorage.setItem(`${hashcode}:timestamp`, Date.now());
+        try{
+            sessionStorage.setItem(hashcode, content);
+            sessionStorage.setItem(`${hashcode}:timestamp`, Date.now());
+        }catch(e){
+            console.log('Your web browser does not support storing settings locally. In Safari, the most common cause of this is using "Private Browsing Mode". Some settings may not save or some features may not work properly for you.');
+
+        }
+        
       });
   }
   return response;

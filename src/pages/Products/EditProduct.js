@@ -46,7 +46,7 @@ const {RangePicker} = DatePicker;
 const { Search, TextArea } = Input;
 const TreeNode = TreeSelect.TreeNode;
 
-@connect(({ list, loading,product,order,category }) => ({
+@connect(({ list, loading,product,order ,category}) => ({
     list,
     loading: loading.models.product,
     product,
@@ -54,20 +54,21 @@ const TreeNode = TreeSelect.TreeNode;
     category
 }))
 @Form.create()
-class ProductDetail extends PureComponent {
+class EditProduct extends PureComponent {
   state = { visible: false, done: false ,pageSize: 10,current: 1 ,
            previewVisible: false,
             previewImage: '',
-            fileList: [],
-           editorState: EditorState.createEmpty(),
-           editorStateDetail: EditorState.createEmpty(),
-           editorStateCSD: EditorState.createEmpty(),
-           editorStateSizeDesc: EditorState.createEmpty(),
-           imageUrl:'',
            nodeid: undefined,
-           seo_link:'',
-           currency: 'USD'
           };
+ componentWillMount(){
+     const {dispatch,match} = this.props;
+     
+     const productid=match.params.productid;
+     dispatch({
+        type: 'product/fetchDetail',
+        payload:{productid},
+    })
+ }
  componentDidMount(){
      const {dispatch} = this.props;
      dispatch({
@@ -83,6 +84,7 @@ class ProductDetail extends PureComponent {
   handleCancel = () => this.setState({ previewVisible: false })
 
   handlePreview = (file) => {
+    console.log(file);
     this.setState({
       previewImage: file.url || file.thumbUrl,
       previewVisible: true,
@@ -135,14 +137,14 @@ onEditorStateChangeSizeDesc = (editorStateSizeDesc) => {
      
  }
 beforeUpload=(file)=>{
-      
+      console.log(file);
       const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' );
       if (!isJPG) {
         message.error('You can only upload JPG file!');
       }
       const isLt2M = file.size / 1024 / 1024 < 5;
       if (!isLt2M) {
-        message.error('Image must smaller than 2MB!');
+        message.error('Image must smaller than 5MB!');
       }
       return isJPG && isLt2M;
 }
@@ -195,10 +197,10 @@ add = () => {
       keys: nextKeys,
     });
   }
-
 changeCurrency=(e)=>{
     this.setState({
-        currency: e
+        currency: e,
+        isChangeCurrency: true
     })
 }
 handleChangePrice = (e) =>{
@@ -208,7 +210,6 @@ handleSalePrice = (e) =>{
      
 }
 onChangeNodeID =(nodeid)=>{
-    console.log(nodeid);
     this.setState({ nodeid });
 }
 handleTitle = (e)=>{
@@ -238,17 +239,43 @@ render() {
       list: { list },
       loading,
       order,    
-      product: { data }  ,
-      category: { treeMap}    
+      product: { data,detail }  ,
+      category: { treeMap }
     } = this.props;
     const {
       form: { getFieldDecorator,getFieldValue },
     } = this.props;
-    const {previewVisible, previewImage, fileList, editorState, thumbnail,editorStateDetail,editorStateCSD,editorStateSizeDesc,currency} = this.state;
+    if(detail && detail.productid){
+            
+    }
+    const {previewVisible, previewImage, fileList, editorState, thumbnail,editorStateDetail,editorStateCSD,currency,imageUrl,editorStateSizeDesc} = this.state;
     getFieldDecorator('keys', { initialValue: [] });
     let ls=[];
     let listRaito=[];
-     const treeData = (treeMap) ? treeMap : [];
+    let initDeathClock= [moment('00:00:00', 'HH:mm:ss'), moment('11:59:59', 'HH:mm:ss')]
+    if(detail.death_clock){
+        initDeathClock=[moment(detail.death_clock.start),moment(detail.death_clock.end)]
+    }
+    let initFile=[];
+    let defaultFileList=[];
+    let image=[];
+    if(detail.image_huge){
+            detail.image_huge.map((e,i)=>{
+                initFile.push({
+                    uid: e,
+                    url: `/api/product/image/${e}`
+                })
+            })
+            defaultFileList=initFile;
+    }
+    
+    let initFileList=(fileList) ? fileList : initFile;
+    let initImageThumb=undefined;
+    if(detail.thumbnail){
+        initImageThumb=(imageUrl) ? imageUrl : `/api/product/image/${detail.thumbnail}`;
+    }
+    
+    const treeData = (treeMap) ? treeMap : [];
     try{  
         if(order.currency){
             order.currency.raito.forEach(function(e){
@@ -269,9 +296,7 @@ render() {
           {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
           label={index === 0 ? 'Passengers' : ''}
           required={false}
-          
         >
-                     
           {getFieldDecorator(`names[${k}]`, {
             validateTrigger: ['onChange', 'onBlur'],
             rules: [{
@@ -326,28 +351,87 @@ render() {
         <div className="ant-upload-text">Upload</div>
       </div>
     );
-    const imageUrl = this.state.imageUrl;
-    let image=[];
-    fileList.map((e,i)=>{
-        if(e.response && e.response.status=='ok' && e.response.file.isValid) image.push(e.response.file.imageid)
-    })  
-    let htmlDescription=draftToHtml(convertToRaw(editorState.getCurrentContent()))
-    let htmlDescriptionDetail=draftToHtml(convertToRaw(editorStateDetail.getCurrentContent()))
-    let htmlCSD=draftToHtml(convertToRaw(editorStateCSD.getCurrentContent()))
-    let htmlSizeDesc=draftToHtml(convertToRaw(editorStateSizeDesc.getCurrentContent()))
+    
+    if(fileList){
+        initFileList.map((e,i)=>{
+            if(e.response && e.response.status=='ok' && e.response.file.isValid) image.push(e.response.file.imageid)
+        })
+    }else{
+        if(detail.image_huge){
+            image=detail.image_huge;
+        }
+        
+    }
+    
+
+    let htmlDescription='';
+    if(editorState){
+       htmlDescription= draftToHtml(convertToRaw(editorState.getCurrentContent()))
+    }
+    let htmlDescriptionDetail=''
+    if(editorStateDetail){
+       htmlDescriptionDetail= draftToHtml(convertToRaw(editorStateDetail.getCurrentContent()))
+    }
+    
+    let htmlCSD='';
+    if(editorStateCSD){
+       htmlCSD=draftToHtml(convertToRaw(editorStateCSD.getCurrentContent()))
+    }
+    let htmlSizeDesc='';
+    if(editorStateSizeDesc){
+       htmlSizeDesc=draftToHtml(convertToRaw(editorStateSizeDesc.getCurrentContent()))
+    }
+    
+    let defaultEditorContentDesc='';
+    if(detail.description){
+        let a = ContentState.createFromBlockArray(htmlToDraft(detail.description));
+       defaultEditorContentDesc= EditorState.createWithContent(a);
+    }else{
+        defaultEditorContentDesc=EditorState.createEmpty()
+    }
+    
+    let defaultEditorContentDesc_detail={}
+    if(detail.desc_detail){
+         let b = ContentState.createFromBlockArray(htmlToDraft(detail.desc_detail));
+        defaultEditorContentDesc_detail= EditorState.createWithContent(b);
+    }else{
+        defaultEditorContentDesc_detail=EditorState.createEmpty()
+    }
+    let defaultEditorContentCSD='';
+   
+    if(detail.materials_use){
+        
+        let c = ContentState.createFromBlockArray(htmlToDraft(detail.materials_use));
+        defaultEditorContentCSD= EditorState.createWithContent(c);
+    }else{
+        
+        defaultEditorContentCSD=EditorState.createEmpty()
+    }
+
+    let defaultEditorContentSizeDesc='';
+   
+    if(detail.size_desc){
+        
+        let c = ContentState.createFromBlockArray(htmlToDraft(detail.size_desc));
+        defaultEditorContentSizeDesc= EditorState.createWithContent(c);
+    }else{
+        
+        defaultEditorContentSizeDesc=EditorState.createEmpty()
+    }
+    let c= (currency) ? currency : detail.currency;
     return (  
       <PageHeaderWrapper> 
         <Form onSubmit={this.handleSubmit} className="login-form">
 <Affix offsetTop={10}>
     <FormItem>
-        <Button type="primary" htmlType="submit" loading={loading}>Thêm mới</Button>
+        <Button type="primary" htmlType="submit" loading={loading}>Lưu lại</Button>
     </FormItem>
 </Affix>   
         <Row>
             <Col md={12}>
                 <FormItem label="Loại tiền" {...this.formLayout}>
                     {getFieldDecorator('currency', {
-                            initialValue:currency
+                            initialValue: c
                     }) (<Select
                             onChange={this.changeCurrency}
                          >
@@ -362,6 +446,7 @@ render() {
               <FormItem label="Tiêu đề" {...this.formLayout}>
                 {getFieldDecorator('title', {
                   rules: [{ required: true, message: 'Yêu cầu nhập tiêu đề ! ' }],
+                  initialValue: detail.title ,  
                   onChange: this.handleTitle 
                 })(
                   <Input />
@@ -372,7 +457,7 @@ render() {
             <Col md={12}> 
             <FormItem label="Danh mục" {...this.formLayout}>
                 {getFieldDecorator('nodeid', {
-                  initialValue: this.state.nodeid
+                  initialValue: detail.nodeid
                 })( 
                  <TreeSelect
                     showSearch
@@ -387,13 +472,14 @@ render() {
                     
                  </TreeSelect>
                 )}
-            </FormItem>
+         </FormItem>
             </Col>
         </Row>    
         <Row>
             <Col md={12}> 
                 <FormItem label="Gía gốc" {...this.formLayout}>
                     {getFieldDecorator('price', {
+                        initialValue: Number.parseFloat(detail.price).toFixed(2), 
                         onChange: this.handleChangePrice
                     })(
                       <InputNumber
@@ -408,7 +494,7 @@ render() {
             <Col md={12}> 
                 <FormItem label="Sale" {...this.formLayout}>
                     {getFieldDecorator('sale', {
-
+                        initialValue: detail.sale , 
                     })(
                       <Input  />
                     )}
@@ -419,6 +505,7 @@ render() {
             <Col md={12}> 
             <FormItem label="Giá đã sale " {...this.formLayout}>
                 {getFieldDecorator('sale_price', {
+                    initialValue: Number.parseFloat(detail.sale_price).toFixed(2) , 
                     onChange: this.handleSalePrice
                 })(
                  <InputNumber
@@ -433,7 +520,7 @@ render() {
             <Col md={12}> 
             <FormItem label="Số lượng " {...this.formLayout}>
                 {getFieldDecorator('amount', {
-                  
+                    initialValue: detail.amount , 
                 })(
                  <InputNumber
                       formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
@@ -447,7 +534,7 @@ render() {
             <Col md={12}> 
             <FormItem label="Màu" {...this.formLayout}>
                 {getFieldDecorator('color', {
-                  
+                   initialValue: detail.color , 
                 })(
                   <Input />
                 )}
@@ -456,7 +543,7 @@ render() {
             <Col md={12}> 
             <FormItem label="Style" {...this.formLayout}>
                 {getFieldDecorator('style', {
-                  
+                  initialValue: detail.style , 
                 })(
                   <Input />
                 )}
@@ -467,7 +554,7 @@ render() {
             <Col md={12}> 
             <FormItem label="Size" {...this.formLayout}>
                 {getFieldDecorator('size', {
-                  
+                  initialValue: detail.size , 
                 })(
                   <Input />
                 )}
@@ -476,7 +563,7 @@ render() {
             <Col md={12}> 
             <FormItem label="Người bán" {...this.formLayout}>
                     {getFieldDecorator('seller', {
-
+                 initialValue: detail.seller , 
             })(
              <Input />
             )}
@@ -487,7 +574,7 @@ render() {
             <Col md={12}> 
             <FormItem label="Nhà sản xuất" {...this.formLayout}>
                 {getFieldDecorator('manufacturer', {
-                  
+                  initialValue: detail.manufacturer , 
                 })(
                   <Input />
                 )}
@@ -496,11 +583,11 @@ render() {
             <Col md={12}> 
             <FormItem label="Thời gian sale" {...this.formLayout}>
                 {getFieldDecorator('death_clock', {
-                  
+                    initialValue: initDeathClock, 
                 })(
                   <RangePicker showTime={{
                         hideDisabledOptions: true,
-                        defaultValue: [moment('00:00:00', 'HH:mm:ss'), moment('11:59:59', 'HH:mm:ss')],
+                        defaultValue: initDeathClock,
                     }}
                     style={{width: '265px'}}
                     format="YYYY-MM-DD HH:mm:ss" 
@@ -513,7 +600,7 @@ render() {
     <Col md={12}>
         <FormItem label="Kích thước" {...this.formLayout}>
             {getFieldDecorator('dimensions', {
-
+                initialValue: (detail.infomation) ? detail.infomation.dimensions : '',
             })(
                 <Input />
             )}
@@ -522,7 +609,7 @@ render() {
     <Col md={12}>
         <FormItem label="Cân nặng" {...this.formLayout}>
             {getFieldDecorator('item_weight', {
-
+                 initialValue: (detail.infomation) ? detail.infomation.item_weight : '' ,
             })(
                 <Input />
             )}
@@ -533,7 +620,7 @@ render() {
     <Col md={12}>
         <FormItem label="Shipping Weight" {...this.formLayout}>
                 {getFieldDecorator('shipping_weight', {
-
+            initialValue: (detail.infomation) ? detail.infomation.shipping_weight : '' ,
         })(
          <Input />
         )}
@@ -542,6 +629,7 @@ render() {
     <Col md={12}>
         <FormItem label="Item model number" {...this.formLayout}>
              {getFieldDecorator('model_number', {
+                initialValue: (detail.infomation) ? detail.infomation.model_number : '' ,
                 })(
                  <Input />
                 )}
@@ -553,7 +641,7 @@ render() {
     <Col md={12}>
         <FormItem label="Nhãn hiệu" {...this.formLayout}>
                 {getFieldDecorator('brand', {
-                  
+                  initialValue:detail.brand
                 })(
                   <Input />
                 )}
@@ -563,7 +651,7 @@ render() {
         
         <FormItem label="ASIN" {...this.formLayout}>
                 {getFieldDecorator('asin', {
-
+                    initialValue: (detail.infomation) ? detail.infomation.asin : '' ,
                 })(
                  <Input />
                 )}
@@ -574,15 +662,16 @@ render() {
 <Col md={12}>
     <FormItem label="Hình ảnh" {...this.formLayout}>
                 <Upload
+                      defaultFileList={defaultFileList}   
                       action="/api/upload/"
                       listType="picture-card"
-                      fileList={fileList}
+                      fileList={initFileList}
                       onPreview={this.handlePreview}
                       onChange={this.handleChange}
                       onRemove={this.handleRemove}
                       multiple
                     >
-                   {(fileList.length > 15) ? null : uploadButton}
+                   {(initFileList.length > 15) ? null : uploadButton}
                 </Upload>
           </FormItem>  
 </Col>
@@ -596,10 +685,10 @@ render() {
                     beforeUpload={this.beforeUpload}
                     onChange={this.handleChangeThumb}
                   >
-                    {imageUrl ? <img src={imageUrl} alt="Thumbnail" style={{width: '120px'}} /> : uploadThumb}
+                    {initImageThumb ? <img src={initImageThumb} alt="Thumbnail" style={{width: '120px'}} /> : uploadThumb}
                   </Upload>
-        </FormItem>
-</Col>
+              </FormItem>
+    </Col>
 
          
 </Row>
@@ -628,7 +717,7 @@ render() {
             <FormItem label="Mô tả ">
               <div style={{backgroundColor:'white'}}>
                   <Editor
-                      editorState={editorState}
+                      editorState={(editorState) ? editorState : defaultEditorContentDesc}
                       wrapperClassName={`${styles['demo-wrapper']}`}
                       editorClassName={`${styles['demo-editor']}`}
                      toolbar={{
@@ -639,8 +728,8 @@ render() {
                     />
                   <FormItem  {...this.formLayout}>
                     {getFieldDecorator('description', {
-                      rules: [{ required: true, message: 'Yêu cầu nhập tiêu đề ! ' }],
-                      initialValue: htmlDescription
+                      
+                      initialValue: (htmlDescription) ? htmlDescription : detail.description
                     })(
                       <TextArea
                         disabled 
@@ -658,16 +747,20 @@ render() {
             <FormItem label="Chất liệu & Cách sử dụng">
               <div style={{backgroundColor:'white'}}>
                   <Editor
-                      editorState={editorStateCSD}
+
+                      editorState={(editorStateCSD) ? editorStateCSD : defaultEditorContentCSD}
                       wrapperClassName={`${styles['demo-wrapper']}`}
                       editorClassName={`${styles['demo-editor']}`}
                       onEditorStateChange={this.onEditorStateCSD}
+                        defaultEditorState={defaultEditorContentCSD}
                     />
                   <FormItem  {...this.formLayout}>
                     {getFieldDecorator('materials_use', {
-                      initialValue: htmlCSD
+                      
+                      initialValue: (htmlCSD) ? htmlCSD : detail.material_use
                     })(
-                      <TextArea disabled 
+                      <TextArea
+                        disabled 
                         style={{'display': 'none'}}
                     />
                     )}
@@ -681,14 +774,14 @@ render() {
             <FormItem label="Chi tiết kích cỡ">
               <div style={{backgroundColor:'white'}}>
                   <Editor
-                      editorState={editorStateSizeDesc}
+                      editorState={(editorStateSizeDesc) ? editorStateSizeDesc : defaultEditorContentSizeDesc}
                       wrapperClassName={`${styles['demo-wrapper']}`}
                       editorClassName={`${styles['demo-editor']}`}
                       onEditorStateChange={this.onEditorStateChangeSizeDesc}
                     />
                   <FormItem  {...this.formLayout}>
                     {getFieldDecorator('size_desc', {
-                      initialValue: htmlSizeDesc
+                      initialValue: (htmlSizeDesc) ? htmlSizeDesc : detail.size_desc
                     })(
                       <TextArea
                         disabled 
@@ -700,20 +793,21 @@ render() {
          </FormItem>
 </Col>
 </Row>
-
 <Row>
 <Col md={20}>
             <FormItem label="Mô tả chi tiết">
               <div style={{backgroundColor:'white'}}>
                   <Editor
-                      editorState={editorStateDetail}
+
+                      editorState={(editorStateDetail) ? editorStateDetail : defaultEditorContentDesc_detail}
                       wrapperClassName={`${styles['demo-wrapper']}`}
                       editorClassName={`${styles['demo-editor']}`}
                       onEditorStateChange={this.onEditorStateChangeDetail}
                     />
                   <FormItem  {...this.formLayout}>
                     {getFieldDecorator('desc_detail', {
-                      initialValue: htmlDescriptionDetail
+                      
+                      initialValue: (htmlDescriptionDetail) ? htmlDescriptionDetail : detail.desc_detail
                     })(
                       <TextArea
                         disabled 
@@ -725,12 +819,11 @@ render() {
          </FormItem>
 </Col>
 </Row>
-
 <Row>
  <Col md={24}>
             <FormItem label="Meta"  {...this.formLayout}>
                 {getFieldDecorator('meta', {
-                  
+                    initialValue:detail.meta
                 })(
                   <Input  />
                 )}
@@ -742,7 +835,7 @@ render() {
  <Col md={24}>
             <FormItem label="Meta Description"  {...this.formLayout}>
                 {getFieldDecorator('meta_description', {
-                  
+                  initialValue:detail.meta_description
                 })(
                   <TextArea ></TextArea>
                 )}
@@ -755,7 +848,7 @@ render() {
             <FormItem label="Seo Link"  {...this.formLayout}>
                 {getFieldDecorator('view_seo_link', {
                   
-                  initialValue: this.state.seo_link,
+                  initialValue: (this.state.seo_link) ? this.state.seo_link : detail.seo_link,
                   onChange: this.handleTitle ,
                 })(
                   <Input  addonBefore="/product/" />
@@ -765,17 +858,24 @@ render() {
 <Col md={24}>
             <FormItem  {...this.formLayout}>
                 {getFieldDecorator('seo_link', {
-                  initialValue: this.state.seo_link,
+                  initialValue: (this.state.seo_link) ? this.state.seo_link : detail.seo_link,
+                })(
+                  <Input  type="hidden"/>
+                )}
+              </FormItem>
+            <FormItem  {...this.formLayout}>
+                {getFieldDecorator('productid', {
+                  initialValue: detail.productid,
                 })(
                   <Input  type="hidden"/>
                 )}
               </FormItem>
 </Col>
 </Row>
-<FormItem>
-        <Button type="primary" htmlType="submit" loading={loading}>Thêm mới</Button>
-    </FormItem>
-</Form> 
+        <FormItem>
+          <Button type="primary" htmlType="submit" loading={loading}>Lưu lại</Button>
+        </FormItem>
+        </Form> 
 <Modal visible={previewVisible} footer={null} onCancel={this.handleCancel}>
           <img alt="Image" style={{ width: '100%' }} src={previewImage} />
         </Modal>
@@ -784,4 +884,4 @@ render() {
   }
 }
 
-export default ProductDetail;
+export default EditProduct;

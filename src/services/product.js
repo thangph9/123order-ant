@@ -6,15 +6,22 @@ export async function getProducts(params) {
 }
 
 export async function saveProduct(params) {
-  return request('/api/product/save',{
+  return request(`/api/product/save?ref=${new Date().getTime()}`,{
       method : "POST",
       body: params,
       headers:{'X-Access-Token':getAuthority()[0].token}
   });
 }
 export async function getProductDetail(params) {
-  return request('/api/product/detail',{
+  return request(`/api/product/DT?productid=${params.productid}&ref=${new Date().getTime()}`,{
       method : "GET",
+      headers:{'X-Access-Token':getAuthority()[0].token}
+  });
+}
+export async function searchProduct(params) {
+  return request(`/api/product/search`,{
+      method : "POST",
+      body: params,
       headers:{'X-Access-Token':getAuthority()[0].token}
   });
 }

@@ -14,6 +14,8 @@ var publicKEY  = fs.readFileSync('./ssl/jwtpublic.pem', 'utf8');
 var router = express.Router()
 router.use('/order',require('./order'))
 router.use('/user',require('./user'))
+router.use('/category',require('./category'))
 router.use('/product',require('./product'))
-router.use('/api',require('./api'))
+router.use('/*',require('./api'))
+router.use('/*',require('./global'))
 module.exports = router

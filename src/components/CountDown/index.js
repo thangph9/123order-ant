@@ -46,6 +46,7 @@ class CountDown extends Component {
   }
 
   componentDidMount() {
+      console.log('count down');
     this.tick();
   }
 
@@ -67,10 +68,10 @@ class CountDown extends Component {
   defaultFormat = time => {
     const hours = 60 * 60 * 1000;
     const minutes = 60 * 1000;
-
-    const h = Math.floor(time / hours);
+    const h = Math.floor(time  / hours);
     const m = Math.floor((time - h * hours) / minutes);
     const s = Math.floor((time - h * hours - m * minutes) / 1000);
+      
     return (
       <span>
         {fixedZero(h)}:{fixedZero(m)}:{fixedZero(s)}
@@ -113,7 +114,7 @@ class CountDown extends Component {
     const { format = this.defaultFormat, onEnd, ...rest } = this.props;
     const { lastTime } = this.state;
     const result = format(lastTime);
-
+    
     return <span {...rest}>{result}</span>;
   }
 }

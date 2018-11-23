@@ -1,6 +1,6 @@
 import { routerRedux } from 'dva/router';
 import { message } from 'antd';
-import { getProducts,saveProduct,getProductDetail } from '@/services/product';
+import { getProducts,saveProduct,getProductDetail, searchProduct } from '@/services/product';
 var currencyFormatter = require('currency-formatter');
 
 export default {
@@ -11,11 +11,12 @@ export default {
       list: [],
       pagination: {},
     },
+    detail: {}   
   },
   effects: {
     *fetch({ payload }, { call, put }) {
       const response = yield call(getProducts, payload);    
-      let list = [];
+        let list=[];
         try{
             list=Array.isArray(response.list) ? response : []  ;
         }catch(e){
@@ -28,10 +29,14 @@ export default {
     },
     *fetchDetail({payload },{call,put}){
         const response =yield call(getProductDetail,payload);
-        yield put({
-            type:'detail',
-            payload: response
-        })
+         let d = [];
+        if(response.status == 'ok'){
+            yield put({
+                type:'detail',
+                payload: (response.data) ? response.data : {}
+            })
+        }
+        
     },    
     *saveProduct({ payload },{call, put}){
           const response = yield call(saveProduct, payload);
@@ -50,6 +55,19 @@ export default {
             },
           });
     },
+    *search({payload} , {call, put}){
+        const response = yield call(searchProduct, payload);    
+        let list=[];
+        try{
+            list=Array.isArray(response.list) ? response : []  ;
+        }catch(e){
+            list=[];
+        }
+        yield put({
+            type: 'list',
+            payload: list,
+          });
+    }
   },
 
   reducers: {
@@ -62,7 +80,7 @@ export default {
     detail(state,{ payload }){
         return {
             ...state,
-            data: payload
+            detail: payload
         }
     },
     save(state,{ payload }){

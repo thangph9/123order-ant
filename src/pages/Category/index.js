@@ -20,13 +20,13 @@ import {
   Form,
   DatePicker,
   Select,
-    TreeSelect
+  TreeSelect
 } from 'antd';
 
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 import Result from '@/components/Result';
 
-import styles from './ProductLists.less';
+import styles from './styles.less';
 
 const FormItem = Form.Item;
 const RadioButton = Radio.Button;
@@ -40,8 +40,9 @@ const { Search, TextArea } = Input;
   product ,
   category
 }))
+
 @Form.create()
-class ProductLists extends PureComponent {
+class Category extends PureComponent {
   state = { visible: false, done: false ,pageSize: 10,current: 1 };
   formLayout = {
     labelCol: { span: 7 },
@@ -60,32 +61,19 @@ class ProductLists extends PureComponent {
       },
     });
     dispatch({
+      type: 'category/fetchAll',
+      payload: {
+        count: 5,
+        pageSize,
+        current,
+      },
+    });  
+      dispatch({
         type: 'category/treemap',
         payload:{},
     })
   }
-  onChangeNodeID = (e)=>{
-     
-      this.setState({
-          nodeid: e
-      });
-  }
-  onSearch = (e)=>{
-      const { dispatch } = this.props;
-      const { nodeid } = this.state;
-      let payload={q:e};
-      if(nodeid){
-          payload={
-              q:e,
-              nodeid
-          }
-      }
-      dispatch({
-          type: 'product/search',
-          payload
-      })
-  }
-  
+
   showModal = () => {
     this.setState({
       visible: true,
@@ -147,18 +135,37 @@ class ProductLists extends PureComponent {
          current:current,
      })
   }
-  
+  onSearch = (e)=>{
+      const { dispatch } = this.props;
+      const { nodeid } = this.state;
+      let payload={q:e};
+      if(nodeid){
+          payload={
+              q:e,
+              nodeid
+          }
+      }
+      dispatch({
+          type: 'category/search',
+          payload
+      })
+  }
+  onChangeNodeID = (e)=>{
+      console.log(e);
+      this.setState({
+          nodeid: e
+      });
+  }
   render() {
     const {
       list: { list },
       loading,
-      product: { data } ,
-      category: { treeMap },    
+      category: { data,treeMap }    
     } = this.props;
     const {
       form: { getFieldDecorator },
     } = this.props;
-    const { visible, done, current = {},nodeid } = this.state;
+    const { visible, done, current = {} } = this.state;
     const editAndDelete = (key, currentItem) => {
       if (key === 'edit') this.showEditModal(currentItem);
       else if (key === 'delete') {
@@ -175,7 +182,7 @@ class ProductLists extends PureComponent {
     const modalFooter = done
       ? { footer: null, onCancel: this.handleDone }
       : { okText: 'Lưu', onOk: this.handleSubmit, onCancel: this.handleCancel };
-    
+
     const Info = ({ title, value, bordered }) => (
       <div className={styles.headerInfo}>
         <span>{title}</span>
@@ -186,16 +193,9 @@ class ProductLists extends PureComponent {
 
     const extraContent = (
       <div className={styles.extraContent}>
-        <RadioGroup defaultValue="all">
-          <RadioButton value="all">Tất cả</RadioButton>
-          <RadioButton value="progress">Đang tiến hành</RadioButton>
-          <RadioButton value="waiting">Đang chờ</RadioButton>
-        </RadioGroup> 
         
-        <Search className={styles.extraContentSearch} placeholder="Tìm kiếm" onSearch={() => ({})} />
       </div>
     );
-    
     const paginationProps = { 
       showSizeChanger: true,
       showQuickJumper: true,
@@ -204,7 +204,7 @@ class ProductLists extends PureComponent {
       total: (data.pagination) ? data.pagination.total : 50,
     };
 
-    const ListContent = ({ data: { createby, death_clock, percent, status } }) => (
+    const ListContent = ({ data: { createby, createat, percent, status } }) => (
       <div className={styles.listContent}>
         <div className={styles.listContentItem}>
           <span>Người tạo</span>
@@ -212,7 +212,7 @@ class ProductLists extends PureComponent {
         </div>
         <div className={styles.listContentItem}>
           <span>Thời gian bắt đầu</span>
-          <p>{moment((death_clock) ? death_clock.start : null).format('YYYY-MM-DD HH:mm')}</p>
+          <p>{moment(createat).format('YYYY-MM-DD HH:mm')}</p>
         </div>
         <div className={styles.listContentItem}>
           <Progress percent={percent} status={status} strokeWidth={6} style={{ width: 180 }} />
@@ -345,20 +345,20 @@ class ProductLists extends PureComponent {
               </Col>
             </Row>
           </Card>
-          <Card bordered={false}>
+         <Card bordered={false}>
             <Form>
                 <Row>
                     <Col md={12}>
                         <FormItem label="Danh mục" {...this.formLayout}>
                         {getFieldDecorator('category', {
-                            onChange: this.onChangeNodeID,
-                            initialValue: this.state.nodeid,   
+                            onChange: this.onChangeNodeID
                         })(<TreeSelect
                             showSearch
                             style={{ width: 195 }}
                             dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
                             allowClear
                             treeDefaultExpandAll
+                            
                             treeData={treeData}
                           >
                         </TreeSelect>)}
@@ -375,10 +375,11 @@ class ProductLists extends PureComponent {
           <Card
             className={styles.listCard}
             bordered={false}
-            title="Danh sách sản phẩm"
+            title="Danh sách tiêu chuẩn"
             style={{ marginTop: 24 }}
             bodyStyle={{ padding: '0 32px 40px 32px' }}
-          >
+            extra={extraContent}
+          > 
             <Button
               type="dashed"
               style={{ width: '100%', marginBottom: 8 }}
@@ -414,14 +415,9 @@ class ProductLists extends PureComponent {
                   ]}
                 >
                   <List.Item.Meta
-                    avatar={<Avatar src={`/api/product/image/${item.thumbnail}`} shape="square" size="large" />}
-                    title={<Link to={`/products/edit/${item.productid}`}>{item.title}</Link>}
-                    description={(item.category && item.category.length > 0) && item.category.map((e,i)=>{
-                            if(item.category.length >1 && (item.category.length-1) > i ){
-                                return <a key={i} href="javascript:void(0)" onClick={()=>{this.onChangeNodeID(e.nodeid)}}>{e.title+" | "}</a>
-                            }else return <a key={i} href="javascript:void(0)"  onClick={()=>{this.onChangeNodeID(e.nodeid)}}>{e.title}</a>;
-                        
-                        })}
+                    avatar={<Avatar src={`/api/category/image/${item.thumbnail}`} shape="square" size="large" />}
+                    title={<Link to={`/category/edit/${item.nodeid}`}>{item.title}</Link>}
+                    
                   />
                   <ListContent data={item} />
                 </List.Item>
@@ -445,4 +441,4 @@ class ProductLists extends PureComponent {
   }
 }
 
-export default ProductLists;
+export default Category;

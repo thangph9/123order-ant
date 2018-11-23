@@ -212,13 +212,13 @@ class OrderForm extends PureComponent {
       payprice=currencyFormatter.format(payprice, { locale: 'en-US' ,symbol: ''});
       price=currencyFormatter.format(price, { locale: 'en-US',symbol: '' });
       deposit=currencyFormatter.format(_deposit, { locale: 'en-US',symbol: '' });
-      
+       
       this.setState({
           price: price,
           payprice:payprice,
           deposit:deposit
       });
-      
+       
   }
   componentWillUnmount(){
     window.onbeforeunload = null;

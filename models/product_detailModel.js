@@ -16,7 +16,14 @@ module.exports={
         star                 : 'text',
         color                 : 'text',
         size                 : 'text',
+        currency             : 'text',
+        size_desc            : 'text',
+        amount              :'int',
+        materials_use       : 'text',
         node_name          : 'text',
+        seo_link        : 'text',
+        meta            : 'text',
+        meta_description: 'text',
         nodeid                 :{
             type: "set",
             typeDef:"<text>"

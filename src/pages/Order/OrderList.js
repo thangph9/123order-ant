@@ -1555,13 +1555,12 @@ class OrderList extends PureComponent {
     
       
     const {
-      order: { data },
       loading,
       order,
       user : { currentUser }
     } = this.props;
     const { selectedRows, modalVisible,selectedRow,statusText,edit } = this.state;
-
+    const data=(order) ? order.data : [];
       
     const parentMethods = {
       handleAdd: this.handleAdd,
