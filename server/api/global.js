@@ -1,6 +1,7 @@
 const models    = require('../settings');
 const utils    = require('./utils');
 const async     = require("async");
+const bcrypt          = require("bcryptjs");
 const Uuid      = require("cassandra-driver").types.Uuid;
 const jwt       = require('jsonwebtoken');
 const fs        =require('fs');
