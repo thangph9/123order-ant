@@ -11,6 +11,8 @@ import { enquireScreen, unenquireScreen } from 'enquire-js';
 import { formatMessage } from 'umi/locale';
 import SiderMenu from '@/components/SiderMenu';
 import Authorized from '@/utils/Authorized';
+import { getAuthority } from '@/utils/authority';
+import { Route, Redirect } from 'react-router-dom';
 import SettingDrawer from '@/components/SettingDrawer';
 import logo from '../assets/logo.svg';
 import Footer from './Footer';
@@ -213,6 +215,9 @@ class BasicLayout extends React.PureComponent {
     const { rendering, isMobile } = this.state;
     const isTop = PropsLayout === 'topmenu';
     const menuData = this.getMenuData();
+      if(getAuthority()=='guest'){
+         return (<Redirect to={{ pathname: '/user/login' }} />)
+      }
     const layout = (
       <Layout>
         {isTop && !isMobile ? null : (
