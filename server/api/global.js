@@ -418,11 +418,305 @@ function register(req,res){
         });
     })  
 }
+function getCurrencyRaito(req,res){
+    let raito={};
+    async.series([
+       function(callback){
+            callback(null,null);    
+       },
+       function(callback){
+           models.instance.currency_raito.find({},function(err,items){
+               if(items){
+                   raito=items;
+               }
+               callback(err,null);
+           });
+       }
+    ],function(err,result){
+        if(err) return res.send('error');
+        res.send({raito:raito});
+    });
+}
+function saveCurrencyRaito(req,res){
+    const { body } = req;
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+       return  res.send({status: 'expired'}); 
+    }
+    let listRole=[]
+    
+    let PARAM_IS_VALID={},queries=[];
+    async.series([
+        function(callback){
+           let uuid='';
+           try{
+               uuid=models.uuidFromString(legit.user_id);
+           }catch(e){
+               return res.send({status:"error_auth"})
+           }
+           models.instance.users.find({user_id:uuid},{select:['role']},function(err,user){
+               
+               listRole=(user) ? user[0].role : [];
+               callback(null,null);
+           })
+       }, 
+        function(callback){
+            try{
+                if(listRole.indexOf('update_currency_raito') > -1){
+                    
+                }else{
+                    return res.send({status:'error_rule_update_currency_raito'})
+                }
+            }catch(e){
+                return res.send({status:'error_rule_update_currency_raito'})
+            }
+            
+          callback(null,null);  
+        },
+        function(callback){
+            PARAM_IS_VALID['currency']=(req.body.currency) ? req.body.currency : '';
+            PARAM_IS_VALID['raito'] = (req.body.raito) ? parseFloat(req.body.raito) : 0;
+            
+            if(PARAM_IS_VALID['currency'] == '' || PARAM_IS_VALID['raito'] ==0 ){
+                return res.send({status: 'invalid'}); 
+            }
+            callback(null,null);
+        },
+        function(callback){
+            const currency_raito=()=>{
+                
+                let object      =PARAM_IS_VALID;
+                let instance    =new models.instance.currency_raito(object);
+                let save        =instance.save({return_query: true});
+                return save;
+            }
+           queries.push(currency_raito());
+            const currency_raito_by_date=()=>{
+                
+                let object      =PARAM_IS_VALID;
+                object['username']  =legit.username;
+                object['date']  =new Date();
+                
+                let instance    =new models.instance.currency_raito_by_date(object);
+                let save        =instance.save({return_query: true});
+                return save;
+                
+            } 
+           queries.push(currency_raito_by_date());
+           callback(null,null);
+        },
+    ],function(err,result){
+           if(err) return res.send({status: 'error'});
+            models.doBatch(queries,function(err){
+                
+                if(err) return res.send({status: 'error'});
+                res.send({ status: 'ok'});
+            });
+    });
+}
+function generateOrderBillCode(req,res){
+    let bill_code,billCode;
+    let id=Uuid.random();
+    var token=req.headers['x-access-token'];
+    
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+       return  res.send({status: 'expired'}); 
+    }
+    async.series([
+        function(callback){
+            models.instance.order_by_bill_code.find({types: req.query.type},{raw:true, allow_filtering: true},function(err,r){
+                bill_code=r;
+                callback(err,null);
+            })
+            
+        },
+        function(callback){
+            let types,code,idBill,_code;
+            
+            if(bill_code && bill_code.length > 0){
+                idBill=bill_code[0].id;
+                _code=parseInt(bill_code[0].bill_code)+1;
+            }else{
+                idBill=id;
+                _code=1;
+            }
+            code=models.datatypes.Long.fromInt(1);
+            models.instance.order_by_bill_code.update({id:idBill,types:'KL'}, {bill_code: code}, function(err){
+                    callback(err,null);
+            });
+            billCode=_code;
+        }
+        
+    ],function(err,result){
+        if(err) return res.send({status:'error'});
+        res.send({billcode:billCode})
+    })
+    
+}
+function checkAccount(req,res){
+    let { username }=req.body;
+    let PARAM_IS_VALID={};
+    let status='ok';
+    async.series([
+        function(callback){
+            callback(null,null);
+        },
+        function(callback){
+            models.instance.login.find({username:username},function(err,_user){
+                
+                if(_user && _user.length > 0){
+                    status='invalid';
+                }
+                callback(err,null);
+            });
+            
+        }
+    ],function(err,result){
+        if(err) res.send({status:'error',username:username});
+        else res.send({status:status,username:username});
+    });
+    
+}
+function saveComment(req,res){
+    let PARAMS_IS_VALID={};
+    const { body } = req;
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+       return  res.send({status: 'expired'}); 
+    }
+    let listRole=[];
+    let queries=[];
+    async.series([
+        function(callback){
+            try{
+                PARAMS_IS_VALID['commentid']=(body.commentid) ?  models.uuidFromString(legit.user_id) : Uuid.random();
+                PARAMS_IS_VALID['comment']=body.scomment;
+                PARAMS_IS_VALID['username']=legit.username;
+                PARAMS_IS_VALID['sbill_code']=body.sbill_code;
+                PARAMS_IS_VALID['createat']=new Date();
+            }catch(e){
+                return res.send({status: 'error'})
+            }
+            callback(null,null);
+        },
+        function(callback){
+            const comments_by_user=()=>{
+                let object=PARAMS_IS_VALID;
+                let comment=new models.instance.comments_by_user(object);
+                let save   =comment.save({return_query: true});
+                return save;
+            }
+            queries.push(comments_by_user())
+            const comment_by_user=()=>{
+                let object={};
+                 object['username']=PARAMS_IS_VALID.username;
+                 object['sbill_code']=PARAMS_IS_VALID.sbill_code;
+                 object['comment']=PARAMS_IS_VALID.comment;
+                 object['createat']=PARAMS_IS_VALID.createat;
+                let comment=new models.instance.comment_by_user(object);
+                let save   =comment.save({return_query: true});
+                return save;
+            }
+            
+            queries.push(comment_by_user())
+            const update_orders_comment=()=>{
+                var query_object = {sbill_code: PARAMS_IS_VALID.sbill_code};
+                var update_values_object = {scomment: PARAMS_IS_VALID.comment};
+                var options = {ttl: 86400, return_query: true};
+                var orders= models.instance.orders.update(query_object,update_values_object,options);
+                return orders;
+            }
+            queries.push(update_orders_comment())
+            callback(null,null);
+        }
+    ],function(err,result){
+        if(err) return res.send({status:"error"})
+        try{
+             models.doBatch(queries,function(err){
+                if(err) return res.send({status: 'error_03'});
+                res.send({status: "ok",result:PARAMS_IS_VALID })
+            });
+         }catch(e){
+             return res.send({status: 'error_04'});
+         }
+    });
+}
+function getComment(req,res){
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+       return  res.send({status: 'expired'}); 
+    }
+    const params=req.query; 
+    let listRole=[];
+    let queries=[];
+    let list=[];
+    let PARAMS_IS_VALID={}
+    async.series([
+        function(callback){
+            try{
+                PARAMS_IS_VALID['sbill_code']=params.sbill_code;
+            }catch(e){
+            return res.send({status: 'error'})
+            }
+            callback(null,null);
+        },
+        function(callback){
+            callback(null,null);
+        },
+        function(callback){
+            var query={$solr_query: '{"q":" sbill_code:'+PARAMS_IS_VALID.sbill_code+'"}'}
+            
+            models.instance.comment_by_user.find(query,function(err,items){
+               if(items){
+                   list=items;
+               }
+               callback(err,null);
+           });
+        }
+    ],function(err,result){
+        if(err) return res.send({status:"error"})
+        res.send({status : 'ok',list: list})
+    });
+    
+}
 router.post("/upload",uploadFile);
 router.post("/upload/thumb",uploadFileThumb);
 router.post("/login/account",login);
 router.post("/register",register);
 router.get("/currentUser",getCurrentUser);
+router.get("/currency/raito",getCurrencyRaito);
+router.get("/generate/bill_code",generateOrderBillCode);
+router.post("/currency/raito",saveCurrencyRaito);
+router.post("/comment/save",saveComment);
+router.get("/comment/list",getComment);
 router.get("/500",(req,res)=>{
       res.status(500).send({
       timestamp: new Date().getTime(),
