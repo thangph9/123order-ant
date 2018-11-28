@@ -20,7 +20,8 @@ export default {
         payload: response,
       });
       // Login successfully
-      if (response.status === 'ok') {
+    try{
+       if (response.status === 'ok') {
         reloadAuthorized();
         const urlParams = new URL(window.location.href);
         const params = getPageQuery();
@@ -38,7 +39,11 @@ export default {
           }
         }
         yield put(routerRedux.replace(redirect || '/'));
-      }
+      } 
+    }catch(e){
+        
+    }
+      
     },
 
     *getCaptcha({ payload }, { call }) {
