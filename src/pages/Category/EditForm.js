@@ -340,6 +340,8 @@ render() {
                         style={{ width: 265 }}
                         dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
                         allowClear
+                        
+                        multiple
                         treeDefaultExpandAll
                         onChange={this.onChangeNodeID}
                         treeData={treeData}

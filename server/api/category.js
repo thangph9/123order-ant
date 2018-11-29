@@ -30,6 +30,7 @@ function save(req,res){
             //console.log(params);
             try{
                 PARAM_IS_VALID=params;
+                console.log(PARAM_IS_VALID);
                 if(params.nodeid){
                     PARAM_IS_VALID['nodeid']=models.uuidFromString(params.nodeid);
                 }
@@ -51,21 +52,28 @@ function save(req,res){
             try{
                 const category=()=>{
                     let object=PARAM_IS_VALID;
+                    let instance    ={};
+                    let save        ={};
                     if(params.nodeid){
-                        object['nodeid']=PARAM_IS_VALID.nodeid;
                         object['updateat']=new Date();
-                        object['updateby']=legit.username
+                        object['updateby']=legit.username;
+                        var query_object = {nodeid: PARAM_IS_VALID.nodeid};
+                        
+                        delete object.nodeid;
+                        var update_values_object = object;
+                        var options = {ttl: 86400, if_exists: true,return_query: true};
+                        save=models.instance.category.update(query_object, update_values_object, options); 
                     }else{
                         object['nodeid']=Uuid.random();
                         object['createat']=new Date();
                         object['createby']=legit.username;
+                        instance    =new models.instance.category(object);
+                        save        =instance.save({return_query: true});
                     }
-                    
-                    
-                    let instance    =new models.instance.category(object);
-                    let save        =instance.save({return_query: true});
+                    console.log(save);
                     return save;
                 } 
+                
                 queries.push(category());
             }catch(e){
                 console.log(e);
@@ -79,6 +87,7 @@ function save(req,res){
         if(err) return res.send({status: 'error_03'});
         try{
              models.doBatch(queries,function(err){
+                 console.log(err);
                 if(err) return res.send({status: 'error_04'});
                 return res.send({ status: 'ok'});
             });
@@ -292,6 +301,7 @@ function createNode(items){
     }
     return node;
 }
+
 function list(req,res){
     var token=req.headers['x-access-token'];
     var verifyOptions = {
@@ -306,6 +316,7 @@ function list(req,res){
     }
     let results=[];
     let current=1;
+    let category=[];
     async.series([
         function(callback){
             try{
@@ -325,6 +336,24 @@ function list(req,res){
                     }
                 callback(err,null);    
             })
+        },
+        function(callback){
+            models.instance.category.find({},{select:['title','nodeid','category']},function(err,items){
+                if(items && items.length > 0){
+                    category=items
+                }
+                callback(err,null);
+            });
+        },
+        function(callback){
+            results.map(e=>{
+                if(e.category && e.category.length > 0 ){
+                    e.category.map(a=>{
+                       e._breadcumb=generateMap(category,a)   
+                    })
+                }
+            })
+            callback(null,null);
         }
     ],function(err,result){
         if(err) return res.send({status: 'error'});
@@ -333,6 +362,7 @@ function list(req,res){
         }}})
     })
 }
+
 function detail(req,res){
     var token=req.headers['x-access-token'];
     var verifyOptions = {
@@ -388,6 +418,7 @@ function search(req,res){
     let current=1;
     let PARAMS_IS_VALID={};
     let query='';
+    let category=[];
     async.series([
         function(callback){
             try{
@@ -404,14 +435,18 @@ function search(req,res){
                         tempQuery='"title: *'+req.body.q+'*"'
                     }
                 }
-                query=tempQuery;
+                if(tempQuery && tempQuery.length > 0){
+                    query='{"q":'+tempQuery+',"sort": "createat desc"}'
+                }else{
+                    query='{"q": "*:*","sort": "createat desc"}'
+                }
             }catch (e){
                 return res.send({status: 'error_01'})
             }
             callback(null,null);
         },
         function(callback){
-            models.instance.category.find({$solr_query: '{"q":'+query+',"sort": "createat desc"}'},{select : ['category','nodeid','title','thumbnail','createat','createby']},function(err,items){
+            models.instance.category.find({$solr_query: query},{select : ['category','nodeid','title','thumbnail','createat','createby']},function(err,items){
               
                 if(items && items.length > 0 )
                 {
@@ -419,6 +454,24 @@ function search(req,res){
                 }
                 callback(err,null);    
             })
+        },
+        function(callback){
+            models.instance.category.find({},{select:['title','nodeid','category']},function(err,items){
+                if(items && items.length > 0){
+                    category=items
+                }
+                callback(err,null);
+            });
+        },
+        function(callback){
+            results.map(e=>{
+                if(e.category && e.category.length > 0 ){
+                    e.category.map(a=>{
+                       e._breadcumb=generateMap(category,a)   
+                    })
+                }
+            })
+            callback(null,null);
         }
     ],function(err,result){
         if(err) return res.send({status: 'error'});
@@ -427,6 +480,35 @@ function search(req,res){
         }}})
     })
 }
+
+function getBreadcumb(category,nodeid){
+    return category.filter(node => {
+        return node.nodeid.toString()==nodeid;
+    });
+}
+function generateMap(category,nodeid){
+    let parent=[];
+    let temp={};
+    let children={};
+    var i=0;
+    var node=nodeid;
+    children=getBreadcumb(category,node);
+    parent.push(children[0]);
+    var i=1;
+    while(children[0].category!=null && i < 100){
+        if(children[0] && children[0].category && children[0].category.length > 0){
+            node=children[0].category[0]
+            children=getBreadcumb(category,node);
+            parent.push(children[0]);
+        }else{
+           children=getBreadcumb(category,node);
+           parent.push(children[0]);
+        }
+        i++;
+    }
+    return parent.reverse();
+}
+
 
 var express = require('express');
 var router = express.Router();

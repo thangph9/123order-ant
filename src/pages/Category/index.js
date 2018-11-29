@@ -151,9 +151,13 @@ class Category extends PureComponent {
       })
   }
   onChangeNodeID = (e)=>{
-      console.log(e);
       this.setState({
           nodeid: e
+      });
+  }
+  handeClickCategory =(e)=>{
+      this.setState({
+          nodeid: e.nodeid
       });
   }
   render() {
@@ -351,6 +355,7 @@ class Category extends PureComponent {
                     <Col md={12}>
                         <FormItem label="Danh mục" {...this.formLayout}>
                         {getFieldDecorator('category', {
+                            initialValue: this.state.nodeid,
                             onChange: this.onChangeNodeID
                         })(<TreeSelect
                             showSearch
@@ -417,7 +422,23 @@ class Category extends PureComponent {
                   <List.Item.Meta
                     avatar={<Avatar src={`/api/category/image/${item.thumbnail}`} shape="square" size="large" />}
                     title={<Link to={`/category/edit/${item.nodeid}`}>{item.title}</Link>}
-                    
+                    description={
+                    (item._breadcumb && item._breadcumb.length > 0) ? (
+                        <div>
+                        {
+                        item._breadcumb.map((e,i)=>{
+                           if (i == (item._breadcumb.length -1) ) {
+                                return (<a href="javascript:void(0);" onClick={()=>{this.handeClickCategory(e)}} key={i}><i>{(e.title.length > 20) ? (e.title.substring(0,20)+"...") : (e.title)}</i></a>)
+                            } else{
+                            return (<div key={i}><a href="javascript:void(0);" onClick={()=>{this.handeClickCategory(e)}} ><i>{(e.title.length > 20) ? (e.title.substring(0,20)+"...") : (e.title)}</i></a><Icon type="double-right" /></div>)
+                            }
+                        })
+                        
+                        }
+                        </div>    
+                        ) : (<div></div>)
+                        
+                    }
                   />
                   <ListContent data={item} />
                 </List.Item>
