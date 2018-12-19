@@ -1,6 +1,6 @@
 import { routerRedux } from 'dva/router';
 import { message } from 'antd';
-import { getProducts,saveProduct,getProductDetail, searchProduct } from '@/services/product';
+import { getProducts,saveProduct,getProductDetail, searchProduct,saveProductVariants,getProductsByCategory,getProductsByCategoryDetail } from '@/services/product';
 var currencyFormatter = require('currency-formatter');
 
 export default {
@@ -37,9 +37,57 @@ export default {
             })
         }
         
+    },  
+    *test_list({payload },{call,put}){
+        const response =yield call(getProductsByCategory,payload);
+         let d = [];
+        
+        if(response.status == 'ok'){
+            
+            d=(response.list) ? response.list : []
+            yield put({
+                type:'list',
+                payload: {
+                    list: d,
+                    pagination:  response.pagination,
+                    
+                }
+            })
+        }
+        
+    },
+    *getPOD({payload}, { call ,put}){
+          const response =yield call(getProductsByCategoryDetail,payload);
+         let d = [];
+        
+        if(response.status == 'ok'){
+            
+            d=(response.data) ? response.data : []
+            yield put({
+                type:'list',
+                payload: d
+            })
+        }
     },    
     *saveProduct({ payload },{call, put}){
           const response = yield call(saveProduct, payload);
+          if(response.status==='ok'){
+                message.success('Thay đổi thành công');
+            }else if (response.status==='expired'){
+                message.warning('Đăng nhập lại ');
+            }else{
+                message.error('Lỗi! không thể thay đổi');
+            }
+          yield put({
+            type: 'save',
+            payload: {
+                row:payload,
+                ...response
+            },
+          });
+    },
+    *saveProductVariants({ payload },{call, put}){
+          const response = yield call(saveProductVariants, payload);
           if(response.status==='ok'){
                 message.success('Thay đổi thành công');
             }else if (response.status==='expired'){
@@ -72,6 +120,7 @@ export default {
 
   reducers: {
     list(state,{ payload }){
+        
         return {
             ...state,
             data: payload

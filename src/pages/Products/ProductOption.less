@@ -1,0 +1,122 @@
+@borderBoxShadow: 0 0 0 1px rgba(63,63,68,0.05),0 1px 3px 0 rgba(63,63,68,0.15);
+@lineBorderColor: #eceef1;
+@bgColor:#f9fafb;
+@clCloseButton:#b5abb5;
+@bgInvalidImage:#e8ebec;
+@bgClHoverImageItem:rgba(0,0,0,0.3);
+ol {
+    display: inline-block;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex:0;
+    width:100%;
+    height: 100%;
+}
+ol li {
+    display: inline-block;
+}
+.box{
+    padding-left: 1.5rem;
+    padding-top: 1.5rem;
+    margin-left:-1.5rem;
+}
+.uiCatLayout{
+    margin-top:-1.5rem;
+    .uiCatList{
+        .uiCatItem{
+            .iconClose{
+                font-size: 0.8rem;
+                flex: 0;
+                float: right;
+                color: @clCloseButton;
+                padding: 0.2rem;
+                cursor: pointer;
+                background-color: white;
+            }
+        }
+    }
+}
+.uiIconDelete{
+    margin-left:0.5rem;
+    font-size:15px;
+    color:white;
+    cursor: pointer;
+    padding-top:0.5rem;
+    padding-right:0.5rem;
+    padding-bottom:0.5rem;
+}
+.boxBorder{
+    .uiLayoutItem{
+        padding-left: 1.5rem;
+        padding-top: 1.5rem;
+        
+        .uiItem{
+            border: 1px solid sliver;
+            background-color: white;
+            border-radius: 3px;
+            
+            box-shadow:@borderBoxShadow;
+            .uiCardBody{
+                padding:1.5rem; 
+            };
+            .uiCardHeader{
+                padding:1rem 1.5rem 1rem 1.5rem; 
+                border-bottom:1px solid @lineBorderColor;
+                font-size: 15px;
+                font-weight:500;
+            };
+            .uiCardFooter{
+                padding:1rem 1.5rem 1rem 1.5rem; 
+                border-top:1px solid @lineBorderColor;
+            };   
+            
+        };
+        .uiCardBgColor{
+                background-color: @bgColor;
+            }
+    }
+}
+.dropZone{
+    border:1px dotted ;
+    width: 200px;
+    height: 100px;
+}
+.imgItem{
+    
+}
+.uiSubmitLayout{
+    margin-top:2rem;
+}
+.demo-wrapper {
+    width: 100% !important;
+    display: block !important;
+    margin-bottom: 25px !important;
+    height: 400px !important;
+}
+.demo-editor {
+    height: 275px !important;
+    border: 1px solid #F1F1F1 !important;
+    padding: 5px !important;
+    border-radius: 2px !important;
+}
+@media (max-width: 769px) and (min-width: 764px), (min-width: 1004px){
+    
+    .imgItem{
+        width:20%;
+    }
+    ol li:first-child{
+        width:40%;
+    }
+    .inputNumber{
+        width:100%
+    }
+}
+@media (max-width: 769px) and (min-width: 764px), (min-width: 1004px){
+    .imgItem{
+        width:20%;
+    }
+    .inputNumber{
+        width:80%
+    }
+}

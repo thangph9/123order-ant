@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import { connect } from 'dva';
 import { formatMessage, FormattedMessage } from 'umi/locale';
 import moment from 'moment';
+import { change_alias } from '@/utils/utils';
 import { Editor } from 'react-draft-wysiwyg';
 var currencyFormatter = require('currency-formatter');
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
@@ -88,9 +89,8 @@ class ProductDetail extends PureComponent {
       previewVisible: true,
     });
   }
-
   handleChange = ({ fileList }) => {
-      this.setState({ fileList })
+      this.setState({ fileList });
   }
   handleRemove = (file)=>{
       console.log(file);
@@ -136,13 +136,13 @@ onEditorStateChangeSizeDesc = (editorStateSizeDesc) => {
  }
 beforeUpload=(file)=>{
       
-      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' );
+      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' || file.type==='image/webm' );
       if (!isJPG) {
         message.error('You can only upload JPG file!');
       }
-      const isLt2M = file.size / 1024 / 1024 < 5;
+      const isLt2M = file.size / 1024 / 1024 < 12;
       if (!isLt2M) {
-        message.error('Image must smaller than 2MB!');
+        message.error('Image must smaller than 12MB!');
       }
       return isJPG && isLt2M;
 }
@@ -214,24 +214,8 @@ onChangeNodeID =(nodeid)=>{
 handleTitle = (e)=>{
     const {name,value} = e.target;
     this.setState({
-        seo_link:this.change_alias(value)
+        seo_link:change_alias(value)
     })
-}
-change_alias(alias) {
-    var str = alias;
-    str = str.toLowerCase();
-    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
-    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
-    str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
-    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
-    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
-    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
-    str = str.replace(/đ/g,"d");
-    str = str.replace(/!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g," ");
-    str = str.replace(/ + /g," ");
-    str = str.trim(); 
-    str=str.replace(/\s+/g, '-');
-    return str;
 }
 render() {
     const {
@@ -370,24 +354,24 @@ render() {
               
             </Col>
             <Col md={12}> 
-            <FormItem label="Danh mục" {...this.formLayout}>
-                {getFieldDecorator('nodeid', {
-                  initialValue: this.state.nodeid
-                })( 
-                 <TreeSelect
-                    showSearch
-                    style={{ width: 265 }}
-                    dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-                    allowClear
-                    multiple
-                    treeDefaultExpandAll
-                    onChange={this.onChangeNodeID}
-                    treeData={treeData}
-                  >
-                    
-                 </TreeSelect>
-                )}
-            </FormItem>
+                <FormItem label="Danh mục" {...this.formLayout}>
+                    {getFieldDecorator('nodeid', {
+                      initialValue: this.state.nodeid
+                    })( 
+                     <TreeSelect
+                        showSearch
+                        style={{ width: 265 }}
+                        dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+                        allowClear
+                        multiple
+                        treeDefaultExpandAll
+                        onChange={this.onChangeNodeID}
+                        treeData={treeData}
+                      >
+
+                     </TreeSelect>
+                    )}
+                </FormItem>
             </Col>
         </Row>    
         <Row>
@@ -569,7 +553,19 @@ render() {
                 )}
         </FormItem> 
     </Col>
-</Row>     
+</Row>
+<Row>
+    <Col md={24}>
+        <div className={styles.noteContainer}>
+            <div className={styles.noteTitle}><span> Hình ảnh: </span></div>
+            <div clssName={styles.noteContent}>
+                <p>
+                    Định dạng cho phép .png .jpg .webm, kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1024x768
+                </p> 
+            </div>
+        </div>
+    </Col>
+</Row>
 <Row>
 <Col md={12}>
     <FormItem label="Hình ảnh" {...this.formLayout}>
@@ -580,6 +576,7 @@ render() {
                       onPreview={this.handlePreview}
                       onChange={this.handleChange}
                       onRemove={this.handleRemove}
+                      beforeUpload={this.beforeUpload}
                       multiple
                     >
                    {(fileList.length > 15) ? null : uploadButton}

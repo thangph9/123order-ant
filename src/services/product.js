@@ -25,4 +25,23 @@ export async function searchProduct(params) {
       headers:{'X-Access-Token':getAuthority()[0].token}
   });
 }
+export async function saveProductVariants(params) {
+  return request(`/api/product/saveProductVariants`,{
+      method : "PUT",
+      body: params,
+      headers:{'X-Access-Token':getAuthority()[0].token}
+  });
+}
+export async function getProductsByCategory() {
+  return request(`/api/product/PL?ref=${new Date().getTime()}`,{
+      method : "GET",
+      headers:{'X-Access-Token':getAuthority()[0].token}
+  });
+} 
+export async function getProductsByCategoryDetail() {
+  return request(`/api/product/POD?ref=${new Date().getTime()}`,{
+      method : "GET",
+      headers:{'X-Access-Token':getAuthority()[0].token}
+  });
+} 
 

@@ -3,7 +3,6 @@ import { connect } from 'dva';
 import { formatMessage, FormattedMessage } from 'umi/locale';
 import moment from 'moment';
 import { Editor } from 'react-draft-wysiwyg';
-var currencyFormatter = require('currency-formatter');
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { EditorState, convertToRaw, ContentState } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
@@ -37,7 +36,7 @@ import {
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 
 import styles from './ProductDetail.less';
-
+var currencyFormatter = require('currency-formatter');
 const FormItem = Form.Item;
 const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
@@ -84,7 +83,6 @@ class EditProduct extends PureComponent {
   handleCancel = () => this.setState({ previewVisible: false })
 
   handlePreview = (file) => {
-    console.log(file);
     this.setState({
       previewImage: file.url || file.thumbUrl,
       previewVisible: true,
@@ -124,27 +122,55 @@ onEditorStateChangeSizeDesc = (editorStateSizeDesc) => {
 
  handleSubmit = (e) =>{
      const {dispatch , form} = this.props;
+     var error=false;
      e.preventDefault();
      form.validateFieldsAndScroll((err, values) => {
       if (!err) {
+          var img=[];
+        try{
+           values.images.map(e=>{
+                if(e.response &&  e.response.file.isValid &&  e.response.file.imageid){
+                    img.push(e.response.file.imageid);
+                }else{
+                    message.error('File '+ e.name + ' không đúng kích thước!'  );
+                    error=true;
+                }
+            });
+        }catch(e){
+            error=true
+        }
+          try{
+            if(values.thumbnail && values.thumbnail.response ){
+                if(values.thumbnail.response.file.isValid){
+                    values.thumbnail=values.thumbnail.response.file.imageid;
+                }else{
+                    message.error('Thumbnail File '+ e.name + ' không đúng kích thước!'  );
+                    error=true;
+                }
+              }
+          }catch(e){
+              error=true
+          }
+        values.images=img;  
+        if(!error){
+            dispatch({
+              type: 'product/saveProduct',
+              payload: values,
+            });
+        }  
         
-        dispatch({
-          type: 'product/saveProduct',
-          payload: values,
-        });
       }
     }); 
      
  }
 beforeUpload=(file)=>{
-      console.log(file);
-      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' );
+      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' || file.type==='image/webm' );
       if (!isJPG) {
         message.error('You can only upload JPG file!');
       }
-      const isLt2M = file.size / 1024 / 1024 < 5;
+      const isLt2M = file.size / 1024 / 1024 < 12;
       if (!isLt2M) {
-        message.error('Image must smaller than 5MB!');
+        message.error('Image must smaller than 12MB!');
       }
       return isJPG && isLt2M;
 }
@@ -167,7 +193,7 @@ handleChangeThumb = (info) => {
     } 
     if(info.file.response && info.file.response.status=='ok'){
         this.setState({
-            thumbnail:info.file.response.file.imageid
+            thumbnail:info
         })
     }
     
@@ -257,24 +283,33 @@ render() {
         initDeathClock=[moment(detail.death_clock.start),moment(detail.death_clock.end)]
     }
     let initFile=[];
-    let defaultFileList=[];
-    let image=[];
+    let images=[];
     if(detail.image_huge){
             detail.image_huge.map((e,i)=>{
                 initFile.push({
                     uid: e,
-                    url: `/api/product/image/${e}`
+                    url: `/api/product/image/${e}`,
+                    response:{
+                        status: 'ok',
+                        file:{
+                            imageid: e,
+                            isValid: true
+                        }
+                    }
                 })
             })
-            defaultFileList=initFile;
     }
     
     let initFileList=(fileList) ? fileList : initFile;
+    
     let initImageThumb=undefined;
     if(detail.thumbnail){
         initImageThumb=(imageUrl) ? imageUrl : `/api/product/image/${detail.thumbnail}`;
     }
-    
+    initFileList.map((e,i)=>{
+        images.push(e);
+        
+    });
     const treeData = (treeMap) ? treeMap : [];
     try{  
         if(order.currency){
@@ -352,18 +387,7 @@ render() {
       </div>
     );
     
-    if(fileList){
-        initFileList.map((e,i)=>{
-            if(e.response && e.response.status=='ok' && e.response.file.isValid) image.push(e.response.file.imageid)
-        })
-    }else{
-        if(detail.image_huge){
-            image=detail.image_huge;
-        }
-        
-    }
     
-
     let htmlDescription='';
     if(editorState){
        htmlDescription= draftToHtml(convertToRaw(editorState.getCurrentContent()))
@@ -411,7 +435,6 @@ render() {
     let defaultEditorContentSizeDesc='';
    
     if(detail.size_desc){
-        
         let c = ContentState.createFromBlockArray(htmlToDraft(detail.size_desc));
         defaultEditorContentSizeDesc= EditorState.createWithContent(c);
     }else{
@@ -419,7 +442,7 @@ render() {
         defaultEditorContentSizeDesc=EditorState.createEmpty()
     }
     let c= (currency) ? currency : detail.currency;
-    return (  
+    return ( 
       <PageHeaderWrapper> 
         <Form onSubmit={this.handleSubmit} className="login-form">
 <Affix offsetTop={10}>
@@ -659,15 +682,28 @@ render() {
     </Col>
 </Row>     
 <Row>
+    <Col md={24}>
+        <div className={styles.noteContainer}>
+            <div className={styles.noteTitle}><span> Hình ảnh: </span></div>
+            <div className={styles.noteContent}>
+                <p>
+                    Định dạng cho phép .png .jpg .webm, kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1024x768
+                </p> 
+            </div>
+        </div>
+    </Col>
+</Row>
+<Row>
 <Col md={12}>
     <FormItem label="Hình ảnh" {...this.formLayout}>
                 <Upload
-                      defaultFileList={defaultFileList}   
+                         
                       action="/api/upload/"
                       listType="picture-card"
                       fileList={initFileList}
                       onPreview={this.handlePreview}
                       onChange={this.handleChange}
+                      beforeUpload={this.beforeUpload}
                       onRemove={this.handleRemove}
                       multiple
                     >
@@ -696,7 +732,7 @@ render() {
     <Col md={12}>
     <FormItem  {...this.formLayout}>
                 {getFieldDecorator('images', {
-                  initialValue: image
+                  initialValue: images
                 })(
                   <Input type="hidden" />
                 )}
