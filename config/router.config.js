@@ -84,20 +84,7 @@ export default [
                 name: 'option',
                 component: './Products/ProductOption',
             },
-            {
-                path: '/products/test_list',
-                name: 'test_list',
-                component: './Products/ProductCategoryList',
-            },
-            {
-                path: '/products/test_edit/:productid',
-                name: 'test_edit',
-                component: './Products/ProductCategoryEdit',
-            },
-            {
-                path: '/products/edit/:productid/:sku',
-                component: './Products/ProductEditSKU',
-            },
+            
             {
                 component : '404'
             }
