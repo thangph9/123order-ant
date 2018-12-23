@@ -85,6 +85,20 @@ export default [
                 component: './Products/ProductOption',
             },
             {
+                path: '/products/test_list',
+                name: 'test_list',
+                component: './Products/ProductCategoryList',
+            },
+            {
+                path: '/products/test_edit/:productid',
+                name: 'test_edit',
+                component: './Products/ProductCategoryEdit',
+            },
+            {
+                path: '/products/edit/:productid/:sku',
+                component: './Products/ProductEditSKU',
+            },
+            {
                 component : '404'
             }
             
@@ -189,7 +203,35 @@ export default [
           },
              
         ],
-      },
+      }, 
+      {
+            name: 'blog',
+            icon: 'table',
+            path: '/blogs',
+            routes: [
+                {
+                    path: '/blogs',
+                    redirect: '/blogs/list',
+                  },
+                  {
+                    path: '/blogs/list',
+                    name: 'list' ,
+                    component: './Blogs/ListBlog',
+                  },
+                  {
+                    path: '/blogs/add',
+                    name: 'add' ,
+                    component: './Blogs/Add',
+                  },
+                  {
+                    path: '/blogs/edit/:artid',
+                    component: './Blogs/Edit',
+                  },
+                  {
+                    component: '404',
+                  },
+            ]
+        },
       {
         component: '404',
       },

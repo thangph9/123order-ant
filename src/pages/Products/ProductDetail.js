@@ -490,7 +490,7 @@ render() {
                     format="YYYY-MM-DD HH:mm:ss" 
                     />
                 )}
-         </FormItem>
+             </FormItem>
             </Col>
         </Row>
 <Row>

@@ -27,6 +27,7 @@
     "@babel/runtime": "^7.0.0",
     "antd": "^3.9.1",
     "async": "^2.6.1",
+    "bcrypt": "^3.0.2",
     "bcryptjs": "^2.4.3",
     "bizcharts": "^3.1.10",
     "bizcharts-plugin-slider": "^2.0.3",

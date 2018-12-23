@@ -41,7 +41,9 @@ export default {
   'menu.category': 'Danh mục',
   'menu.category.index': 'Danh sách',
   'menu.category.new': 'Thêm mới',
-    
+  'menu.blog':'Bài viết',
+   'menu.blog.list': 'Danh sách',     
+   'menu.blog.add': 'Thêm mới',     
   'menu.products': 'Sản phẩm',
   'menu.products.option': 'Lựa chọn',
   'menu.products.list': 'Danh sách',

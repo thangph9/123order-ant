@@ -1293,7 +1293,6 @@ class OrderList extends PureComponent {
         from,
         to
     };
-    console.log(formValues);
     if (sorter.field) {
       params.sorter = sorter.field+"_"+sorter.order;
     }
@@ -1574,7 +1573,6 @@ class OrderList extends PureComponent {
         handleModalVisible: this.handleModalVisible,
     };
     let showUpdateForm=false;
-    console.log(selectedRow);  
     if(selectedRow.sstatus=='pending' && selectedRow.status=='processing' && selectedRow.semployee == currentUser.username) {
       showUpdateForm=true;
     }

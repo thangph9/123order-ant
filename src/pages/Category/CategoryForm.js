@@ -286,172 +286,154 @@ render() {
     return (  
       <PageHeaderWrapper> 
         <Form onSubmit={this.handleSubmit} className="login-form">
-<Row>
-    <Col md={12}>
         <Row>
-            <Col md={24}>
-                <FormItem label="Tiêu đề"  {...this.formLayout}>
-                    {getFieldDecorator('title', {
-                        rules: [{ required: true, message: 'Yêu cầu nhập tiêu đề ! ' }],
-                        onChange: this.handleTitle 
-                    })(
-                      <Input  />
-                    )}
-                </FormItem>
-            </Col>
-            <Col md={24}>
-                 <FormItem label="Danh mục" {...this.formLayout}>
-                    {getFieldDecorator('category', {
-                        initialValue: this.state.nodeid
-                    })( 
-                     <TreeSelect
-                        showSearch
-                        style={{ width: 265 }}
-                        dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-                        allowClear
-                        multiple
-                        treeDefaultExpandAll
-                        onChange={this.onChangeNodeID}
-                        treeData={treeData}
-                      >
+            <Col xs={24} md={16}>
+                <div>
+                    <Card>
+                        <Row>
+                            <Col md={24}>
+                                <FormItem label="Tiêu đề"  {...this.formLayout}>
+                                    {getFieldDecorator('title', {
+                                        rules: [{ required: true, message: 'Yêu cầu nhập tiêu đề ! ' }],
+                                        onChange: this.handleTitle 
+                                    })(
+                                      <Input  />
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col md={24}>
+                                 <FormItem label="Danh mục" {...this.formLayout}>
+                                    {getFieldDecorator('category', {
+                                        initialValue: this.state.nodeid
+                                    })( 
+                                     <TreeSelect
+                                        showSearch
+                                        style={{ width: 265 }}
+                                        dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+                                        allowClear
+                                        multiple
+                                        treeDefaultExpandAll
+                                        onChange={this.onChangeNodeID}
+                                        treeData={treeData}
+                                      >
 
-                     </TreeSelect>
-                    )}
-                </FormItem>
+                                     </TreeSelect>
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Col md={24}>
+                            <FormItem label="Thời gian sale" {...this.formLayout}>
+                                {getFieldDecorator('death_clock', {
+
+                                })(
+                                  <RangePicker showTime={{
+                                        hideDisabledOptions: true,
+                                        defaultValue: [moment('00:00:00', 'HH:mm:ss'), moment('11:59:59', 'HH:mm:ss')],
+                                    }}
+                                    style={{width: '265px'}}
+                                    format="YYYY-MM-DD HH:mm:ss" 
+                                    />
+                                )}
+                         </FormItem>
+                            <FormItem  {...this.formLayout}>
+                                {getFieldDecorator('thumbnail', {
+                                  initialValue: thumbnail
+                                })(
+                                  <Input type="hidden" />
+                                )}
+                              </FormItem>
+                            </Col>
+                        </Row>
+                    </Card>
+                </div>
+                <div>
+                    <Card>
+                    <Row>
+                        <Col md={24}>
+                            <FormItem label="Meta"  {...this.formLayout}>
+                                {getFieldDecorator('meta', {
+                                    
+                                })(
+                                  <Input  />
+                                )}
+                              </FormItem>
+                            </Col>
+
+                    </Row>
+                    <Row>
+                             <Col md={24}>
+                                        <FormItem label="Meta Description"  {...this.formLayout}>
+                                            {getFieldDecorator('meta_description', {
+
+                                            })(
+                                              <TextArea ></TextArea>
+                                            )}
+                                          </FormItem>
+                            </Col>
+
+                            </Row>
+                            <Row>
+                             <Col md={24}>
+                                        <FormItem label="Seo Link"  {...this.formLayout}>
+                                            {getFieldDecorator('view_seo_link', {
+
+                                              initialValue: this.state.seo_link,
+                                              onChange: this.handleTitle ,
+                                            })(
+                                              <Input  addonBefore="/category/" />
+                                            )}
+                                          </FormItem>
+                            </Col>
+                            <Col md={24}>
+                                        <FormItem  {...this.formLayout}>
+                                            {getFieldDecorator('seo_link', {
+                                              initialValue: this.state.seo_link,
+                                            })(
+                                              <Input  type="hidden"/>
+                                            )}
+                                          </FormItem>
+                            </Col>
+                            </Row>
+                    <FormItem>
+                      <Button type="primary" htmlType="submit" loading={loading}>Thêm mới</Button>
+                    </FormItem>
+                    </Card>
+                </div>
+            </Col>
+            <Col xs={24} md={8}>
+                <div className={styles.cardLayout}>
+                    <Card>
+                        <Row>
+                            <Col md={24}>
+                                <FormItem {...this.formLayout}>
+                                        <Upload
+                                            listType="picture-card"
+                                            className="avatar-uploader"
+                                            showUploadList={false}
+                                            action="/api/upload/thumb/"
+                                            beforeUpload={this.beforeUpload}
+                                            onChange={this.handleChangeThumb}
+                                          >
+                                            {imageUrl ? <img src={imageUrl} alt="Thumbnail" style={{width: '120px'}} /> : uploadThumb}
+                                          </Upload>
+                                </FormItem>
+                                </Col>
+                                <Col md={24}>
+                                    <FormItem  {...this.formLayout}>
+                                         {getFieldDecorator('thumbnail', {
+                                             initialValue: thumbnail
+                                        })(
+                                             <Input type="hidden" />
+                                        )}
+                                    </FormItem>
+                                </Col>  
+                        </Row>
+                    </Card>
+                </div>
             </Col>
         </Row>
-        <Row>
-            <Col md={24}>
-            <FormItem label="Thời gian sale" {...this.formLayout}>
-                {getFieldDecorator('death_clock', {
-                  
-                })(
-                  <RangePicker showTime={{
-                        hideDisabledOptions: true,
-                        defaultValue: [moment('00:00:00', 'HH:mm:ss'), moment('11:59:59', 'HH:mm:ss')],
-                    }}
-                    style={{width: '265px'}}
-                    format="YYYY-MM-DD HH:mm:ss" 
-                    />
-                )}
-         </FormItem>
-            </Col>
-        </Row>
-    </Col>  
-    <Col md={12}>
-        <Row>
-            
-            <Col md={24}>
-            <FormItem label="Ảnh đại diện" {...this.formLayout}>
-                    <Upload
-                        listType="picture-card"
-                        className="avatar-uploader"
-                        showUploadList={false}
-                        action="/api/upload/thumb/"
-                        beforeUpload={this.beforeUpload}
-                        onChange={this.handleChangeThumb}
-                      >
-                        {imageUrl ? <img src={imageUrl} alt="Thumbnail" style={{width: '120px'}} /> : uploadThumb}
-                      </Upload>
-            </FormItem>
-            </Col>
-            <Col md={24}>
-                <FormItem  {...this.formLayout}>
-                     {getFieldDecorator('thumbnail', {
-                         initialValue: thumbnail
-                    })(
-                         <Input type="hidden" />
-                    )}
-                </FormItem>
-            </Col>  
-        </Row>
-    </Col>
-</Row>
-<Row>
-    <Col md={12}>
-    
-    </Col>  
-    <Col md={12}>
-            <FormItem  {...this.formLayout}>
-                {getFieldDecorator('thumbnail', {
-                  initialValue: thumbnail
-                })(
-                  <Input type="hidden" />
-                )}
-              </FormItem>
-</Col>
-</Row>
-<Row>
-    <Col md={12}>
-    
-    </Col>  
-    
-</Row>        
-<Row>
-    
-</Row>
-<Row>
-    <Col md={12}>
-    </Col>  
-    <Col md={12}>
-            <FormItem  {...this.formLayout}>
-                {getFieldDecorator('thumbnail', {
-                  initialValue: thumbnail
-                })(
-                  <Input type="hidden" />
-                )}
-              </FormItem>
-</Col>
-</Row>
-<Row>
- <Col md={24}>
-            <FormItem label="Meta"  {...this.formLayout}>
-                {getFieldDecorator('meta', {
-                  
-                })(
-                  <Input  />
-                )}
-              </FormItem>
-</Col>
-
-</Row>
-<Row>
- <Col md={24}>
-            <FormItem label="Meta Description"  {...this.formLayout}>
-                {getFieldDecorator('meta_description', {
-                  
-                })(
-                  <TextArea ></TextArea>
-                )}
-              </FormItem>
-</Col>
-
-</Row>
-<Row>
- <Col md={24}>
-            <FormItem label="Seo Link"  {...this.formLayout}>
-                {getFieldDecorator('view_seo_link', {
-                  
-                  initialValue: this.state.seo_link,
-                  onChange: this.handleTitle ,
-                })(
-                  <Input  addonBefore="/category/" />
-                )}
-              </FormItem>
-</Col>
-<Col md={24}>
-            <FormItem  {...this.formLayout}>
-                {getFieldDecorator('seo_link', {
-                  initialValue: this.state.seo_link,
-                })(
-                  <Input  type="hidden"/>
-                )}
-              </FormItem>
-</Col>
-</Row>
-        <FormItem>
-          <Button type="primary" htmlType="submit" loading={loading}>Thêm mới</Button>
-        </FormItem>
         </Form> 
       </PageHeaderWrapper>
     );
