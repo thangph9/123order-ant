@@ -12,6 +12,13 @@ export async function saveProduct(params) {
       headers:{'X-Access-Token':getAuthority()[0].token}
   });
 }
+export async function updateProduct(params) {
+  return request(`/api/product/update?ref=${new Date().getTime()}`,{
+      method : "PUT",
+      body: params,
+      headers:{'X-Access-Token':getAuthority()[0].token}
+  });
+}
 export async function getProductDetail(params) {
   return request(`/api/product/DT?productid=${params.productid}&ref=${new Date().getTime()}`,{
       method : "GET",

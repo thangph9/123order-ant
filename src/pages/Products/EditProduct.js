@@ -152,9 +152,10 @@ onEditorStateChangeSizeDesc = (editorStateSizeDesc) => {
               error=true
           }
         values.images=img;  
+        console.log(values);
         if(!error){
             dispatch({
-              type: 'product/saveProduct',
+              type: 'product/update',
               payload: values,
             });
         }  
@@ -164,7 +165,7 @@ onEditorStateChangeSizeDesc = (editorStateSizeDesc) => {
      
  }
 beforeUpload=(file)=>{
-      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' || file.type==='image/webm' );
+      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' || file.type==='image/webm' || file.type==='image/webp' );
       if (!isJPG) {
         message.error('You can only upload JPG file!');
       }
@@ -687,7 +688,7 @@ render() {
             <div className={styles.noteTitle}><span> Hình ảnh: </span></div>
             <div className={styles.noteContent}>
                 <p>
-                    Định dạng cho phép .png .jpg .webm, kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1024x768
+                    Định dạng cho phép .png .jpg .webm .webp, kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1024x768
                 </p> 
             </div>
         </div>
@@ -741,7 +742,7 @@ render() {
     <Col md={12}>
             <FormItem  {...this.formLayout}>
                 {getFieldDecorator('thumbnail', {
-                  initialValue: thumbnail
+                  initialValue: (thumbnail) ? thumbnail : detail.thumbnail
                 })(
                   <Input type="hidden" />
                 )}
@@ -793,7 +794,7 @@ render() {
                   <FormItem  {...this.formLayout}>
                     {getFieldDecorator('materials_use', {
                       
-                      initialValue: (htmlCSD) ? htmlCSD : detail.material_use
+                      initialValue: (htmlCSD) ? htmlCSD : detail.materials_use
                     })(
                       <TextArea
                         disabled 

@@ -20,6 +20,7 @@ module.exports={
         size_desc            : 'text',
         amount              :'int',
         materials_use       : 'text',
+        manufacturer       : 'text',
         node_name          : 'text',
         seo_link        : 'text',
         meta            : 'text',

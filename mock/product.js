@@ -394,7 +394,7 @@ function saveProduct(req,res){
                 }else{
                     PARAM_IS_VALID['death_clock']={ }
                 }
-                
+                PARAM_IS_VALID.thumbnail=params.thumbnail.file.response.file.imageid;
                 PARAM_IS_VALID['image_huge']= params.images;
                 PARAM_IS_VALID['image_large']= [];
                 PARAM_IS_VALID['image_small']= [];
@@ -463,7 +463,127 @@ function saveProduct(req,res){
          }
     })
 }
-
+function updateProduct(req,res){
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+        return res.send({status: 'expired'}); 
+    }
+    var PARAM_IS_VALID={};
+    let queries=[];
+    let params=req.body;
+    async.series([
+        function(callback){
+            //models.instance.
+            try{
+                
+                PARAM_IS_VALID=params;
+                if(params.productid){
+                    PARAM_IS_VALID['productid']=models.uuidFromString(params.productid); 
+                }
+                PARAM_IS_VALID['nodeid']=params.nodeid;
+                PARAM_IS_VALID['price']=(params.price) ? parseFloat(params.price) : 0;
+                PARAM_IS_VALID['sale']=(params.sale) ? parseInt(params.sale) : 0;
+                PARAM_IS_VALID['sale_price']=(params.sale_price) ? parseFloat(params.sale_price) : 0;
+                let dateClock=(params.death_clock) ? params.death_clock : [];
+                
+                if(dateClock.length > 0){
+                    PARAM_IS_VALID['death_clock']={ start:new Date(dateClock[0]) ,end: new Date(dateClock[1])}
+                }else{
+                    PARAM_IS_VALID['death_clock']={ }
+                }
+                PARAM_IS_VALID['image_huge']= params.images;
+                PARAM_IS_VALID['image_large']= [];
+                PARAM_IS_VALID['image_small']= [];
+                
+                let info={}
+                if(params.item_weight){
+                    info['item_weight']=params.item_weight;
+                }
+                if(params.dimensions){
+                    info['dimensions']=params.dimensions;
+                }
+                if(params.asin){
+                    info['asin']=params.asin;
+                }
+                if(params.model_number){
+                    info['model_number']=params.model_number;
+                }
+                if(params.shipping_weight){
+                    info['shipping_weight']=params.shipping_weight;
+                }
+                
+                PARAM_IS_VALID['infomation']= info;
+                
+                PARAM_IS_VALID['seo_link']=params.seo_link;
+            }catch (e){
+                console.log(e);
+                return res.send({status: 'error_01'})
+            }
+            callback(null,null);
+        },
+        function(callback){
+            try{
+                let object=PARAM_IS_VALID;
+                var query_object = {productid:object.productid};
+                var update_values_object = {title: object.title,
+                                            thumbnail: object.thumbnail,
+                                            amount:object.amount,
+                                            asin: object.asin,
+                                            brand: object.brand,
+                                            color:object.color,
+                                            currency:object.currency,
+                                            death_clock:object.death_clock,
+                                            desc_detail:object.desc_detail,
+                                            description: object.description,
+                                            image_huge: object.image_huge,
+                                            image_large:object.image_large,
+                                            image_small:object.image_small,
+                                            meta: object.meta,
+                                            meta_description:object.meta_description,
+                                            nodeid: object.nodeid,
+                                            price: object.price,
+                                            sale:object.sale,
+                                            sale_price: object.sale_price,
+                                            seller:object.seller,
+                                            seo_link:object.seo_link,
+                                            size:object.size,
+                                            size_desc: object.size_desc,
+                                            style:object.style,
+                                            materials_use:object.materials_use,
+                                            manufacturer:object.manufacturer
+                                        };
+                var options = {ttl: 86400, if_exists: true};
+                models.instance.product_detail.update(query_object, update_values_object, options,function(err){
+                        console.log(err);
+                    });
+            }catch(e){
+                console.log(e);
+                return res.send({status: 'error_02'})
+            }
+                
+           
+            callback(null,null);
+        }
+    ],function(err,result){
+        if(err) return res.send({status: 'error_03'});
+        try{
+             models.doBatch(queries,function(err){
+                 console.log(err);
+                if(err) return res.send({status: 'error_04'});
+                return res.send({ status: 'ok'});
+            });
+         }catch(e){
+             return res.send({status: 'error_05'});
+         }
+    })
+}
 function saveProducts(req,res){
     var products={
         name: 'STAN SMITH SHOES',
@@ -557,10 +677,12 @@ function uploadFileThumb(req,res){
                createat            : new Date(),
             }
             dimensions = sizeOf(image);
+           
            if(dimensions.height >= 320 && dimensions.width >= 640 ){
                let object   =image_object;
                let instance =new models.instance.images(object);
                let save     =instance.save(function(err){
+                   
               });
            }else{
                isValid=false;
@@ -758,6 +880,7 @@ export default {
     
   'POST /api/product/search': searchProducts,    
   'POST /api/product/save'  : saveProduct,
+  'PUT /api/product/update'  : updateProduct,
   'POST /api/upload'    : uploadFile ,
   'POST /api/upload/thumb'    : uploadFileThumb ,
   'POST /api/upload/blog'    : uploadFreeSize ,

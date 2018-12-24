@@ -391,9 +391,7 @@ render() {
                                           </FormItem>
                             </Col>
                             </Row>
-                    <FormItem>
-                      <Button type="primary" htmlType="submit" loading={loading}>Thêm mới</Button>
-                    </FormItem>
+                   
                     </Card>
                 </div>
             </Col>
@@ -414,7 +412,7 @@ render() {
                                             {imageUrl ? <img src={imageUrl} alt="Thumbnail" style={{width: '120px'}} /> : uploadThumb}
                                           </Upload>
                                 </FormItem>
-                                <p>Định dạng cho phép .png .jpg .webm, kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1024x768</p>
+                                <p>Định dạng cho phép .png .jpg .webm,.webp kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1080x480, tỷ lệ 9:4</p>
                                 </Col>
                                 <Col md={24}>
                                     <FormItem  {...this.formLayout}>
@@ -450,6 +448,17 @@ render() {
                                     )}
                                 </FormItem>
                             </Col>
+                    </Card>
+                </div>
+            </Col>
+        </Row>
+        <Row>
+            <Col md={24} xs={24}>
+                <div>
+                    <Card>
+                         <FormItem>
+                          <Button type="primary" htmlType="submit" loading={loading}>Thêm mới</Button>
+                        </FormItem>
                     </Card>
                 </div>
             </Col>

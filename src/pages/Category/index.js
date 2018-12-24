@@ -188,9 +188,17 @@ componentWillReceiveProps(nextProps){
       })
   }
   handeClickCategory =(e)=>{
+      const { dispatch } = this.props;
       this.setState({
           nodeid: e.nodeid
       });
+      var payload={
+              nodeid:e.nodeid
+          }
+      dispatch({
+          type: 'category/search',
+          payload
+      })
   }
   render() {
     const {

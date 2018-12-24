@@ -1,6 +1,6 @@
 import { routerRedux } from 'dva/router';
 import { message } from 'antd';
-import { getProducts,saveProduct,getProductDetail, searchProduct,saveProductVariants,getProductsByCategory,getProductsByCategoryDetail } from '@/services/product';
+import { getProducts,saveProduct,getProductDetail, searchProduct,saveProductVariants,getProductsByCategory,getProductsByCategoryDetail,updateProduct } from '@/services/product';
 var currencyFormatter = require('currency-formatter');
 
 export default {
@@ -88,6 +88,23 @@ export default {
     },
     *saveProductVariants({ payload },{call, put}){
           const response = yield call(saveProductVariants, payload);
+          if(response.status==='ok'){
+                message.success('Thay đổi thành công');
+            }else if (response.status==='expired'){
+                message.warning('Đăng nhập lại ');
+            }else{
+                message.error('Lỗi! không thể thay đổi');
+            }
+          yield put({
+            type: 'save',
+            payload: {
+                row:payload,
+                ...response
+            },
+          });
+    },
+    *update({payload},{call,put}){
+          const response = yield call(updateProduct, payload);
           if(response.status==='ok'){
                 message.success('Thay đổi thành công');
             }else if (response.status==='expired'){

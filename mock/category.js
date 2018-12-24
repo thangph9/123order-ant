@@ -145,9 +145,7 @@ function update(req,res){
                     models.instance.category.update(query_object, update_values_object, options,function(err){
                         console.log(err);
                     });
-                    console.log(object.death_clock)
             }catch(e){
-                console.log(e);
                 return res.send({status: 'error_02'})
             }
             callback(null,null);

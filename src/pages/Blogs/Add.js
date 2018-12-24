@@ -174,12 +174,7 @@ getBase64(img, callback) {
                                       </div>
                                  </FormItem>
                                 </Col>       
-                            </Row>
-                             <Row>
-                                <Col md={24} xs={24}>
-                                   <Button type="primary" htmlType="submit" loading={loading}>Thêm mới</Button>
-                                </Col>       
-                            </Row>                   
+                            </Row>                  
                         </Card>
                     </Col>
                     <Col md={7} xs={24}>
@@ -227,7 +222,17 @@ getBase64(img, callback) {
                         </div>
                     </Col>
                 </Row>
-                
+                <Row>
+                    <Col md={24} xs={24}>
+                        <div>
+                            <Card>
+                                 <Col md={24} xs={24}>
+                                   <Button type="primary" htmlType="submit" loading={loading}>Thêm mới</Button>
+                                </Col>    
+                            </Card>
+                        </div>
+                    </Col>
+                </Row>
                 
             </Form>
         </PageHeaderWrapper>
