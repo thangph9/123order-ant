@@ -92,8 +92,9 @@ export default {
     },
     *update({payload} , {call,put}){
             const response = yield call(updateCategory, payload);
-             
+          var newData='';
           if(response.status==='ok'){
+                newData=payload;
                 message.success('Thay đổi thành công');
             }else if (response.status==='expired'){
                 message.warning('Đăng nhập lại ');
@@ -103,7 +104,7 @@ export default {
           yield put({
             type: 'saveReducer',
             payload: {
-                ...response
+                newData:newData
             },
           });
     },
@@ -146,6 +147,9 @@ export default {
         }
     },
     saveReducer(state,{ payload }){
+        if(payload.newData){
+            state.data=payload.newData;
+        }
         return {
                 ...state
             }

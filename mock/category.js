@@ -105,7 +105,7 @@ function update(req,res){
     async.series([
         function(callback){
             //models.instance.
-            //console.log(params);
+            console.log(params);
             try{
                 PARAM_IS_VALID=params;
                 if(params.nodeid){
@@ -119,6 +119,9 @@ function update(req,res){
                     PARAM_IS_VALID['death_clock']={ }
                 }
                 PARAM_IS_VALID.title=(params.title) ? params.title : ' ';
+                PARAM_IS_VALID.meta=(params.meta) ? params.meta : ' ';
+                PARAM_IS_VALID.meta_description=(params.meta_description) ? params.meta_description : '';
+                PARAM_IS_VALID.meta_description=(params.seo_link) ? params.seo_link : ' ';
             }catch (e){
                 return res.send({status: 'invalid'})
             }
@@ -145,6 +148,7 @@ function update(req,res){
                         console.log(err);
                     });
             }catch(e){
+                console.log(e);
                 return res.send({status: 'error_02'})
             }
             callback(null,null);
