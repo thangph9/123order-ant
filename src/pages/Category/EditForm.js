@@ -323,7 +323,7 @@ render() {
                     </Card>
                 </div>
                 <div className={styles.cardLayoutLeft}>
-                    <Card>
+                    <Card title="Sản phẩm">
                         <Row>       
                             <Col xs={24} md={24}>
                                 Danh sách
