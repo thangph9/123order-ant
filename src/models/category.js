@@ -1,6 +1,6 @@
 import { routerRedux } from 'dva/router';
 import { message } from 'antd';
-import { getTreeMap,saveCategory,getAllCategory,getDetailCategory,getSearch } from '@/services/category';
+import { getTreeMap,saveCategory,getAllCategory,getDetailCategory,getSearch,updateCategory } from '@/services/category';
 
 export default {
   namespace: 'category',
@@ -77,7 +77,7 @@ export default {
           const response = yield call(saveCategory, payload);
              
           if(response.status==='ok'){
-                message.success('Thay đổi thành công');
+                message.success('Thêm mới thành công');
             }else if (response.status==='expired'){
                 message.warning('Đăng nhập lại ');
             }else{
@@ -90,6 +90,23 @@ export default {
             },
           });
     },
+    *update({payload} , {call,put}){
+            const response = yield call(updateCategory, payload);
+             
+          if(response.status==='ok'){
+                message.success('Thay đổi thành công');
+            }else if (response.status==='expired'){
+                message.warning('Đăng nhập lại ');
+            }else{
+                message.error('Lỗi! không thể thay đổi');
+            }
+          yield put({
+            type: 'saveReducer',
+            payload: {
+                ...response
+            },
+          });
+    }    
   },
 
   reducers: {
@@ -116,6 +133,7 @@ export default {
                 ...state
             }
         
-    },   
+    }, 
+        
   },
 };

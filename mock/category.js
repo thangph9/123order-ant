@@ -55,7 +55,7 @@ function save(req,res){
                     if(params.nodeid){
                         object['nodeid']=PARAM_IS_VALID.nodeid;
                         object['updateat']=new Date();
-                        object['updateby']=legit.username
+                        object['updateby']=legit.username;
                     }else{
                         object['nodeid']=Uuid.random();
                         object['createat']=new Date();
@@ -69,11 +69,87 @@ function save(req,res){
                 } 
                 queries.push(category());
             }catch(e){
-                console.log(e);
                 return res.send({status: 'error_02'})
             }
                 
            
+            callback(null,null);
+        }
+    ],function(err,result){
+        if(err) return res.send({status: 'error_03'});
+        try{
+             models.doBatch(queries,function(err){
+                if(err) return res.send({status: 'error_04'});
+                return res.send({ status: 'ok'});
+            });
+         }catch(e){
+             return res.send({status: 'error_05'});
+         }
+    })
+}
+function update(req,res){
+     var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+        return res.send({status: 'expired'}); 
+    }
+    var PARAM_IS_VALID={};
+    let queries=[];
+    let params=req.body;
+    async.series([
+        function(callback){
+            //models.instance.
+            //console.log(params);
+            try{
+                PARAM_IS_VALID=params;
+                if(params.nodeid){
+                    PARAM_IS_VALID['nodeid']=models.uuidFromString(params.nodeid);
+                }
+                let dateClock=(params.death_clock) ? params.death_clock : [];
+                
+                if(dateClock.length > 0){
+                    PARAM_IS_VALID['death_clock']={ start:new Date(dateClock[0]) ,end: new Date(dateClock[1])}
+                }else{
+                    PARAM_IS_VALID['death_clock']={ }
+                }
+                
+                
+            }catch (e){
+                return res.send({status: 'error_01'})
+            }
+            callback(null,null);
+        },
+        function(callback){
+            try{
+               
+                    let object=PARAM_IS_VALID;
+                    var query_object = {nodeid:object.nodeid};
+                    var update_values_object = {title: object.title,
+                                                thumbnail: object.thumbnail,
+                                                seo_link   :object.seo_link,
+                                                category    : object.category,
+                                                death_clock   :object.death_clock,
+                                                updateat   : new Date(),
+                                                updateby   : legit.username,
+                                                meta_title :object.meta,
+                                                meta_tag   :object.meta,
+                                                meta_description   :object.meta_description
+                                               };
+                    var options = {ttl: 86400, if_exists: true};
+                    models.instance.category.update(query_object, update_values_object, options,function(err){
+                        console.log(err);
+                    });
+                    console.log(object.death_clock)
+            }catch(e){
+                console.log(e);
+                return res.send({status: 'error_02'})
+            }
             callback(null,null);
         }
     ],function(err,result){
@@ -385,7 +461,44 @@ function generateMap(category,nodeid){
     }
     return parent.reverse();
 }
-
+function image(req,res){
+    let image='';
+    let imageid='';
+    async.series([
+        function(callback){
+            try{
+                
+                let uuid=req.params.imageid;
+                imageid=models.uuidFromString(uuid);
+            }catch(e){
+                res.contentType('image/jpeg');
+                return res.end('','binary');
+            }
+            callback(null,null)
+        },
+        function(callback){
+            models.instance.images.find({imageid: imageid},function(err,img){
+                if(img && img.length > 0){
+                    image=img[0].image; 
+                    
+                }
+                callback(err,null);
+            })
+            
+        }
+    ],function(err,result){
+        if(err){
+            res.contentType('image/jpeg');
+            res.end('','binary');
+        }else if(image){
+            res.writeHead(200, {'Content-Type': 'image/jpg'});
+            res.end(image,'binary');
+        }else{
+            res.contentType('image/jpeg');
+            res.end('','binary');
+        }
+    })
+}
 function detail(req,res){
     var token=req.headers['x-access-token'];
     var verifyOptions = {
@@ -505,8 +618,10 @@ function search(req,res){
 }
 export default {
   'POST /api/category/save'     : save,
+  'PUT /api/category/UP'     : update,
   'GET /api/category/treemap'   : treeMap,   
   'GET /api/category/LS'        : list,   
+  'GET /api/category/image/:imageid': image,
   'GET /api/category/DT'        : detail,   
   'POST /api/category/search'   : search,   
 };

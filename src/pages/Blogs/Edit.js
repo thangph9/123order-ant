@@ -124,7 +124,12 @@ componentWillReceiveProps(nextProps){
     var image=data.image;
     var imageUrl='';
     if(image){
-        imageUrl='/api/blog/image/'+data.image;
+        if(this.state.uploaded){
+            imageUrl=this.state.imageUrl;
+        }else{
+            imageUrl='/api/blog/image/'+data.image;
+        }
+        
     }
     let a = ContentState.createFromBlockArray(htmlToDraft(data.content));
     var editorState= EditorState.createWithContent(a);  

@@ -53,10 +53,10 @@ class EditForm extends PureComponent {
   state = { visible: false, done: false ,pageSize: 10,current: 1 ,
           
            imageUrl:'',
+           imageIsValid:true,
            nodeid: undefined,
            data : {},
            treeData: [],
-           imageUrl: ''
           };
   componentDidMount() {
       const {dispatch,match} = this.props;
@@ -70,17 +70,21 @@ class EditForm extends PureComponent {
         });
   }
 componentWillReceiveProps(nextProps){
-  
   if(nextProps.category!==this.props.category){
     //Perform some operation
     var data= nextProps.category.data;
     var treeData=nextProps.category.treeMap;
     var thumbnail=data.thumbnail;
     var imageUrl='';
-    
     if(thumbnail){
-        imageUrl='/api/category/image/'+data.thumbnail;
+        if(this.state.uploaded){
+            imageUrl=this.state.imageUrl;
+        }else{
+            imageUrl='/api/category/image/'+data.thumbnail;
+        }
+        
     }
+      
     this.setState({data,thumbnail,imageUrl,treeData});
   }
 }
@@ -93,9 +97,8 @@ componentWillReceiveProps(nextProps){
      e.preventDefault();
      form.validateFieldsAndScroll((err, values) => {
       if (!err) {
-        
         dispatch({
-          type: 'category/save',
+          type: 'category/update',
           payload: values,
         });
           
@@ -131,10 +134,23 @@ handleChangeThumb = (info) => {
         loading: false,
       }));
     } 
-    if(info.file.response && info.file.response.status=='ok' && info.file.response.isValid ){
-        this.setState({
-            thumbnail:info.file.response.file.imageid
-        })
+    if(info.file.response && info.file.response.status=='ok'  ){
+        console.log(info)
+        if(info.file.response.file.isValid){
+             this.setState({
+                thumbnail:info.file.response.file.imageid, 
+                uploaded:true,
+            });
+        }else{
+            this.setState({
+                thumbnail:info.file.response.file.imageid,
+                imageIsValid: false
+            });
+            message.error('Ảnh không đạt tiêu chuẩn!')
+        }
+       
+    }else{
+        message.error('Lỗi ko thể upload!')
     }
     
   }
@@ -210,9 +226,9 @@ render() {
     let start=moment();
     let end=moment();
     try{
-        if(data[0]){
-          start = moment(data[0].death_clock.start) 
-          end   = moment(data[0].death_clock.end) 
+        if(data){
+          start = moment(data.death_clock.start) 
+          end   = moment(data.death_clock.end) 
         }
     }catch(e){
         
@@ -386,7 +402,7 @@ render() {
                                             beforeUpload={this.beforeUpload}
                                             onChange={this.handleChangeThumb}
                                           >
-                                            {imageUrl ? <img src={imageUrl} alt="Thumbnail" style={{width: '205px'}} /> : uploadThumb}
+                                            {imageUrl ? <img src={imageUrl} alt={data.title} style={{width: '230px'}} /> : uploadThumb}
                                           </Upload>
                                 </FormItem>
                                 <FormItem  {...this.formLayout}>
@@ -396,7 +412,7 @@ render() {
                                          <Input type="hidden" />
                                     )}
                                 </FormItem>
-                                <p>Định dạng cho phép .png .jpg .webm, kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1024x768</p>
+                                <p>Định dạng cho phép .png .jpg .webm,.webp kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1024x768</p>
                             </Col>
                         </Row>
                     </Card>
@@ -416,7 +432,6 @@ render() {
                                         allowClear
 
                                         multiple
-                                        treeDefaultExpandAll
                                         onChange={this.onChangeNodeID}
                                         treeData={treeData}
                                       >

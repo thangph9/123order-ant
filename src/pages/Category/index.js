@@ -175,9 +175,17 @@ componentWillReceiveProps(nextProps){
       })
   }
   onChangeNodeID = (e)=>{
+      const { dispatch } = this.props;
       this.setState({
           nodeid: e
       });
+      var payload={
+              nodeid:e
+          }
+      dispatch({
+          type: 'category/search',
+          payload
+      })
   }
   handeClickCategory =(e)=>{
       this.setState({
@@ -389,7 +397,6 @@ componentWillReceiveProps(nextProps){
                             style={{ width: 195 }}
                             dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
                             allowClear
-                            treeDefaultExpandAll
                             
                             treeData={treeData}
                           >

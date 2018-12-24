@@ -10,6 +10,13 @@ export async function saveCategory(params) {
       headers:{'X-Access-Token':getAuthority()[0].token}
   });
 }
+export async function updateCategory(params) {
+  return request(`/api/category/UP?ref=${new Date().getTime()}`,{
+      method : "PUT",
+      body: params,
+      headers:{'X-Access-Token':getAuthority()[0].token}
+  });
+}
 export async function getTreeMap() {
   return request(`/api/category/treemap?ref=${new Date().getTime()}`,{
       method : "GET",

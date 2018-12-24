@@ -764,7 +764,6 @@ export default {
   'POST /api/product/publish'   : publish,
   'POST /api/product/unpublish' : unpublish,
   'GET /api/product/image/:imageid': image,
-  'GET /api/category/image/:imageid': image,
   'PUT /api/product/saveProductVariants'   : saveProductVariants,
   'PUT /api/product/saveProducts'   : saveProducts,
 };
