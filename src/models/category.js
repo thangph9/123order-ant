@@ -109,19 +109,19 @@ export default {
     },
     *remove({ payload }, { call , put }){
          const response = yield call(deleteCategory, payload);
-         console.log(response);
-          if(response.status==='ok'){
+         var id='';
+        if(response==='ok'){
+                id=payload;
                 message.success('Xoá thành công');
-            }else if (response.status==='expired'){
+            }else if (response==='expired'){
                 message.warning('Đăng nhập lại ');
             }else{
                 message.error('Lỗi! không thể xoá');
             }
+         
           yield put({
             type: 'deleteReducer',
-            payload: {
-                ...response
-            },
+            payload: id,
           });
     }
   },
@@ -152,21 +152,17 @@ export default {
         
     }, 
     deleteReducer(state,{payload}){
-        console.log(payload);
-        const newData=[];
+        var newData=[];
         try{
             const oldData=state.data.list;
-            console.log(oldData)
-            
             newData= oldData.filter(k=>{
-                return k.nodeid===payload.data
+                console.log(k.nodeid,payload);
+                return k.nodeid != payload
             });
-            console.log(newData);
             state.data.list=newData;
         }catch(e){
-            
+            console.log(e);
         }
-        
         return {
                 ...state
             }

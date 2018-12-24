@@ -293,7 +293,6 @@ function test(items,callback){
     
     
 }
-
 function createTreeMap(items){
     let children={};
     let parent={};
@@ -347,7 +346,6 @@ function createTreeMap(items){
     //console.log(rootItem[0].children[0].children[0])
     return rootItem;
 }
-
 function filterNode(items,node){
     return items.filter(f => {
         if(f.category && f.category.length > 0){
@@ -358,7 +356,6 @@ function filterNode(items,node){
         }
     })    
 }
-
 function createNode(items){
     let node={};
     node={
@@ -369,7 +366,6 @@ function createNode(items){
     }
     return node;
 }
-
 function list(req,res){
     var token=req.headers['x-access-token'];
     var verifyOptions = {
@@ -430,7 +426,6 @@ function list(req,res){
         }}})
     })
 }
-
 function getBreadcumb(category,nodeid){
     return category.filter(node => {
         return node.nodeid.toString()==nodeid;
@@ -627,7 +622,7 @@ function remove(req,res){
     try{
         legit   = jwt.verify(token, publicKEY, verifyOptions);
     }catch(e){
-        return res.send({status: 'expired'}); 
+        return res.status(403).send('expired'); 
     }
     var nodeid=req.query.id;
     var PARAM_IS_VALID={};
@@ -636,21 +631,19 @@ function remove(req,res){
             try{
                 PARAM_IS_VALID.nodeid=models.uuidFromString(nodeid);
             }catch(e){
-                return res.send({status: 'invalid'})
+                return res.status(400).send('invalid')
             }
             callback(null,null);  
         },
         function(callback){
-            /*
             var query_object = {nodeid: PARAM_IS_VALID.nodeid };
             models.instance.category.delete(query_object, function(err){
                 callback(err,null);  
-            });*/
-            callback(null,null);
+            });
         },
     ],function(err,result){
-        if(err) return res.send({status: 'error'});
-        res.send({status: 'ok',data: PARAM_IS_VALID.nodeid})
+        if(err) return res.status(500).send('error');
+        res.status(200).send('ok')
     })
     
 }
