@@ -418,9 +418,12 @@ class ProductLists extends PureComponent {
                     avatar={<Avatar src={`/api/product/image/${item.thumbnail}`} shape="square" size="large" />}
                     title={<Link to={`/products/edit/${item.productid}`}>{item.title}</Link>}
                     description={(item.category && item.category.length > 0) && item.category.map((e,i)=>{
-                            if(item.category.length >1 && (item.category.length-1) > i ){
-                                return <a key={i} href="javascript:void(0)" onClick={()=>{this.onChangeNodeID(e.nodeid)}}>{e.title+" | "}</a>
-                            }else return <a key={i} href="javascript:void(0)"  onClick={()=>{this.onChangeNodeID(e.nodeid)}}>{e.title}</a>;
+                            if(e){
+                                if(item.category.length >1 && (item.category.length-1) > i ){
+                                    return <a key={i} href="javascript:void(0)" onClick={()=>{this.onChangeNodeID(e.nodeid)}}>{e.title+" | "}</a>
+                                }else return <a key={i} href="javascript:void(0)"  onClick={()=>{this.onChangeNodeID(e.nodeid)}}>{e.title}</a>;
+                            }
+                            
                         
                         })}
                   />

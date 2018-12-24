@@ -134,8 +134,7 @@ handleChangeThumb = (info) => {
         loading: false,
       }));
     } 
-    if(info.file.response && info.file.response.status=='ok'  ){
-        console.log(info)
+    if(info.file.response && info.file.response.status=='ok'){
         if(info.file.response.file.isValid){
              this.setState({
                 thumbnail:info.file.response.file.imageid, 

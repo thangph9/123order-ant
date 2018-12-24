@@ -17,6 +17,12 @@ export async function updateCategory(params) {
       headers:{'X-Access-Token':getAuthority()[0].token}
   });
 }
+export async function deleteCategory(params) {
+  return request(`/api/category/DEL?id=${params}&ref=${new Date().getTime()}`,{
+      method : "DELETE",
+      headers:{'X-Access-Token':getAuthority()[0].token}
+  });
+}
 export async function getTreeMap() {
   return request(`/api/category/treemap?ref=${new Date().getTime()}`,{
       method : "GET",

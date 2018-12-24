@@ -84,7 +84,6 @@ class Category extends PureComponent {
     })
   }
 componentWillReceiveProps(nextProps){
-  console.log(nextProps);
   if(nextProps.category!==this.props.category){
     //Perform some operation
     var data= nextProps.category.data;
@@ -140,7 +139,7 @@ componentWillReceiveProps(nextProps){
         done: true,
       });
       dispatch({
-        type: 'list/submit',
+        type: 'category/submit',
         payload: { id, ...fieldsValue },
       });
     });
@@ -149,8 +148,8 @@ componentWillReceiveProps(nextProps){
   deleteItem = id => {
     const { dispatch } = this.props;
     dispatch({
-      type: 'list/submit',
-      payload: { id },
+      type: 'category/remove',
+      payload: id,
     }); 
   };
   onShowSizeChange=(current, pageSize)=>{
@@ -208,6 +207,7 @@ componentWillReceiveProps(nextProps){
       form: { getFieldDecorator },
     } = this.props;
     const { visible, done, current = {}, treeData,data } = this.state;
+      
     const editAndDelete = (key, currentItem) => {
       if (key === 'edit') this.showEditModal(currentItem);
       else if (key === 'delete') {
@@ -216,7 +216,7 @@ componentWillReceiveProps(nextProps){
           content: 'Bạn có chắc chắn muốn xóa tác vụ này không？',
           okText: 'Xác nhận',
           cancelText: 'Hủy bỏ',
-          onOk: () => this.deleteItem(currentItem.id),
+          onOk: () => this.deleteItem(currentItem.nodeid),
         });
       }
     };

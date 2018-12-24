@@ -1,6 +1,6 @@
 import { routerRedux } from 'dva/router';
 import { message } from 'antd';
-import { getTreeMap,saveCategory,getAllCategory,getDetailCategory,getSearch,updateCategory } from '@/services/category';
+import { getTreeMap,saveCategory,getAllCategory,getDetailCategory,getSearch,updateCategory,deleteCategory } from '@/services/category';
 
 export default {
   namespace: 'category',
@@ -106,7 +106,24 @@ export default {
                 ...response
             },
           });
-    }    
+    },
+    *remove({ payload }, { call , put }){
+         const response = yield call(deleteCategory, payload);
+         console.log(response);
+          if(response.status==='ok'){
+                message.success('Xoá thành công');
+            }else if (response.status==='expired'){
+                message.warning('Đăng nhập lại ');
+            }else{
+                message.error('Lỗi! không thể xoá');
+            }
+          yield put({
+            type: 'deleteReducer',
+            payload: {
+                ...response
+            },
+          });
+    }
   },
 
   reducers: {
@@ -134,6 +151,25 @@ export default {
             }
         
     }, 
+    deleteReducer(state,{payload}){
+        console.log(payload);
+        const newData=[];
+        try{
+            const oldData=state.data.list;
+            console.log(oldData)
+            
+            newData= oldData.filter(k=>{
+                return k.nodeid===payload.data
+            });
+            console.log(newData);
+            state.data.list=newData;
+        }catch(e){
+            
+        }
         
+        return {
+                ...state
+            }
+    },
   },
 };
