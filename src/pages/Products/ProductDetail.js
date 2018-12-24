@@ -132,7 +132,7 @@ onEditorStateChangeSizeDesc = (editorStateSizeDesc) => {
                     if(values.thumbnail.file.response.file.isValid){
                         values.thumbnail=values.thumbnail.file.response.file.imageid;
                     }else{
-                        message.error('Thumbnail File '+ e.name + ' không đúng kích thước!'  );
+                        message.error('Thumbnail File '+ e.file.name + ' không đúng kích thước!'  );
                         error=true;
                     }
                   }

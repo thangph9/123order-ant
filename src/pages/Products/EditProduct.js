@@ -128,14 +128,15 @@ onEditorStateChangeSizeDesc = (editorStateSizeDesc) => {
       if (!err) {
         var img=[];
         try{
+           
            values.images.map(e=>{
-               
-                 if(e.file && e.file.response &&  e.file.response.file.isValid &&  e.file.response.file.imageid){
-                    img.push(e.response.file.imageid);
-                }else{
-                    message.error('File '+ e.name + ' không đúng kích thước!'  );
-                    error=true;
-                }
+                   if(e.response &&  e.response.file.isValid &&  e.response.file.imageid){
+                        img.push(e.response.file.imageid);
+                    }else{
+                        message.error('File '+ e.file.name + ' không đúng kích thước!'  );
+                        error=true;
+                    }
+                 
             });
         }catch(e){
             error=true
