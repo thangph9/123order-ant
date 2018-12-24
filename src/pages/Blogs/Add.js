@@ -130,7 +130,11 @@ getBase64(img, callback) {
                                 <Col md={12} xs={24}>
                                     <FormItem label="Tiêu đề" {...this.formLayout}>
                                         {getFieldDecorator('title', {
-                                        
+                                            rules: [{
+                                              required: true,
+                                              whitespace: true,
+                                              message: "Nhập tiêu đề bài viết.",
+                                            }],
                                     }) (<Input />)}
                                     </FormItem>
 

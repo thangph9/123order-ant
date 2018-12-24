@@ -160,7 +160,6 @@ export default {
         try{
             const oldData=state.data.list;
             newData= oldData.filter(k=>{
-                console.log(k.nodeid,payload);
                 return k.nodeid != payload
             });
             state.data.list=newData;

@@ -156,6 +156,11 @@ componentWillReceiveProps(nextProps){
         const preview=(
             <a href="https://123order.vn/blog/preivew/">Xem bài viết</a>
         )
+        var expired=[];
+        if(data.expired.start){
+            expired=[ moment(data.expired.start,'YYYY-MM-DD'), moment(data.expired.end,'YYYY-MM-DD')] 
+        }
+        
         return(
         <PageHeaderWrapper>
             <Form onSubmit={this.handleSubmit} className="login-form">
@@ -168,7 +173,13 @@ componentWillReceiveProps(nextProps){
                                 <Col md={12} xs={24}>
                                     <FormItem label="Tiêu đề" {...this.formLayout}>
                                         {getFieldDecorator('title', {
+                                        rules: [{
+                                              required: true,
+                                              whitespace: true,
+                                              message: "Nhập tiêu đề bài viết.",
+                                            }],
                                         initialValue: data.title
+                                        
                                     }) (<Input />)}
                                     </FormItem>
                                     <FormItem>
@@ -249,7 +260,7 @@ componentWillReceiveProps(nextProps){
                             style={{ marginTop: 24 }}>
                                 <FormItem {...this.formLayout}>
                                 {getFieldDecorator('expired', {
-                                    initialValue: [moment(data.expired.start,'YYYY-MM-DD'), moment(data.expired.end,'YYYY-MM-DD') ]               
+                                    initialValue: expired              
                                 })(
                                   <RangePicker showTime={{
                                         hideDisabledOptions: true,
