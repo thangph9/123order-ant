@@ -106,6 +106,7 @@ class CategoryForm extends PureComponent {
      form.validateFieldsAndScroll((err, values) => {
       if (!err) {
         var img=[];  
+          /*
         try{
             if(values.thumbnail && values.thumbnail.response ){
                 if(values.thumbnail.response.file.isValid){
@@ -117,8 +118,7 @@ class CategoryForm extends PureComponent {
               }
           }catch(e){
               error=true
-          }
-        values.images=img;  
+          }*/
         dispatch({
           type: 'category/save',
           payload: values,
