@@ -51,60 +51,43 @@ const TreeNode = TreeSelect.TreeNode;
 @Form.create()
 class EditForm extends PureComponent {
   state = { visible: false, done: false ,pageSize: 10,current: 1 ,
-           previewVisible: false,
-            previewImage: '',
-            fileList: [],
-           editorState: EditorState.createEmpty(),
-           editorStateDetail: EditorState.createEmpty(),
+          
            imageUrl:'',
            nodeid: undefined,
-           seo_link:'',
+           data : {},
+           treeData: [],
+           imageUrl: ''
           };
-  componentWillMount(){
-      const {dispatch} = this.props;
-      dispatch({
-          type: 'category/treemap',
-          payload: {},
-        });
-  }
   componentDidMount() {
       const {dispatch,match} = this.props;
       dispatch({
           type: 'category/fetchDetail',
           payload: match.params.nodeid,
         });
+      dispatch({
+          type: 'category/treemap',
+          payload: {},
+        });
   }
-  handleCancel = () => this.setState({ previewVisible: false })
-
-  handlePreview = (file) => {
-    console.log(file);
-    this.setState({
-      previewImage: file.url || file.thumbUrl,
-      previewVisible: true,
-    });
+componentWillReceiveProps(nextProps){
+  
+  if(nextProps.category!==this.props.category){
+    //Perform some operation
+    var data= nextProps.category.data;
+    var treeData=nextProps.category.treeMap;
+    var thumbnail=data.thumbnail;
+    var imageUrl='';
+    
+    if(thumbnail){
+        imageUrl='/api/category/image/'+data.image;
+    }
+    this.setState({data,thumbnail,imageUrl,treeData});
   }
-
-  handleChange = ({ fileList }) => {
-      this.setState({ fileList })
-  }
-  handleRemove = (file)=>{
-      console.log(file);
-  }
+}
   formLayout = {
-    labelCol: { span: 7 },
-    wrapperCol: { span: 13 },
+    labelCol: { span: 24 },
+    wrapperCol: { span: 24 },
   };
- onEditorStateChange = (editorState) => {
-    this.setState({
-      editorState,
-    });
-  };
- onEditorStateChangeDetail = (editorStateDetail) => {
-    this.setState({
-      editorStateDetail,
-    });
-  };
-
  handleSubmit = (e) =>{
      const {dispatch , form} = this.props;
      e.preventDefault();
@@ -121,13 +104,13 @@ class EditForm extends PureComponent {
  }
 beforeUpload=(file)=>{
       
-      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' );
+      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webm' || file.type === 'image/webp' );
       if (!isJPG) {
         message.error('You can only upload JPG file!');
       }
-      const isLt2M = file.size / 1024 / 1024 < 2;
+      const isLt2M = file.size / 1024 / 1024 < 12;
       if (!isLt2M) {
-        message.error('Image must smaller than 2MB!');
+        message.error('Image must smaller than 12MB!');
       }
       return isJPG && isLt2M;
 }
@@ -206,26 +189,24 @@ change_alias(alias) {
     str=str.replace(/\s+/g, '-');
     return str;
 }
+
+
+
 render() {
     const {
-      list: { list },
-      loading,
-      category: { treeMap,data }    
+      loading,   
     } = this.props;
     const {
       form: { getFieldDecorator,getFieldValue },
     } = this.props;
     
-    const {previewVisible, previewImage, fileList, editorState, thumbnail , editorStateDetail} = this.state;
+    const {thumbnail,data ,treeData,imageUrl } = this.state;
     
     //console.log(data);
     
     getFieldDecorator('keys', { initialValue: [] });
-    const treeData = (treeMap) ? treeMap : [];
-    let category=(data[0]) ? data[0] : {};
-    let nodeid = (data[0]) ? data[0].category : null;
+    
     //let categoryTreeNode1=this.generateCategoryNode(category,null);
-    let thumb=(thumbnail) ? thumbnail : category.thumbnail;
     let start=moment();
     let end=moment();
     try{
@@ -237,7 +218,6 @@ render() {
         
     }
     //console.log(start,end);
-    
     
     const keys = getFieldValue('keys');
     const formItems = keys.map((k, index) => {
@@ -287,167 +267,190 @@ render() {
         sm: { span: 20 },
       },
     };
-
-    const uploadButton = (
-      <div>  
-        <Icon type="plus" />
-        <div className="ant-upload-text">Upload</div>
-      </div>
-    );
      const uploadThumb = (
       <div>
         <Icon type={this.state.loading ? 'loading' : 'plus'} />
         <div className="ant-upload-text">Upload</div>
       </div>
     );
-    const imageUrl = (this.state.imageUrl) ? this.state.imageUrl : `/api/category/image/${category.thumbnail}`;
-    let image=[];
-    fileList.map((e,i)=>{
-        if(e.response && e.response.status=='ok') image.push(e.response.file.imageid)
-    })  
+    const previewExtra=(
+        <a href="https://123order.vn/category/">Xem trước</a>
+    )
     return (  
       <PageHeaderWrapper> 
         <Form onSubmit={this.handleSubmit} className="login-form">
-<Row>
-    <Col md={12}>
         <Row>
-            <Col md={24}>
-                <FormItem label="Tiêu đề"  {...this.formLayout}>
-                    {getFieldDecorator('title', {
-                        rules: [{ required: true, message: 'Yêu cầu nhập tiêu đề ! ' }],
-                        onChange: this.handleTitle ,
-                        initialValue: category.title
-                    })(
-                      <Input  />
-                    )}
-                </FormItem>
-                <FormItem  {...this.formLayout}>
-                    {getFieldDecorator('nodeid', {
-                        rules: [{ required: true, message: 'Yêu cầu nhập tiêu đề ! ' }],
-                        initialValue: category.nodeid
-                    })(
-                      <Input type='hidden' />
-                    )}
-                </FormItem>
-            </Col>
-            <Col md={24}>
-                 <FormItem label="Danh mục" {...this.formLayout}>
-                    {getFieldDecorator('category', {
-                        initialValue: (this.state.nodeid) ? this.state.nodeid : nodeid
-                    })( 
-                     <TreeSelect
-                        showSearch
-                        style={{ width: 265 }}
-                        dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-                        allowClear
+            <Col xs={24} md={16}>
+                <div className={styles.cardLayoutLeft}>
+                    <Card extra={previewExtra}>
+                        <Row>       
+                            <Col xs={24} md={24}>
+                                <FormItem label='Tiêu đề'  {...this.formLayout}>
+                                    {getFieldDecorator('title', {
+                                        rules: [{ required: true, message: 'Yêu cầu nhập tiêu đề ! ' }],
+                                        onChange: this.handleTitle ,
+                                        initialValue: data.title
+                                    })(
+                                      <Input  />
+                                    )}
+                                </FormItem>
+                                <FormItem  {...this.formLayout}>
+                                    {getFieldDecorator('nodeid', {
+                                        rules: [{ required: true, message: 'Yêu cầu nhập tiêu đề ! ' }],
+                                        initialValue: data.nodeid
+                                    })(
+                                      <Input type='hidden' />
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>
+                    </Card>
+                </div>
+                <div className={styles.cardLayoutLeft}>
+                    <Card>
+                        <Row>       
+                            <Col xs={24} md={24}>
+                                Danh sách
+                            </Col>
+                        </Row>
+                    </Card>
+                </div>
+                <div className={styles.cardLayoutLeft}>
+                    <Card title="SEO">
+                                <Row>       
+                                    <Col xs={24} md={24}>
+                                        <FormItem label="Meta"  {...this.formLayout}>
+                                            {getFieldDecorator('meta', {
+                                              initialValue: data.meta_title
+                                            })(
+                                              <Input  />
+                                            )}
+                                          </FormItem>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col xs={24} md={24}>
+                                        <FormItem label="Meta Description"  {...this.formLayout}>
+                                            {getFieldDecorator('meta_description', {
+                                              initialValue: data.meta_description
+                                            })(
+                                              <TextArea rows={4} ></TextArea>
+                                            )}
+                                          </FormItem>
                         
-                        multiple
-                        treeDefaultExpandAll
-                        onChange={this.onChangeNodeID}
-                        treeData={treeData}
-                      >
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col md={24}>
+                                        <FormItem label="Seo Link"  {...this.formLayout}>
+                                            {getFieldDecorator('view_seo_link', {
 
-                     </TreeSelect>
-                    )}
-                </FormItem>
+                                              initialValue: (this.state.seo_link) ? this.state.seo_link: data.seo_link ,
+                                              onChange: this.handleTitle ,
+                                            })(
+                                              <Input  addonBefore="/category/" />
+                                            )}
+                                          </FormItem>
+                                    </Col>
+                                    <Col md={24}>
+                                        <FormItem  {...this.formLayout}>
+                                            {getFieldDecorator('seo_link', {
+                                              initialValue: (this.state.seo_link) ? this.state.seo_link: data.seo_link,
+                                            })(
+                                              <Input  type="hidden"/>
+                                            )}
+                                          </FormItem>
+                                    </Col>
+                                </Row>
+                    </Card>
+                </div>
+                <div className={styles.cardLayoutLeft}>
+                    <Card>
+                        <FormItem>
+                          <Button type="primary" htmlType="submit" loading={loading}>Lưu lại</Button>
+                        </FormItem>
+                    </Card>
+                </div>
             </Col>
-        </Row>
-        <Row>
-            <Col md={24}>
-            <FormItem label="Thời gian sale" {...this.formLayout}>
-                {getFieldDecorator('death_clock', {
-                  initialValue: [start,end]
-                })(
-                  <RangePicker showTime={{
-                        hideDisabledOptions: true,
-                        defaultValue: [start, end],
-                    }}
-                    style={{width: '265px'}}
-                    format="YYYY-MM-DD HH:mm:ss" 
-                    />
-                )}
-         </FormItem>
-            </Col>
-        </Row>
-    </Col>  
-    <Col md={12}>
-        <Row>
-            
-            <Col md={24}>
-            <FormItem label="Ảnh đại diện" {...this.formLayout}>
-                    <Upload
-                        listType="picture-card"
-                        className="avatar-uploader"
-                        showUploadList={false}
-                        action="/api/upload/thumb/"
-                        beforeUpload={this.beforeUpload}
-                        onChange={this.handleChangeThumb}
-                      >
-                        {imageUrl ? <img src={imageUrl} alt="Thumbnail" style={{width: '320px'}} /> : uploadThumb}
-                      </Upload>
-            </FormItem>
-            </Col>
-            <Col md={24}>
-                <FormItem  {...this.formLayout}>
-                     {getFieldDecorator('thumbnail', {
-                         initialValue: thumb
-                    })(
-                         <Input type="hidden" />
-                    )}
-                </FormItem>
-            </Col>  
-        </Row>
-    </Col>
-</Row>
-<Row>
- <Col md={24}>
-            <FormItem label="Meta"  {...this.formLayout}>
-                {getFieldDecorator('meta', {
-                  initialValue: category.meta_title
-                })(
-                  <Input  />
-                )}
-              </FormItem>
-</Col>
+            <Col xs={24} md={8}>
+                <div className={styles.cardLayout}>
+                    <Card title='Hình ảnh'>
+                        <Row>
+                            <Col md={24}>
+                                <FormItem {...this.formLayout}>
+                                        <Upload
+                                            listType="picture-card"
+                                            className="avatar-uploader"
+                                            showUploadList={false}
+                                            action="/api/upload/thumb/"
+                                            beforeUpload={this.beforeUpload}
+                                            onChange={this.handleChangeThumb}
+                                          >
+                                            {imageUrl ? <img src={imageUrl} alt="Thumbnail" style={{width: '205px'}} /> : uploadThumb}
+                                          </Upload>
+                                </FormItem>
+                                <FormItem  {...this.formLayout}>
+                                     {getFieldDecorator('thumbnail', {
+                                         initialValue: thumbnail
+                                        })(
+                                         <Input type="hidden" />
+                                    )}
+                                </FormItem>
+                                <p>Định dạng cho phép .png .jpg .webm, kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1024x768</p>
+                            </Col>
+                        </Row>
+                    </Card>
+                </div>
+                <div className={styles.cardLayout}>
+                    <Card title='Danh mục'>
+                        <Row>
+                            <Col md={24}>
+                                 <FormItem {...this.formLayout}>
+                                    {getFieldDecorator('category', {
+                                        initialValue: data.category
+                                    })( 
+                                     <TreeSelect
+                                        showSearch
+                                        style={{ width: '205px' }}
+                                        dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+                                        allowClear
 
-</Row>
-<Row>
- <Col md={24}>
-            <FormItem label="Meta Description"  {...this.formLayout}>
-                {getFieldDecorator('meta_description', {
-                  initialValue: category.meta_description
-                })(
-                  <TextArea ></TextArea>
-                )}
-              </FormItem>
-</Col>
+                                        multiple
+                                        treeDefaultExpandAll
+                                        onChange={this.onChangeNodeID}
+                                        treeData={treeData}
+                                      >
 
-</Row>
-<Row>
- <Col md={24}>
-            <FormItem label="Seo Link"  {...this.formLayout}>
-                {getFieldDecorator('view_seo_link', {
-                  
-                  initialValue: (this.state.seo_link) ? this.state.seo_link: category.seo_link ,
-                  onChange: this.handleTitle ,
-                })(
-                  <Input  addonBefore="/category/" />
-                )}
-              </FormItem>
-</Col>
-<Col md={24}>
-            <FormItem  {...this.formLayout}>
-                {getFieldDecorator('seo_link', {
-                  initialValue: (this.state.seo_link) ? this.state.seo_link: category.seo_link,
-                })(
-                  <Input  type="hidden"/>
-                )}
-              </FormItem>
-</Col>
-</Row>
-        <FormItem>
-          <Button type="primary" htmlType="submit" loading={loading}>Lưu lại</Button>
-        </FormItem>
+                                     </TreeSelect>
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>
+                    </Card>
+                </div>
+                <div className={styles.cardLayout}>
+                    <Card title='Thời gian'>
+                        <Row>
+                            <Col md={24}>
+                                 <FormItem  {...this.formLayout}>
+                                    {getFieldDecorator('death_clock', {
+                                      initialValue: [start,end]
+                                    })(
+                                      <RangePicker showTime={{
+                                            hideDisabledOptions: true,
+                                            defaultValue: [start, end],
+                                        }}
+                                        style={{width: '265px'}}
+                                        format="YYYY-MM-DD HH:mm:ss" 
+                                        />
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>
+                    </Card>
+                </div>
+            </Col>
+        </Row>    
         </Form> 
       </PageHeaderWrapper>
     );

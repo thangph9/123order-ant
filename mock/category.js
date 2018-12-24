@@ -415,7 +415,7 @@ function detail(req,res){
               
                 if(items && items.length > 0 )
                     {
-                       results=items; 
+                       results=items[0]; 
                     }
                 callback(err,null);    
             })

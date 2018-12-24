@@ -43,7 +43,16 @@ const { Search, TextArea } = Input;
 
 @Form.create()
 class Category extends PureComponent {
-  state = { visible: false, done: false ,pageSize: 10,current: 1 };
+  state = { 
+            visible: false,
+            done: false ,
+            pageSize: 10,
+            current: 1,
+            data:{
+               list:[],
+               pagination:{}
+              }
+          };
   formLayout = {
     labelCol: { span: 7 },
     wrapperCol: { span: 13 },
@@ -60,6 +69,7 @@ class Category extends PureComponent {
         current,
       },
     });
+
     dispatch({
       type: 'category/fetchAll',
       payload: {
@@ -73,7 +83,21 @@ class Category extends PureComponent {
         payload:{},
     })
   }
-
+componentWillReceiveProps(nextProps){
+  console.log(nextProps);
+  if(nextProps.category!==this.props.category){
+    //Perform some operation
+    var data= nextProps.category.data;
+    var treeData=nextProps.category.treeMap;
+    var thumbnail=data.thumbnail;
+    var imageUrl='';
+    
+    if(thumbnail){
+        imageUrl='/api/category/image/'+data.image;
+    }
+    this.setState({data,thumbnail,imageUrl,treeData});
+  }
+}
   showModal = () => {
     this.setState({
       visible: true,
@@ -162,14 +186,12 @@ class Category extends PureComponent {
   }
   render() {
     const {
-      list: { list },
-      loading,
-      category: { data,treeMap }    
+      loading, 
     } = this.props;
     const {
       form: { getFieldDecorator },
     } = this.props;
-    const { visible, done, current = {} } = this.state;
+    const { visible, done, current = {}, treeData,data } = this.state;
     const editAndDelete = (key, currentItem) => {
       if (key === 'edit') this.showEditModal(currentItem);
       else if (key === 'delete') {
@@ -182,7 +204,6 @@ class Category extends PureComponent {
         });
       }
     };
-    const treeData = (treeMap) ? treeMap : [];
     const modalFooter = done
       ? { footer: null, onCancel: this.handleDone }
       : { okText: 'Lưu', onOk: this.handleSubmit, onCancel: this.handleCancel };
@@ -200,13 +221,19 @@ class Category extends PureComponent {
         
       </div>
     );
-    const paginationProps = { 
-      showSizeChanger: true,
-      showQuickJumper: true,
-      onShowSizeChange: this.onShowSizeChange,    
-      pageSize: this.state.pageSize || 5,
-      total: (data.pagination) ? data.pagination.total : 50,
-    };
+      const paginationProps={};
+      try{
+           paginationProps = { 
+              showSizeChanger: true,
+              showQuickJumper: true,
+              onShowSizeChange: this.onShowSizeChange,    
+              pageSize: this.state.pageSize || 5,
+              total: (data.pagination) ? data.pagination.total : 50,
+            };
+      }catch(e){
+          
+      }
+    
 
     const ListContent = ({ data: { createby, createat, percent, status } }) => (
       <div className={styles.listContent}>

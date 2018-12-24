@@ -51,6 +51,9 @@ const { Search, TextArea } = Input;
 class ListBlog extends PureComponent {
     state={
         data: {list:[],pagination:{}},
+        visible: false,
+        current: '',
+        done : false,
     }
     componentDidMount() {
         const { dispatch } = this.props;
@@ -61,17 +64,6 @@ class ListBlog extends PureComponent {
           },
         });
       }
-    onSearch=(e)=>{
-        this.setState({
-            title: e
-        });
-    }
-    handleFilterDate = (e)=>{
-        this.setState({
-            createat: e
-        });
-        this.handleFilter(e);
-    }
     componentWillReceiveProps(nextProps){
       if(nextProps.blog!==this.props.blog){
         //Perform some operation
@@ -80,6 +72,35 @@ class ListBlog extends PureComponent {
           })
       }
     }
+    onSearch=(e)=>{
+        this.setState({
+            title: e
+        });
+    }
+    handleCancel = () => {
+        this.setState({
+          visible: false,
+        });
+      };
+    handleFilterDate = (e)=>{
+        this.setState({
+            createat: e
+        });
+        this.handleFilter(e);
+    }
+    
+    showEditModal = item => {
+        this.setState({
+          visible: true,
+          current: item,
+        });
+      };
+     showModal = () => {
+        this.setState({
+          visible: true,
+          current: undefined,
+        });
+      };
     handleFilter=(e)=>{
         try{
             const { blog:{data : {list}} } = this.props;
@@ -102,6 +123,23 @@ class ListBlog extends PureComponent {
             
         }
     }
+    handleDone = () => {
+        setTimeout(() => this.addBtn.blur(), 0);
+        this.setState({
+          done: false,
+          visible: false,
+        });
+      };
+   handleSubmit =(e)=>{
+         const {dispatch , form} = this.props;
+         e.preventDefault();
+         form.validateFieldsAndScroll((err, values) => {
+          if (!err) {
+
+            console.log(values);
+          }
+        }); 
+   }
     render(){
         
         const {
@@ -109,8 +147,9 @@ class ListBlog extends PureComponent {
               form: { getFieldDecorator,getFieldValue },
               blog: {data}
             } = this.props;
+        const { done, current, visible } = this.state;
         let list=this.state.data;
-        const ListContent = ({ data: { createby, expired , percent, status } }) => (
+        const ListContent = ({ data: { createby, expired , percent, status }  }) => (
           <div className={styles.listContent}>
             <div className={styles.listContentItem}>
               <span>Người tạo</span>
@@ -127,6 +166,72 @@ class ListBlog extends PureComponent {
             </div>
           </div>
         );
+         const getModalContent = () => {
+              if (done) {
+                return (
+                  <Result
+                    type="success"
+                    title="Hoạt động thành công"
+                    description="Một loạt các mô tả thông tin, ngắn gọn và không kém chấm câu."
+                    actions={
+                      <Button type="primary" onClick={this.handleDone}>
+                        Tôi biết
+                      </Button>
+                    }
+                    className={styles.formResult}
+                  />
+                );
+              }
+             const expired=[];
+             if(current.expired){
+                 expired=[moment(current.expired.start),moment(current.expired.end)];
+             }
+             
+              return (
+                <Form onSubmit={this.handleSubmit}>
+                  <FormItem label="Tên công việc" {...this.formLayout}>
+                    {getFieldDecorator('title', {
+                      rules: [{ required: true, message: 'Vui lòng nhập tên tác vụ' }],
+                      initialValue: current.title,
+                    })(<Input placeholder="Vui lòng nhập" />)}
+                  </FormItem>
+                  <FormItem label="Thời gian bắt đầu" {...this.formLayout}>
+                    {getFieldDecorator('createdAt', {
+                      rules: [{ required: true, message: 'Vui lòng chọn thời gian bắt đầu' }],
+                      initialValue: current.createdAt ? moment(current.createdAt) : null,
+                    })(
+                      <RangePicker
+                        showTime
+                        placeholder="Vui lòng chọn"
+                        
+                        format="YYYY-MM-DD HH:mm:ss"
+                        style={{ width: '100%' }}
+                      />
+                    )}
+                  </FormItem>
+                  <FormItem label="Trình quản lý tác vụ" {...this.formLayout}>
+                    {getFieldDecorator('owner', {
+                      rules: [{ required: true, message: 'Vui lòng chọn chủ sở hữu công việc' }],
+                      initialValue: current.owner,
+                    })(
+                      <Select placeholder="Vui lòng chọn">
+                        <SelectOption value="付晓晓">付晓晓</SelectOption>
+                        <SelectOption value="周毛毛">周毛毛</SelectOption>
+                      </Select>
+                    )}
+                  </FormItem>
+                  <FormItem {...this.formLayout} label="Mô tả sản phẩm">
+                    {getFieldDecorator('subDescription', {
+                      rules: [{ message: 'Vui lòng nhập mô tả sản phẩm của ít nhất năm ký tự！', min: 5 }],
+                      initialValue: current.subDescription,
+                    })(<TextArea rows={4} placeholder="Vui lòng nhập ít nhất năm ký tự" />)}
+                  </FormItem>
+                </Form>
+              );
+            };
+        const modalFooter = done
+          ? { footer: null, onCancel: this.handleDone }
+          : { okText: 'Lưu', onOk: this.handleSubmit, onCancel: this.handleCancel };
         const MoreBtn = props => (
               <Dropdown
                 overlay={
@@ -208,6 +313,17 @@ class ListBlog extends PureComponent {
             />
             </Card>
             </div>
+        <Modal
+              title={done ? null : `${current ? 'Chỉnh sửa' : 'Thêm'}`}
+              className={styles.standardListForm}
+              width={640}
+              bodyStyle={done ? { padding: '72px 0' } : { padding: '1rem' }}
+              destroyOnClose
+              visible={visible}
+              {...modalFooter}
+        >
+          {getModalContent()}
+        </Modal>
         </PageHeaderWrapper>
         )
     }

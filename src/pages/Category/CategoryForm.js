@@ -85,8 +85,8 @@ class CategoryForm extends PureComponent {
       console.log(file);
   }
   formLayout = {
-    labelCol: { span: 7 },
-    wrapperCol: { span: 13 },
+    labelCol: { span: 24 },
+    wrapperCol: { span: 24 },
   };
  onEditorStateChange = (editorState) => {
     this.setState({
@@ -116,13 +116,13 @@ class CategoryForm extends PureComponent {
  }
 beforeUpload=(file)=>{
       
-      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' );
+      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp' || file.type === 'image/webm' );
       if (!isJPG) {
         message.error('You can only upload JPG file!');
       }
-      const isLt2M = file.size / 1024 / 1024 < 2;
+      const isLt2M = file.size / 1024 / 1024 < 12;
       if (!isLt2M) {
-        message.error('Image must smaller than 2MB!');
+        message.error('Image must smaller than 12MB!');
       }
       return isJPG && isLt2M;
 }
@@ -288,7 +288,7 @@ render() {
         <Form onSubmit={this.handleSubmit} className="login-form">
         <Row>
             <Col xs={24} md={16}>
-                <div>
+                <div className={styles.cardLayoutLeft}>
                     <Card>
                         <Row>
                             <Col md={24}>
@@ -301,26 +301,7 @@ render() {
                                     )}
                                 </FormItem>
                             </Col>
-                            <Col md={24}>
-                                 <FormItem label="Danh mục" {...this.formLayout}>
-                                    {getFieldDecorator('category', {
-                                        initialValue: this.state.nodeid
-                                    })( 
-                                     <TreeSelect
-                                        showSearch
-                                        style={{ width: 265 }}
-                                        dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-                                        allowClear
-                                        multiple
-                                        treeDefaultExpandAll
-                                        onChange={this.onChangeNodeID}
-                                        treeData={treeData}
-                                      >
-
-                                     </TreeSelect>
-                                    )}
-                                </FormItem>
-                            </Col>
+                            
                         </Row>
                         <Row>
                             <Col md={24}>
@@ -348,8 +329,8 @@ render() {
                         </Row>
                     </Card>
                 </div>
-                <div>
-                    <Card>
+                <div className={styles.cardLayoutLeft}>
+                    <Card title="SEO Meta">
                     <Row>
                         <Col md={24}>
                             <FormItem label="Meta"  {...this.formLayout}>
@@ -366,9 +347,9 @@ render() {
                              <Col md={24}>
                                         <FormItem label="Meta Description"  {...this.formLayout}>
                                             {getFieldDecorator('meta_description', {
-
+    
                                             })(
-                                              <TextArea ></TextArea>
+                                              <TextArea rows={4}></TextArea>
                                             )}
                                           </FormItem>
                             </Col>
@@ -404,7 +385,7 @@ render() {
             </Col>
             <Col xs={24} md={8}>
                 <div className={styles.cardLayout}>
-                    <Card>
+                    <Card title="Hình ảnh">
                         <Row>
                             <Col md={24}>
                                 <FormItem {...this.formLayout}>
@@ -419,6 +400,7 @@ render() {
                                             {imageUrl ? <img src={imageUrl} alt="Thumbnail" style={{width: '120px'}} /> : uploadThumb}
                                           </Upload>
                                 </FormItem>
+                                <p>Định dạng cho phép .png .jpg .webm, kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1024x768</p>
                                 </Col>
                                 <Col md={24}>
                                     <FormItem  {...this.formLayout}>
@@ -430,6 +412,30 @@ render() {
                                     </FormItem>
                                 </Col>  
                         </Row>
+                    </Card>
+                </div>
+                <div className={styles.cardLayout}>
+                    <Card title="Danh mục">
+                        <Col md={24}>
+                                 <FormItem {...this.formLayout}>
+                                    {getFieldDecorator('category', {
+                                        initialValue: this.state.nodeid
+                                    })( 
+                                     <TreeSelect
+                                        showSearch
+                                        style={{ width: 265 }}
+                                        dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+                                        allowClear
+                                        multiple
+                                        treeDefaultExpandAll
+                                        onChange={this.onChangeNodeID}
+                                        treeData={treeData}
+                                      >
+
+                                     </TreeSelect>
+                                    )}
+                                </FormItem>
+                            </Col>
                     </Card>
                 </div>
             </Col>
