@@ -557,7 +557,7 @@ function uploadFileThumb(req,res){
                createat            : new Date(),
             }
             dimensions = sizeOf(image);
-           if(dimensions.height > 320 && dimensions.width > 640 ){
+           if(dimensions.height >= 320 && dimensions.width >= 640 ){
                let object   =image_object;
                let instance =new models.instance.images(object);
                let save     =instance.save(function(err){

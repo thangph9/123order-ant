@@ -79,7 +79,7 @@ componentWillReceiveProps(nextProps){
     var imageUrl='';
     
     if(thumbnail){
-        imageUrl='/api/category/image/'+data.image;
+        imageUrl='/api/category/image/'+data.thumbnail;
     }
     this.setState({data,thumbnail,imageUrl,treeData});
   }
@@ -131,7 +131,7 @@ handleChangeThumb = (info) => {
         loading: false,
       }));
     } 
-    if(info.file.response && info.file.response.status=='ok'){
+    if(info.file.response && info.file.response.status=='ok' && info.file.response.isValid ){
         this.setState({
             thumbnail:info.file.response.file.imageid
         })

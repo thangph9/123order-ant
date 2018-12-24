@@ -102,9 +102,23 @@ class CategoryForm extends PureComponent {
  handleSubmit = (e) =>{
      const {dispatch , form} = this.props;
      e.preventDefault();
+     var error=false;
      form.validateFieldsAndScroll((err, values) => {
       if (!err) {
-        
+        var img=[];  
+        try{
+            if(values.thumbnail && values.thumbnail.response ){
+                if(values.thumbnail.response.file.isValid){
+                    values.thumbnail=values.thumbnail.response.file.imageid;
+                }else{
+                    message.error('Thumbnail File '+ e.name + ' không đúng kích thước!'  );
+                    error=true;
+                }
+              }
+          }catch(e){
+              error=true
+          }
+        values.images=img;  
         dispatch({
           type: 'category/save',
           payload: values,
@@ -144,7 +158,7 @@ handleChangeThumb = (info) => {
         loading: false,
       }));
     } 
-    if(info.file.response && info.file.response.status=='ok'){
+    if(info.file.response && info.file.response.status=='ok' && info.file.response.isValid){
         this.setState({
             thumbnail:info.file.response.file.imageid
         })
