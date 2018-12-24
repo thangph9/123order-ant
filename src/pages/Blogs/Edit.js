@@ -156,7 +156,7 @@ componentWillReceiveProps(nextProps){
         const preview=(
             <a href="https://123order.vn/blog/preivew/">Xem bài viết</a>
         )
-        var expired=[];
+        var expired=[moment(),moment()];
         if(data.expired){
             expired=[ moment(data.expired.start,'YYYY-MM-DD'), moment(data.expired.end,'YYYY-MM-DD')] 
         }
