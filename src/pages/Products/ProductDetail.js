@@ -123,20 +123,37 @@ onEditorStateChangeSizeDesc = (editorStateSizeDesc) => {
  handleSubmit = (e) =>{
      const {dispatch , form} = this.props;
      e.preventDefault();
-     form.validateFieldsAndScroll((err, values) => {
-      if (!err) {
-        
-        dispatch({
-          type: 'product/saveProduct',
-          payload: values,
-        });
-      }
-    }); 
+     var error=false;
+     form.validateFieldsAndScroll((err, values) =>{
+         if (!err) {
+           
+              try{
+                if(values.thumbnail && values.thumbnail.file ){
+                    if(values.thumbnail.file.response.file.isValid){
+                        values.thumbnail=values.thumbnail.file.response.file.imageid;
+                    }else{
+                        message.error('Thumbnail File '+ e.name + ' không đúng kích thước!'  );
+                        error=true;
+                    }
+                  }
+              }catch(e){
+                  error=true
+              }
+            if(!error){
+                dispatch({
+                  type: 'product/saveProduct',
+                  payload: values,
+                });
+            }  
+
+          }
+     }); 
+
      
  }
 beforeUpload=(file)=>{
       
-      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' || file.type==='image/webm' );
+      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png' || file.type==='image/webm' || file.type==='image/webp' );
       if (!isJPG) {
         message.error('You can only upload JPG file!');
       }

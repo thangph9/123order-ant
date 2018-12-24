@@ -394,7 +394,6 @@ function saveProduct(req,res){
                 }else{
                     PARAM_IS_VALID['death_clock']={ }
                 }
-                PARAM_IS_VALID.thumbnail=params.thumbnail.file.response.file.imageid;
                 PARAM_IS_VALID['image_huge']= params.images;
                 PARAM_IS_VALID['image_large']= [];
                 PARAM_IS_VALID['image_small']= [];
@@ -419,7 +418,6 @@ function saveProduct(req,res){
                 PARAM_IS_VALID['infomation']= info;
                 
                 PARAM_IS_VALID['seo_link']=params.seo_link;
-                console.log(PARAM_IS_VALID);
             }catch (e){
                 return res.send({status: 'error_01'})
             }
@@ -501,29 +499,13 @@ function updateProduct(req,res){
                 PARAM_IS_VALID['image_huge']= params.images;
                 PARAM_IS_VALID['image_large']= [];
                 PARAM_IS_VALID['image_small']= [];
-                
-                let info={}
-                if(params.item_weight){
-                    info['item_weight']=params.item_weight;
-                }
-                if(params.dimensions){
-                    info['dimensions']=params.dimensions;
-                }
-                if(params.asin){
-                    info['asin']=params.asin;
-                }
-                if(params.model_number){
-                    info['model_number']=params.model_number;
-                }
-                if(params.shipping_weight){
-                    info['shipping_weight']=params.shipping_weight;
-                }
-                
-                PARAM_IS_VALID['infomation']= info;
-                
                 PARAM_IS_VALID['seo_link']=params.seo_link;
+                PARAM_IS_VALID['amount'] =(params.amount) ? parseInt(params.amount) : 0;
+                PARAM_IS_VALID['asin']= (params.asin) ? params.asin : null;
+                PARAM_IS_VALID['brand']= (params.brand) ? params.brand : null;
+                PARAM_IS_VALID['color']= (params.color) ? params.color : null;
+                PARAM_IS_VALID['style']= (params.style) ? params.style : null;
             }catch (e){
-                console.log(e);
                 return res.send({status: 'error_01'})
             }
             callback(null,null);
@@ -559,6 +541,7 @@ function updateProduct(req,res){
                                             materials_use:object.materials_use,
                                             manufacturer:object.manufacturer
                                         };
+                console.log(object);
                 var options = {ttl: 86400, if_exists: true};
                 models.instance.product_detail.update(query_object, update_values_object, options,function(err){
                         console.log(err);

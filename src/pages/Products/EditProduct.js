@@ -126,10 +126,11 @@ onEditorStateChangeSizeDesc = (editorStateSizeDesc) => {
      e.preventDefault();
      form.validateFieldsAndScroll((err, values) => {
       if (!err) {
-          var img=[];
+        var img=[];
         try{
            values.images.map(e=>{
-                if(e.response &&  e.response.file.isValid &&  e.response.file.imageid){
+               
+                 if(e.file && e.file.response &&  e.file.response.file.isValid &&  e.file.response.file.imageid){
                     img.push(e.response.file.imageid);
                 }else{
                     message.error('File '+ e.name + ' không đúng kích thước!'  );
@@ -152,7 +153,6 @@ onEditorStateChangeSizeDesc = (editorStateSizeDesc) => {
               error=true
           }
         values.images=img;  
-        console.log(values);
         if(!error){
             dispatch({
               type: 'product/update',
