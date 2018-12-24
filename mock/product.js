@@ -541,24 +541,19 @@ function updateProduct(req,res){
                                             materials_use:object.materials_use,
                                             manufacturer:object.manufacturer
                                         };
-                console.log(object);
                 var options = {ttl: 86400, if_exists: true};
                 models.instance.product_detail.update(query_object, update_values_object, options,function(err){
                         console.log(err);
                     });
             }catch(e){
-                console.log(e);
                 return res.send({status: 'error_02'})
             }
-                
-           
             callback(null,null);
         }
     ],function(err,result){
         if(err) return res.send({status: 'error_03'});
         try{
              models.doBatch(queries,function(err){
-                 console.log(err);
                 if(err) return res.send({status: 'error_04'});
                 return res.send({ status: 'ok'});
             });

@@ -118,10 +118,9 @@ function update(req,res){
                 }else{
                     PARAM_IS_VALID['death_clock']={ }
                 }
-                
-                
+                PARAM_IS_VALID.title=(params.title) ? params.title : ' ';
             }catch (e){
-                return res.send({status: 'error_01'})
+                return res.send({status: 'invalid'})
             }
             callback(null,null);
         },
@@ -446,18 +445,22 @@ function generateMap(category,nodeid){
     children=getBreadcumb(category,node);
     parent.push(children[0]);
     var i=1;
-    while(children[0].category!=null && i < 100){
-        if(children[0] && children[0].category && children[0].category.length > 0){
-            node=children[0].category[0]
-            children=getBreadcumb(category,node);
-            parent.push(children[0]);
-        }else{
-           children=getBreadcumb(category,node);
-           parent.push(children[0]);
+    if(children[0]){
+        while(children[0].category!=null && i < 100){
+            if(children[0].category && children[0].category.length > 0){
+                node=children[0].category[0]
+                children=getBreadcumb(category,node);
+                parent.push(children[0]);
+            }else{
+               children=getBreadcumb(category,node);
+               parent.push(children[0]);
+            }
+            i++;
         }
-        i++;
     }
+    
     return parent.reverse();
+    
 }
 function image(req,res){
     let image='';
@@ -614,6 +617,43 @@ function search(req,res){
         }}})
     })
 }
+function remove(req,res){
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+        return res.send({status: 'expired'}); 
+    }
+    var nodeid=req.query.id;
+    var PARAM_IS_VALID={};
+    async.series([
+        function(callback){
+            try{
+                PARAM_IS_VALID.nodeid=models.uuidFromString(nodeid);
+            }catch(e){
+                return res.send({status: 'invalid'})
+            }
+            callback(null,null);  
+        },
+        function(callback){
+            /*
+            var query_object = {nodeid: PARAM_IS_VALID.nodeid };
+            models.instance.category.delete(query_object, function(err){
+                callback(err,null);  
+            });*/
+            callback(null,null);
+        },
+    ],function(err,result){
+        if(err) return res.send({status: 'error'});
+        res.send({status: 'ok',data: PARAM_IS_VALID.nodeid})
+    })
+    
+}
 export default {
   'POST /api/category/save'     : save,
   'PUT /api/category/UP'     : update,
@@ -622,4 +662,5 @@ export default {
   'GET /api/category/image/:imageid': image,
   'GET /api/category/DT'        : detail,   
   'POST /api/category/search'   : search,   
+  'DELETE /api/category/DEL'   : remove,   
 };
