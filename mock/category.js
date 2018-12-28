@@ -29,11 +29,10 @@ function save(req,res){
         function(callback){
             //models.instance.
             //console.log(params);
+            var valid=true;
+            var msg=[];
             try{
                 PARAM_IS_VALID=params;
-                if(params.nodeid){
-                    PARAM_IS_VALID['nodeid']=models.uuidFromString(params.nodeid);
-                }
                 let dateClock=(params.death_clock) ? params.death_clock : [];
                 
                 if(dateClock.length > 0){
@@ -41,8 +40,18 @@ function save(req,res){
                 }else{
                     PARAM_IS_VALID['death_clock']={ }
                 }
-                
-                
+                if(PARAM_IS_VALID.title){
+                    
+                }else{
+                    msg[0]={
+                        field: 'title',
+                        message:'Title invalid'
+                    }
+                    valid=false;
+                }
+                if(!valid){
+                    return res.send({status: 'invalid',msg: msg})
+                }
             }catch (e){
                 return res.send({status: 'error_01'})
             }
@@ -51,18 +60,10 @@ function save(req,res){
         function(callback){
             try{
                 const category=()=>{
-                    let object=PARAM_IS_VALID;
-                    if(params.nodeid){
-                        object['nodeid']=PARAM_IS_VALID.nodeid;
-                        object['updateat']=new Date();
-                        object['updateby']=legit.username;
-                    }else{
-                        object['nodeid']=Uuid.random();
-                        object['createat']=new Date();
-                        object['createby']=legit.username;
-                    }
-                    
-                    
+                    let object=PARAM_IS_VALID;                    
+                    object['nodeid']=Uuid.random();
+                    object['createat']=new Date();
+                    object['createby']=legit.username;
                     let instance    =new models.instance.category(object);
                     let save        =instance.save({return_query: true});
                     return save;
@@ -105,7 +106,8 @@ function update(req,res){
     async.series([
         function(callback){
             //models.instance.
-            console.log(params);
+            //console.log(params);
+            var valid=true;
             try{
                 PARAM_IS_VALID=params;
                 if(params.nodeid){
@@ -118,12 +120,25 @@ function update(req,res){
                 }else{
                     PARAM_IS_VALID['death_clock']={ }
                 }
-                PARAM_IS_VALID.title=(params.title) ? params.title : ' ';
+               
                 PARAM_IS_VALID.meta=(params.meta) ? params.meta : ' ';
                 PARAM_IS_VALID.meta_description=(params.meta_description) ? params.meta_description : '';
                 PARAM_IS_VALID.meta_description=(params.seo_link) ? params.seo_link : ' ';
+                if(PARAM_IS_VALID.title){
+                    
+                }else{
+                    msg[0]={
+                        field: 'title',
+                        message:'Title invalid'
+                    }
+                    valid=false;
+                }
+                if(!valid){
+                    return res.send({status: 'invalid',msg: msg})
+                }
             }catch (e){
-                return res.send({status: 'invalid'})
+                console.log(e)
+                return res.send({status: 'error_invalid'})
             }
             callback(null,null);
         },
@@ -145,7 +160,6 @@ function update(req,res){
                                                };
                     var options = {ttl: 86400, if_exists: true};
                     models.instance.category.update(query_object, update_values_object, options,function(err){
-                        console.log(err);
                     });
             }catch(e){
                 console.log(e);
@@ -396,7 +410,7 @@ function list(req,res){
             callback(null,null);
         },
         function(callback){
-            models.instance.category.find({$solr_query: '{"q":"title:*","sort": "createat desc"}'},{select : ['category','nodeid','title','thumbnail','createat','createby','death_clock']},function(err,items){
+            models.instance.category.find({$solr_query: '{"q":"-category:*","sort": "createat desc"}'},{select : ['category','nodeid','title','thumbnail','createat','createby','death_clock']},function(err,items){
               
                 if(items && items.length > 0 )
                     {

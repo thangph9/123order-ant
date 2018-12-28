@@ -253,7 +253,7 @@ componentWillReceiveProps(nextProps){
                                       <Input type="hidden" />
                                     )}
                                   </FormItem>
-                                <p>Định dạng cho phép .png .jpg .webm, kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1024x768</p>
+                                <p>Định dạng cho phép .png .jpg .webm .webp, kích cỡ nhỏ hơn 12mb, kích thước tối thiểu 1024x768</p>
                             </Card>
                             <Card bordered={false}
                             title="Thời gian"

@@ -60,6 +60,7 @@ class EditForm extends PureComponent {
           };
   componentDidMount() {
       const {dispatch,match} = this.props;
+      console.log(match);
       dispatch({
           type: 'category/fetchDetail',
           payload: match.params.nodeid,
