@@ -88,6 +88,84 @@ function save(req,res){
          }
     })
 }
+function add(req,res){
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+        return res.send({status: 'expired'}); 
+    }
+    var PARAM_IS_VALID={};
+    let queries=[];
+    let params=req.body;
+    async.series([
+        function(callback){
+            //models.instance.
+            //console.log(params);
+            var valid=true;
+            try{
+                console.log(params);
+                PARAM_IS_VALID=params;
+                PARAM_IS_VALID.title=params.title,
+                PARAM_IS_VALID.lname=params.lname,
+                PARAM_IS_VALID.image=params.image,
+                PARAM_IS_VALID.note=params.note,
+                PARAM_IS_VALID.meta=(params.meta) ? params.meta : ' ';
+                PARAM_IS_VALID.meta_desc=(params.meta_desc) ? params.meta_desc : '';
+                PARAM_IS_VALID.seo_link=(params.seo_link) ? params.seo_link : ' ';
+                if(PARAM_IS_VALID.title){
+                    
+                }else{
+                    msg[0]={
+                        field: 'title',
+                        message:'Title invalid'
+                    }
+                    valid=false;
+                }
+                if(!valid){
+                    return res.send({status: 'invalid',msg: msg})
+                }
+            }catch (e){
+                return res.send({status: 'error_invalid'})
+            }
+            callback(null,null);
+        },
+        function(callback){
+            try{
+                const category=()=>{
+                    let object=PARAM_IS_VALID;                    
+                    object['id']=Uuid.random();
+                    object['createat']=new Date();
+                    object['createby']=legit.username;
+                    let instance    =new models.instance.categories(object);
+                    let save        =instance.save({return_query: true});
+                    return save;
+                } 
+                queries.push(category());
+                   
+            }catch(e){
+                console.log(e);
+                return res.send({status: 'error_02'})
+            }
+            callback(null,null);
+        }
+    ],function(err,result){
+        if(err) return res.send({status: 'error_03'});
+        try{
+             models.doBatch(queries,function(err){
+                if(err) return res.send({status: 'error_04'});
+                return res.send({ status: 'ok'});
+            });
+         }catch(e){
+             return res.send({status: 'error_05'});
+         }
+    })
+}
 function update(req,res){
      var token=req.headers['x-access-token'];
     var verifyOptions = {
@@ -158,7 +236,7 @@ function update(req,res){
                                                 meta_tag   :object.meta,
                                                 meta_description   :object.meta_description
                                                };
-                    var options = {ttl: 86400, if_exists: true};
+                    var options = {if_exists: true};
                     models.instance.category.update(query_object, update_values_object, options,function(err){
                     });
             }catch(e){
@@ -665,13 +743,47 @@ function remove(req,res){
     })
     
 }
+function LVer2(req,res){
+    var token=req.headers['x-access-token'];
+    var verifyOptions = {
+     expiresIn:  '30d',
+     algorithm:  ["RS256"]
+    };
+    var legit={};
+    try{
+        legit   = jwt.verify(token, publicKEY, verifyOptions);
+    }catch(e){
+        return res.send({status: 'expired'}); 
+    }
+    let results=[];
+    async.series([
+        function(callback){
+            models.instance.categories.find({},function(err,items){
+                if(items && items.length > 0){
+                    results=items;
+                }
+                callback(err,null);
+            })
+            
+        },
+        function(callback){
+           
+            callback(null,null);
+        }
+    ],function(err,result){
+        if(err) return res.send({status: 'error'});
+        res.send({status: 'ok',data: {list : results,}})
+    })
+}
 export default {
   'POST /api/category/save'     : save,
+  'POST /api/category/add'     : add,
   'PUT /api/category/UP'     : update,
   'GET /api/category/treemap'   : treeMap,   
   'GET /api/category/LS'        : list,   
   'GET /api/category/image/:imageid': image,
   'GET /api/category/DT'        : detail,   
+  'GET /api/category/LVer2'        : LVer2,   
   'POST /api/category/search'   : search,   
   'DELETE /api/category/DEL'   : remove,   
 };

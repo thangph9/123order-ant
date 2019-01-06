@@ -1,6 +1,6 @@
 import { routerRedux } from 'dva/router';
 import { message } from 'antd';
-import { getProducts,saveProduct,getProductDetail, searchProduct,saveProductVariants,getProductsByCategory,getProductsByCategoryDetail,updateProduct } from '@/services/product';
+import { getProducts,saveProduct,getProductDetail,saveProducts,getProduct,getVariantsBy,getOptionsBy,deleteOption,addOption,updateOption, searchProduct,saveProductVariants,getProductsByCategory,getProductsByCategoryDetail,updateProduct,addProduct } from '@/services/product';
 var currencyFormatter = require('currency-formatter');
 
 export default {
@@ -41,7 +41,6 @@ export default {
     *test_list({payload },{call,put}){
         const response =yield call(getProductsByCategory,payload);
          let d = [];
-        
         if(response.status == 'ok'){
             
             d=(response.list) ? response.list : []
@@ -80,6 +79,40 @@ export default {
             }
           yield put({
             type: 'save',
+            payload: {
+                row:payload,
+                ...response
+            },
+          });
+    },
+    *saveProducts({ payload },{call, put}){
+        const response = yield call(saveProducts, payload);
+          if(response.status==='ok'){
+                message.success('Thay đổi thành công');
+            }else if (response.status==='expired'){
+                message.warning('Đăng nhập lại ');
+            }else{
+                message.error('Lỗi! không thể thay đổi');
+            }
+          yield put({
+            type: 'save',
+            payload: {
+                row:payload,
+                ...response
+            },
+          });
+    },
+    *add({ payload },{call, put}){
+        const response = yield call(addProduct, payload);
+          if(response.status==='ok'){
+                message.success('Thêm mới thành công');
+            }else if (response.status==='expired'){
+                message.warning('Đăng nhập lại ');
+            }else{
+                message.error('Lỗi! không thể thay đổi');
+            }
+          yield put({
+            type: 'addReducer',
             payload: {
                 row:payload,
                 ...response
@@ -132,7 +165,88 @@ export default {
             type: 'list',
             payload: list,
           });
-    }
+    },
+    *getBy({ payload }, { call, put }) {
+        
+        const response = yield call(getProduct, payload);    
+       
+      yield put({
+        type: 'getByReducer',
+        payload: response.data,
+      });
+    },
+    *optionsBy({ payload }, { call, put }) {
+        
+      const response = yield call(getOptionsBy, payload);    
+       let list=[];
+        try{
+            list=Array.isArray(response.data) ? response.data : []  ;
+        }catch(e){
+            list=[];
+        }
+      yield put({
+        type: 'optionsByReducer',
+        payload: list,
+      });
+    },
+    *variantsBy({ payload }, { call, put }) {
+        
+        const response = yield call(getVariantsBy, payload);    
+       
+      yield put({
+        type: 'variantsByReducer',
+        payload: response.data,
+      });
+    },
+    *deleteOption({ payload }, { call, put }) {
+        
+      const response = yield call(deleteOption, payload); 
+        var res = JSON.parse(response);
+       if(res.status==='ok'){
+                message.success('Đã xoá');
+            }else if (res.status==='expired'){
+                message.warning('Đăng nhập lại ');
+            }else{
+                message.error('Lỗi! không thể thay đổi');
+        }
+      yield put({
+        type: 'deleteOptionReducer',
+        payload: payload,
+      });
+    },    
+    *addOption({ payload }, { call, put }) {
+      const response = yield call(addOption, payload); 
+        var data=payload;
+       if(response.status==='ok'){
+           data=response.data;
+                message.success('Thêm thành công');
+            }else if (response.status==='expired'){
+                message.warning('Đăng nhập lại ');
+            }else{
+                message.error('Lỗi! không thể thay đổi');
+        }
+        
+      yield put({
+        type: 'addOptionReducer',
+        payload: data,
+      });
+    },   
+    *updateOption({ payload }, { call, put }) {
+      const response = yield call(updateOption, payload); 
+        var data=payload;
+       if(response.status==='ok'){
+                data=response.data;
+                message.success('Sửa thành công');
+            }else if (response.status==='expired'){
+                message.warning('Đăng nhập lại ');
+            }else{
+                message.error('Lỗi! không thể thay đổi');
+        }
+      yield put({
+        type: 'updateOptionReducer',
+        payload: data,
+      });
+    },        
   },
 
   reducers: {
@@ -176,6 +290,51 @@ export default {
                 ...state
             }
         
-    },   
+    },
+    getByReducer(state,{payload}){
+         return {
+            ...state,
+            detail: payload
+        }
+    },
+    optionsByReducer(state,{payload}){
+         return {
+            ...state,
+            options: payload
+        }
+    } 
+    ,
+    variantsByReducer(state,{payload}){
+         return {
+            ...state,
+            variants: payload
+        }
+    },
+    deleteOptionReducer(state,{payload}){
+         return {
+            ...state,
+        }
+    },
+    addOptionReducer(state,{payload}){
+        var newOption=state.options;
+        newOption.push(payload);     
+        return {
+                 ...state,
+                options: newOption,
+             }
+    },
+    updateOptionReducer(state,{payload}){
+        var oldOption=state.options;
+        var newOption=oldOption.filter(k=>{
+            if(k.optid===payload.optid){
+                k=payload;
+                return true;
+            }
+        })
+             return {
+                 ...state,
+                 options:newOption,
+             }
+    },         
   },
 };

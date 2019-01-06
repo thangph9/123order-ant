@@ -541,7 +541,7 @@ function updateProduct(req,res){
                                             materials_use:object.materials_use,
                                             manufacturer:object.manufacturer
                                         };
-                var options = {if_exists: true};
+                var options = {ttl: 86400, if_exists: true};
                 models.instance.product_detail.update(query_object, update_values_object, options,function(err){
                         console.log(err);
                     });
@@ -568,11 +568,10 @@ function add(req,res){
     var params=req.body;
     var products={};
     var queryOption=[];
-    var queryCategories=[];
-    
     async.series([
         function(callback){
           try{
+             
               products={
                     productid: Uuid.random(),
                     name: params.name,
@@ -584,7 +583,6 @@ function add(req,res){
                     amount: params.amount,
                     type: params.type,
                     brand: params.brand,
-                    currency: params.currency,
                     seller: params.seller,
                     manufacturer: params.manufacturer,
                     size_type: params.size_type,
@@ -610,76 +608,6 @@ function add(req,res){
           callback(null,null);  
         },
         function(callback){
-            callback(null,null)
-        }, // xử lý thêm sp vào product_by_categories
-        function(callback){
-            if(Array.isArray(products.nodeid)){
-                try{
-                    products.nodeid.map((e,index)=>{
-                      var globalCounter={};
-                      var globalUpdate=0;    
-                      async.series([
-                          function(cb){
-                            models.instance.counterGlobal.find({id: models.uuidFromString(e)},function(err,item){
-                                if(item && item.length > 0){
-                                    globalCounter=item[0];
-                                }else{
-                                    globalCounter=0;
-                                }
-                                cb(err,null);
-                            }) 
-                          },
-                          function(cb){
-                              var counter= parseInt(globalCounter.product_by_categories) + 1;
-                              let product_by_categories=()=>{
-                                   var object={
-                                        productid: products.productid,
-                                        catid: models.uuidFromString(e),
-                                        name: products.name,
-                                        orderby: counter || 1,
-                                        groupby: '',
-                                  };
-                                   console.log(object);
-                                  var instance=new models.instance.product_by_categories(object);
-                                  var query=instance.save({return_query: true});
-                                  return query;
-                               }
-                              queryCategories.push(product_by_categories());
-                              cb(null,null);
-                          },
-                          function(cb){
-                              try{
-                                        var query_object = {id: models.uuidFromString(e)};
-                                        var update_values_object = {product_by_categories: models.datatypes.Long.fromInt(1)};
-                                        models.instance.counterGlobal.update(query_object, update_values_object,function(err){
-                                                console.log(err);
-                                            }); 
-
-                                }catch(e){
-
-                                }
-                              cb(null,null);
-                          }
-                      ],function(err,resut){
-                          try{
-                              models.doBatch(queryCategories, function(err){
-                                 console.log(err);
-                              });
-                          }catch(e){
-                              
-                          }
-                      })
-                    });
-                   
-                }catch(e){
-                    console.log(e);
-                }
-                   
-            }
-            callback(null,null);
-        },
-        //variant _by_product
-        function(callback){
           if(products.variants && products.variants.length > 0 ){    
               products.variants.map(e=>{
                   let variant_by_product=()=>{
@@ -701,55 +629,33 @@ function add(req,res){
           callback(null,null); 
               
         },
-        // product options
         function(callback){
             try{
-               if(Array.isArray(products.options)){ 
-                   products.options.map(e=>{
-                    var optid=Uuid.random();
-                    var attrs={};
-                    if(Array.isArray(products.options)){ 
-                        products.variants.map(k=>{
-                            attrs[k._id]=e[k._id];
-                        });
-                        let options=()=>{
-                              var object={
-                                    optid: optid,
-                                    productid:products.productid,
-                                    price: e.price,
-                                    amount: e.amount,
-                                    attrs: attrs,
-                                    images: e.images
-                              };
-                              var instance=new models.instance.options(object)
-                              var query=instance.save({return_query: true});
-                              return query;
-                          }
-                          queryOption.push(options());
-                    }
+               products.options.map(e=>{
+                var optid=Uuid.random();
+                var attrs={};
+                products.variants.map(k=>{
+                    attrs[k._id]=e[k._id];
                 });
-                   
-              }else{
-                  var optid=Uuid.random();
-                 let options=()=>{
-                              var object={
-                                    optid: optid,
-                                    productid:products.productid,
-                                    price: products.price,
-                                    amount: products.amount
-                              };
-                              var instance=new models.instance.options(object)
-                              var query=instance.save({return_query: true});
-                              return query;
-                          }
-                          queryOption.push(options()); 
-              }
+                let options=()=>{
+                      var object={
+                            optid: optid,
+                            productid:products.productid,
+                            price: e.price,
+                            amount: e.float,
+                            attrs: attrs
+                      };
+                      var instance=new models.instance.options(object)
+                      var query=instance.save({return_query: true});
+                      return query;
+                  }
+                  queryOption.push(options());
+                });
             }catch(e){
                 console.log(e);
             }
             callback(null,null); 
         },
-        // product
         function(callback){
             try{
                 let product=()=>{
@@ -771,7 +677,6 @@ function add(req,res){
                             nodeid: products.nodeid,
                             manufacturer: products.manufacturer,
                             size_type: products.size_type,
-                            currency: products.currency,
                             
                       };
                       var instance=new models.instance.product(object);
@@ -784,7 +689,7 @@ function add(req,res){
             }
             callback(null,null)
         },
-        
+        /*
         function(callback){
             models.doBatch(queries, function(err){
                 callback(err,null);
@@ -794,207 +699,13 @@ function add(req,res){
             models.doBatch(queryOption, function(err){
                 callback(err,null);
             });
-        },
+        }*/
     ],function(err,result){
         if(err) return res.send({status: 'error'});
         else res.send({status: 'ok',product: products})
     })
 }
-function listProductV2(req,res){
-    var params=req.params;
-    var productid=req.params.productid;
-    var product={};
-    async.series([
-        function(callback){
-            try{
-                productid=models.uuidFromString(productid);
-            }catch(e){
-                
-            }
-            callback(null,null);
-        },
-        function(callback){
-            models.instance.product.find({productid},function(err,item){
-                 if(item && item.length > 0){
-                     product=item[0];
-                 }
-                 callback(err,null);
-            });
-            
-        },
-        function(callback){
-            
-            callback(null,null)
-        }
-    ],function(err, results){
-        res.send({status: 'ok',data: product});
-    })
-}
-function listVariantV2(req,res){
-    var params=req.params;
-    var productid=req.params.productid;
-    var variants={};
-    async.series([
-        function(callback){
-            try{
-                productid=models.uuidFromString(productid);
-            }catch(e){
-                
-            }
-            callback(null,null);
-        },
-        function(callback){
-            models.instance.variant_by_product.find({productid},function(err,item){
-                 if(item && item.length > 0){
-                     variants=item;
-                 }
-                 callback(err,null);
-            });
-            
-        },
-        function(callback){
-            
-            callback(null,null)
-        }
-    ],function(err, results){
-        res.send({status: 'ok',data: variants});
-    })
-}
-function listOptionsV2(req,res){
-    var params=req.params;
-    var productid=req.params.productid;
-    var options={};
-    async.series([
-        function(callback){
-            try{
-                productid=models.uuidFromString(productid);
-            }catch(e){
-                
-            }
-            callback(null,null);
-        },
-        function(callback){
-            models.instance.options.find({productid},function(err,item){
-                 if(item && item.length > 0){
-                     options=item;
-                 }
-                 callback(err,null);
-            });
-            
-        },
-        function(callback){
-            
-            callback(null,null)
-        }
-    ],function(err, results){
-        res.send({status: 'ok',data: options});
-    })
-}
-function addOptionsV2(req,res){
-    var params=req.body;
-    var option={};
-    async.series([
-        function(callback){
-            try{
-                option.productid=models.uuidFromString(params.productid);
-                option.optid=Uuid.random();
-                option.price=params.price;
-                option.amount=params.amount;
-                option.attrs=params.attrs;
-                option.images=params.images;
-                params.optid=option.optid;
-            }catch(e){
-               return res.send({status: 'error'})
-            }
-            callback(null,null)
-        },function(callback){
-            var instance=new models.instance.options(option);
-            instance.save(function(err){
-                callback(err,null)
-            });
-        }
-    ],function(err,results){
-        if(err) return res.send({status: 'error', data: req.body});
-        res.send({status: 'ok', data: params});
-    });
-    
-}
-function updateOptionsV2(req,res){
-    var params=req.body;
-    var option={};
-    async.series([
-        function(callback){
-            try{
-                option.productid=models.uuidFromString(params.productid);
-                option.optid=models.uuidFromString(params.optid);
-                option.price=params.price;
-                option.amount=params.amount;
-                option.attrs=params.attrs;
-                option.images=params.images;
-            }catch(e){
-               return res.send({status: 'error'})
-            }
-            callback(null,null)
-        },function(callback){
-            var query_object = {productid: option.productid,optid: option.optid};
-            var update_values_object = {
-                                            price : option.price,
-                                            amount: option.amount,
-                                            attrs : option.attrs,
-                                            images: option.images,
-                                        };
-            var options = {if_exists: true};
-            models.instance.options.update(query_object, update_values_object, options, function(err){
-                 callback(err,null);
-            });
-           
-        }
-    ],function(err,results){
-        if(err) return res.send({status: 'error'});
-        res.send({status: 'ok', data: params});
-    });
-}
-function deleteOptionsV2(req,res){
-    var token=req.headers['x-access-token'];
-    var verifyOptions = {
-     expiresIn:  '30d',
-     algorithm:  ["RS256"]
-    };
-    var legit={};
-    try{
-        legit   = jwt.verify(token, publicKEY, verifyOptions);
-    }catch(e){
-        return res.send({status: 'expired'}); 
-    }
-    var params=req.params;
-    var optid='';
-    var productid='';
-    async.series([
-        function(callback){
-            console.log(params);
-            try{
-                
-                optid=models.uuidFromString(params.optid);
-                productid=models.uuidFromString(params.productid);
-            }catch(e){
-                return res.send({status: 'error'})
-            }
-            callback(null,null);
-        },
-        function(callback){
-            var query_object = {optid,productid};
-            models.instance.options.delete(query_object, function(err){
-               callback(err,null)
-            });
 
-            
-        }
-    ],function(err,result){
-        console.log(err);
-        if(err) return res.send({status: 'error'});
-        res.send({status: 'ok'})
-    })
-}
 function uploadFile(req,res){
     let dimensions='';
     let isValid=true;
@@ -1099,96 +810,11 @@ function uploadFreeSize(req,res){
               });
             
        }catch(e){
+           console.log(e);
            return res.send({status:'error'})
        }
        res.send({status:'ok',file:{imageid,isValid}})
     })
-}
-function deleteProduct(req,res){
-    var token=req.headers['x-access-token'];
-    var verifyOptions = {
-     expiresIn:  '30d',
-     algorithm:  ["RS256"]
-    };
-    var legit={};
-    try{
-        legit   = jwt.verify(token, publicKEY, verifyOptions);
-    }catch(e){
-        return res.send({status: 'expired'}); 
-    }
-    async.series([
-        function(callback){
-            callback(null,null)
-        },
-        function(callback){
-            callback(null,null)
-        }
-    ],function(err,result){
-        if(err) return res.send({status: 'error'});
-        res.send({status: 'ok'})
-    })
-}
-function imageProduct(req,res){
-    var token=req.headers['x-access-token'];
-    var verifyOptions = {
-     expiresIn:  '30d',
-     algorithm:  ["RS256"]
-    };
-    var legit={};
-    try{
-        legit   = jwt.verify(token, publicKEY, verifyOptions);
-    }catch(e){
-        return res.send({status: 'expired'}); 
-    }
-    async.series([
-        function(callback){
-            callback(null,null)
-        },
-        function(callback){
-            callback(null,null)
-        }
-    ],function(err,result){
-        if(err) return res.send({status: 'error'});
-        res.send({status: 'ok'})
-    })
-}
-function publish(req,res){
-     var token=req.headers['x-access-token'];
-    var verifyOptions = {
-     expiresIn:  '30d',
-     algorithm:  ["RS256"]
-    };
-    var legit={};
-    try{
-        legit   = jwt.verify(token, publicKEY, verifyOptions);
-    }catch(e){
-        return res.send({status: 'expired'}); 
-    }
-    async.series([
-        function(callback){
-            callback(null,null)
-        },
-        function(callback){
-            callback(null,null)
-        }
-    ],function(err,result){
-        if(err) return res.send({status: 'error'});
-        res.send({status: 'ok'})
-    })
-}
-function unpublish(req,res){
-     var token=req.headers['x-access-token'];
-    var verifyOptions = {
-     expiresIn:  '30d',
-     algorithm:  ["RS256"]
-    };
-    var legit={};
-    try{
-        legit   = jwt.verify(token, publicKEY, verifyOptions);
-    }catch(e){
-        return res.send({status: 'expired'}); 
-    }
-    res.send({status: 'ok'})
 }
 function image(req,res){
     let image='';
@@ -1227,49 +853,7 @@ function image(req,res){
         }
     })
 }
-function decodeVI(alias){
-    var str = alias;
-    str = str.toLowerCase();
-    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
-    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
-    str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
-    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
-    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
-    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
-    str = str.replace(/đ/g,"d");
-    str = str.replace(/!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g," ");
-    str = str.replace(/ + /g," ");
-    str = str.trim(); 
-    str=str.replace(/\s+/g, ' ');
-    return str;
-}
 export default {
-  'GET /api/product/list'   : getProducts,
-  'GET /api/product/DT'   : getDetail,
-  'GET /api/product/PL'   : getProductByCategory,
-  'GET /api/product/POD'   : getProductByID,
-  'GET /api/product/uniqueID'   : (req,res)=>{
-        var time=new Date().getTime();
-        var uni= time.toString(24).toUpperCase();
-        res.send(uni);
-  },
-  
-    
-  'POST /api/product/search': searchProducts,    
-  'POST /api/product/save'  : saveProduct,
-  'PUT /api/product/update'  : updateProduct,
-  'POST /api/upload'    : uploadFile ,
-  'POST /api/upload/thumb'    : uploadFileThumb ,
-  'POST /api/upload/blog'    : uploadFreeSize ,
-  'POST /api/product/publish'   : publish,
-  'POST /api/product/unpublish' : unpublish,
-  'POST /api/product/add' : add, // ver2
-  'GET /api/product/image/:imageid': image,
-  'PUT /api/product/saveProductVariants'   : saveProductVariants,
-  'GET /api/product/v2/:productid'   : listProductV2,
-  'GET /api/product/v2/variants/:productid'   : listVariantV2,
-  'GET /api/product/v2/options/:productid'   : listOptionsV2,
-  'DELETE /api/product/v2/options/delete/:optid/:productid'   : deleteOptionsV2,
-  'POST /api/product/v2/options/add'   : addOptionsV2,
-  'PUT /api/product/v2/options/update'   : updateOptionsV2,
+  'POST /api/image/upload'   : uploadFreeSize,
+  'GET /image/:imageid'   : image,
 };

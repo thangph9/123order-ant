@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import { connect } from 'dva';
 import { change_alias,encodeVI,populateFromArray } from '@/utils/utils';
 import { formatMessage, FormattedMessage } from 'umi/locale';
+import { Link } from 'react-router-dom';
 import moment from 'moment';
 
 
@@ -33,11 +34,14 @@ import {
   Tag,
   Tabs,    
   Divider,
-  Tooltip
+  Tooltip,
+  Popconfirm
 } from 'antd';
 
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 import DynamicFieldSet from '@/components/DynamicFieldSet';
+import EditVariant from '@/components/DynamicFieldSet/EditVariant';
+import AddVariant from '@/components/DynamicFieldSet/AddVariant';
 import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
 import styles from './ProductOption.less';
@@ -98,7 +102,6 @@ class UICard extends PureComponent{
 var placeholder = document.createElement("li");
     placeholder.className = styles.dragged;
 @connect(({ loading,image}) => ({
-   
     loading: loading.models.image,
     image
 }))
@@ -218,8 +221,9 @@ class ListImageUpload extends PureComponent{
             this.setState({dataSource: newData})
         }
         render(){
+            var source=Array.isArray(this.state.dataSource) ? this.state.dataSource : [];
             
-            var listItems = this.state.dataSource.map((item, i) => {
+            var listItems = source.map((item, i) => {
                 return (<li   className={styles.imgItem}
                               data-id={i}
                               key={i}
@@ -229,17 +233,18 @@ class ListImageUpload extends PureComponent{
                               onDragEnd={this.dragEnd.bind(this)}
                               onDragStart={this.dragStart.bind(this)}><div className={styles.imgLayout}><img src={"/image/"+item} style={{width:'100%'}} /></div>
                               {this.state[item] &&
-                                    <div className={styles.imgNav}><Icon type="delete" onClick={()=>{this.removeImage(item)}} /></div>
+                                    <div className={styles.imgNav}><Icon type="delete" onClick={()=>{this.removeImage(item)}} />
+                                    
+                                    </div>
                               }
                               </li>
                           )
                          });
-        
         return (
             <Dropzone onDrop={this.dropFile.bind(this)}>
             {({getRootProps, getInputProps, isDragActive}) => {
               return (
-                <div style={{minHeight: '150px',display:'block',float:'left'}}
+                <div style={{minHeight: '150px',display:'inline-block',float:'left'}}
                   {...getRootProps({
                   onClick: evt => evt.preventDefault()
                   })}
@@ -254,8 +259,20 @@ class ListImageUpload extends PureComponent{
                             </p>
                             <p className="ant-upload-text">Click or drag file to this area to upload</p>
                             <p className="ant-upload-hint">Support for a single or bulk upload. Strictly prohibit from uploading company data or other band files</p>
-                      </div> :
-                      <ol onDragOver={this.dragOver.bind(this)}>{listItems}</ol>
+                      </div> : 
+                        <div> {
+                                source.length > 0 ? <ol onDragOver={this.dragOver.bind(this)}>{listItems}</ol> :
+                                <div>
+                                    <p className="ant-upload-drag-icon">
+                                      <Icon type="inbox" />
+                                    </p>
+                                    <p className="ant-upload-text">Click or drag file to this area to upload</p>
+                                    <p className="ant-upload-hint">Support for a single or bulk upload. Strictly prohibit from uploading company data or other band files</p>
+                                </div>
+                               }
+                        </div>
+                    
+                      
                   }
                 </div>
               )
@@ -313,8 +330,7 @@ class EditableCell extends React.Component {
       </EditableContext.Consumer>
     );
   }
-} 
-// xu ly generate options
+}              
 class A extends PureComponent {
     state={
         dataSources:[],
@@ -344,6 +360,8 @@ class A extends PureComponent {
     }
     
     componentWillMount(){
+        const { source, match  } = this.props;
+        this.setState({dataSources: source,productid:match.params.productid});
     }
     handleChange(tag, checked,value) {
         const { selectedTags,selectedValue,dataSources, dataFilter} = this.state;
@@ -361,10 +379,25 @@ class A extends PureComponent {
         } 
         this.setState({selectedValue:nextSelectedValue, selectedTags: nextSelectedTags,addImage: true,dataFilter: variants,tag: tag});
       }
-    handleDeleteRows(rows){
-        const {dataSources} = this.state;
-        var result=dataSources.filter(e=> rows.key != e.key);
-        this.setState({dataSources:result});
+    handleDeleteRows(row){
+        const { dataSources } = this.state;
+        const { dispatch,match } = this.props;
+        
+        var result=dataSources.filter(e=> {
+            return row.key !== e.key
+        });
+        this.setState({ dataSources:result });
+        try{
+           
+            row.productid=match.params.productid;
+            dispatch({
+                type: 'product/deleteOption',
+                payload: row,
+            })
+        }catch(e){
+            
+        }
+        
     }
     handleAddPrice=(e,record)=>{
         console.log(record)
@@ -425,13 +458,16 @@ class A extends PureComponent {
         })
     }
     handleChangeAddOptionImage = ({ fileList }) =>{
+        
         this.setState({ fileList })
     } 
     handlePreviewImageOption = (record)=>{
+        
         if(record.images && record.images.length > 0){
+            
             this.setState({
                 previewVisible: true,
-                previewImage: record.imageRaw,
+                previewImage: record.images,
                 recordKey: record.key
             })
         }
@@ -455,46 +491,46 @@ class A extends PureComponent {
         })
     }
     componentWillReceiveProps(nextProps){
-        if(nextProps.variants!==this.props.variants){
-            var variants = nextProps.variants;
-            try{
-                var columns= variants.names.filter(k =>  k != null);
-                var rows=variants.values.filter(k=>  k !=null);
-                console.log(rows);
-                var _columns=[       
-                ];
-                var _tags=[];
-                columns.map( (e,index)=>{
-                    _columns.push({
-                      title: e,
-                      dataIndex: '100'+index,
-                      key: e,
-                      filters: [],
-                      onFilter: (value, record) => record['100'+index].indexOf(value) === 0,
-                    });
-                    _tags.push({
-                        _id: '100'+index,
-                        name:e,
-                        values: rows[index].split(','),
-                        orderby: index,
-                    })
-                });
+       
+        if(nextProps.variants !== this.props.variants){
+                var variants=nextProps.variants;
+                
+                try{
+                    var _columns=[];
+                    var _tags=[];   
+                    variants.map((e,index)=>{
+                            
+                        _columns.push({
+                                  title: e.name,
+                                  dataIndex: e.variantid,
+                                  key: e.variantid,
+                                  onFilter: (value, record) => record[e.variantid].indexOf(value) === 0,
+                                });
+                        _tags.push({
+                                _id: e.variantid,
+                                name:e.name,
+                                values: e.value,
+                                orderby: e.orderby,
+                            })
+
+                        });
+                    
+               _columns.push({
+                            title: 'Giá',
+                            dataIndex: 'price',
+                            key: 'price',
+                            render: (text,record)=> (<InputNumber defaultValue={record.price}  onChange={(price)=>{
+                                record.price=price;
+                            }}/>)
+                        });
                 _columns.push({
-                    title: 'Giá',
-                    dataIndex: 'price',
-                    key: 'price',
-                    render: (text,record)=> (<InputNumber onChange={(e)=>{
-                        record.price=e;
-                    }}/>)
-                });
-                _columns.push({
-                    title: 'Số lượng',
-                    dataIndex: 'amount',
-                    key: 'amount',
-                    render: (text,record)=> (<InputNumber onChange={(e)=>{
-                        record.amount=e;
-                    }}/>)
-                });
+                            title: 'Số lượng',
+                            dataIndex: 'amount',
+                            key: 'amount',
+                            render: (text,record)=> (<InputNumber defaultValue={record.amount} onChange={(amount)=>{
+                                record.amount=amount;
+                            }}/>)
+                        })       
                 _columns.push({
                     title: '',
                     dataIndex: 'action',
@@ -504,36 +540,57 @@ class A extends PureComponent {
                         if(record.images){
                             image=(<Icon type="eye" onClick={()=>{this.handlePreviewImageOption(record)}}/>);
                         }
+                        console.log(record);
                         return (
                             <div>
-                            <Icon type="delete" onClick={()=>{this.handleDeleteRows(record)}} />
+                            <Popconfirm
+                                title="Sure to cancel?"
+                                onConfirm={() => this.handleDeleteRows(record)}
+                              >
+                                <Icon type="delete"/>
+                              </Popconfirm>
+                              <Link to={`/products/v2/option/`+this.state.productid+`?variant=`+record.key} >
+                                <Icon type="edit"/>
+                              </Link>
                             {image}
                             </div>  
                         )
                     }
-                });
-                var matrixData=populateFromArray(_tags);
-                if(Array.isArray(matrixData)){
-                    matrixData.map((e,index)=>{
-                        e.key=index;
                     });
-                    
-                }
+               
                 this.setState({
                     columns: _columns,
                     tags: _tags,
-                    dataSources: matrixData,
                 });
-            }catch(e){
+                if(nextProps.defaultSource !== this.props.defaultSource){
+                    var defaultSource=nextProps.defaultSource;
+                    var dataSources=[];
+                    defaultSource.map((e,index)=>{
+                        var row={
+                            key: e.optid,
+                            ...e.attrs,
+                            price: e.price,
+                            images:e.images,
+                            amount: e.amount,
+                        }
+                        dataSources[index]=row
+                    });
+                    this.setState({
+                        dataSources
+                    })
+                }
+                }catch(e){
+                    console.log(e);
+                }
+                
             }
         }
-        
-    }
     
     render(){
         const {form: { getFieldDecorator,getFieldValue }} = this.props;
         const { changePrice, selectedRowKeys,dataSources,fileList,columns,selectedTags,rowSelection,tags ,listImage} =this.state;
         var rowSelect=rowSelection;
+       
         rowSelect.selectedRowKeys=this.state.selectedRowKeys;
         var tag=[];
         this.state.tags.map((e,index)=>{
@@ -557,6 +614,7 @@ class A extends PureComponent {
             <div className="ant-upload-text">Upload</div>
           </div>
         );
+        
         return (
             <Row>
                 {tag}
@@ -566,7 +624,7 @@ class A extends PureComponent {
                         </Row>   
                     }
                 <Table 
-                    dataSource={dataSources}  rowSelection={rowSelect}  columns={columns} />
+                    dataSource={dataSources} rowSelection={rowSelect}  columns={columns} />
                     <FormItem  {...this.formLayout}>
                         {getFieldDecorator('options', {
                             initialValue: dataSources
@@ -597,15 +655,14 @@ class A extends PureComponent {
                       onOk={this.onOkPreviewModalImage}
                       onCancel={this.onCancelPreviewShowImage}
                       >
-                      <Upload
-                          action="/api/image/upload"
-                          listType="picture-card"
-                          multiple
-                          fileList={this.state.previewImage}
-                          onChange={this.handleChangeAddOptionImagePrev}
-                        >
-                          {fileList.length >= 10 ? null : uploadButton}
-                        </Upload>      
+                      <ul className={styles.previewImage}>
+                        {this.state.previewImage.map(e=>{
+                            return(<li key={e}> 
+                                    <img src={`/image/`+e} style={{width:'100px'}}/>
+                                </li>)    
+                            })
+                        }
+                      </ul>      
                   </Modal>  
                          
             </Row>
@@ -622,59 +679,18 @@ class A extends PureComponent {
 }))
 
 @Form.create()
-class ProductOption extends PureComponent {
+class ProductEdit extends PureComponent {
   state = { 
         currency: 'USD',
         imageUrl:'',
         variantVisible: false,
+        editVariantVisible: false,
         previewVisible: false,
         previewImage: '',
         fileList: [],
         imgHover: false,
         variants: [],
-        sizeData:[
-        {
-            title   : 'Adidas',
-            key     : 'adidas',
-            value   : 'adidas',
-            children:[
-                {
-                    title   : 'HEEL-TOE MEASUREMENT',
-                    key     : '01',
-                    value   : '01',  
-                },
-                {
-                    title   : "US - MEN\'S",
-                    key     : '02',
-                    value   : '02',  
-                },
-                {
-                    title   : "US - WOMEN'S",
-                    key     : '03',
-                    value   : '03',  
-                },
-                {
-                    title   : 'UK',
-                    key     : '04',
-                    value   : '04',  
-                },
-                {
-                    title   : 'EU',
-                    key     : '05',
-                    value   : '05',  
-                },
-                {
-                    title   : 'JP',
-                    key     : '06',
-                    value   : '06',  
-                },
-            ]
-        }
-    ],
-        colors: ["3779053b-b82e-4beb-83d7-9d82933f9067",
-                 "c78397db-6add-4cf7-b1d6-5df07e85284f",
-                 "825a462c-5f09-4953-b549-6904fd3dd3eb",
-                 "ac72e30a-44aa-4430-a732-bac1439e04ef"],
+        images: [],
         editorDesc: EditorState.createEmpty(),
         editorMaterial: EditorState.createEmpty(),
         editorSize: EditorState.createEmpty(),
@@ -682,7 +698,10 @@ class ProductOption extends PureComponent {
         options: [],
         images: [],
         hasImage: false,
-        
+        productDetail: {},
+        CategoriesOptions: [],
+        productid: '',
+      
     };
 handleSubmit=(e)=>{
     const {dispatch , form} = this.props;
@@ -694,7 +713,7 @@ handleSubmit=(e)=>{
                values.thumbnail=values.images[0];
            }
            dispatch({
-              type: 'product/add',
+              type: 'product/update',
               payload: values,
             });
             
@@ -799,15 +818,13 @@ showAddVariant = () => {
       variantVisible: true,
     });
   }
-
-handleOkVariant = (e) => {
+handleCancelVariant = (e) => {
+    console.log(e);
     this.setState({
       variantVisible: false,
     });
   }
-
-handleCancelVariant = (e) => {
-    console.log(e);
+handleOkVariant = (e) => {
     this.setState({
       variantVisible: false,
     });
@@ -815,6 +832,26 @@ handleCancelVariant = (e) => {
 handleVariantSubmit =(values)=>{
     this.setState({variants: values});
 }
+
+showEditVariant =()=>{
+    this.setState({
+      editVariantVisible: true,
+    });
+}
+handleOkEditVariant =(e)=>{
+    this.setState({
+      editVariantVisible: false,
+    });
+}
+handleCancelEditVariant =(e)=>{
+    this.setState({
+      editVariantVisible: false,
+    });
+}
+handleEditVariantSubmit =(values)=>{
+    this.setState({variants: values});
+}
+
 changeCurrency=(e)=>{
     this.setState({
         currency: e
@@ -827,7 +864,7 @@ handleCallback = (e)=>{
     });
     if(e){
         this.setState({
-            images: e
+            colors: e
         })
     }
     
@@ -894,13 +931,9 @@ uiCardImgExtra=(
         <span>Ảnh</span>
     </div>
 );
-optionExtra=(
-    <div>
-        <a href="javascript: void(0)" onClick={this.showAddVariant}>Add Variants</a>
-    </div>
-)
 componentDidMount(){
-     const {dispatch} = this.props;
+     const {dispatch,match} = this.props;
+     this.setState({productid: match.params.productid})
      dispatch({
         type: 'order/fetchRaito',
         payload:{},
@@ -909,6 +942,19 @@ componentDidMount(){
         type: 'category/lver2',
         payload:{},
     })
+     dispatch({
+        type: 'product/getBy',
+        payload:match.params.productid,
+    })
+     dispatch({
+        type: 'product/optionsBy',
+        payload:match.params.productid,
+    })
+     dispatch({
+        type: 'product/variantsBy',
+        payload:match.params.productid,
+    })
+     
 }
 componentWillReceiveProps(nextProps){
   if(nextProps.category!==this.props.category){
@@ -917,17 +963,38 @@ componentWillReceiveProps(nextProps){
     //this.setState({treeData});
       try{
           var category=nextProps.category.data.list;
-          this.setState({options: category})
+          this.setState({CategoriesOptions: category})
       }catch(e){
           
       }
-      
-      
-      
-    
   }
   if(nextProps.product!==this.props.product) {
+      var product=nextProps.product;
+      try{
+          let desc = ContentState.createFromBlockArray(htmlToDraft(detail.descriptions.desc));
+          product.detail.defaultDesc= EditorState.createWithContent(desc);
+          let desc_detail = ContentState.createFromBlockArray(htmlToDraft(detail.descriptions.desc_detail));
+         
+          product.detail.defaultDescDetail= EditorState.createWithContent(desc_detail);
+          let material = ContentState.createFromBlockArray(htmlToDraft(detail.descriptions.material));
+          product.detail.defaultMaterial= EditorState.createWithContent(material);
+          
+          let size_desc = ContentState.createFromBlockArray(htmlToDraft(detail.descriptions.size_desc));
+          product.detail.defaultSize= EditorState.createWithContent(size_desc);
+          
+      }catch(e){
+          
+      }
+      var images=(product.detail.images) ? product.detail.images : [];
+      var variants=(Array.isArray(product.variants)) ? product.variants : [];
+      var options=(Array.isArray(product.options)) ? product.options : [];
       
+      this.setState({
+          productDetail: product.detail,
+          options,
+          variants ,
+          images
+      });
   }   
   if(nextProps.order!==this.props.order) {
       let ls=[];
@@ -958,19 +1025,25 @@ render() {
     const {
       form: { getFieldDecorator,getFieldValue },form
     } = this.props;
-    const {currency,fileList, thumbnail,sizeData,image,treeData,listRaito,ls,options}=this.state;
+    const {currency,fileList, thumbnail,sizeData,image,treeData,listRaito,ls,productDetail,variants,options,CategoriesOptions}=this.state;
     const imageUrl = this.state.imageUrl;
     let htmlDescription=draftToHtml(convertToRaw(this.state.editorDesc.getCurrentContent()))
     let htmlMaterials=draftToHtml(convertToRaw(this.state.editorMaterial.getCurrentContent()))
     let htmlSizeDesc=draftToHtml(convertToRaw(this.state.editorSize.getCurrentContent()))
     let htmlDetail=draftToHtml(convertToRaw(this.state.editorDetail.getCurrentContent()))
     var selectOption=[];
-    if(options && options.length > 0){
-      options.map((e,index)=>{
+    if(CategoriesOptions && CategoriesOptions.length > 0){
+      CategoriesOptions.map((e,index)=>{
           selectOption[index]=(<SelectOption key={index} value={e.id}>{e.title}</SelectOption>)
       })
     }
-   
+    var optionExtra=(
+    <div>
+        <a href="javascript: void(0)" onClick={this.showAddVariant}>Add Variants</a> |
+        <a href="javascript: void(0)" onClick={this.showEditVariant}>Edit Variants</a> |
+        <Link to={`/products/v2/option/`+this.state.productid} >Add Option</Link>
+    </div>
+    )
     return (  
       <PageHeaderWrapper> 
         <Form onSubmit={this.handleSubmit} className="login-form">
@@ -983,15 +1056,23 @@ render() {
                              <UICard> 
                                 <FormItem label="Tên: "  {...this.formLayout}>
                                     {getFieldDecorator('name', {
-                                        rules:[{required: true, message: 'Nhập tên sản phẩm!'}]
+                                        rules:[{required: true, message: 'Nhập tên sản phẩm!'}],
+                                        initialValue:  productDetail.name 
                                     })(<Input />)}
+                                       
                                 </FormItem>
+                                <FormItem>
+                                    {getFieldDecorator('productid', {
+                                        initialValue:  productDetail.productid 
+                                    })(<Input type="hidden"/>)}
+                                       
+                                </FormItem>       
                                  <Tabs onChange={this.callback}>
                                     <TabPane tab="Mô tả" key="1">
                                        <FormItem>
                                               <div style={{backgroundColor:'white'}}>
                                                   <Editor
-                                                      editorState={this.state.editorDesc }
+                                                      editorState={productDetail.defaultDesc }
                                                       wrapperClassName={styles['demo-wrapper']}
                                                       editorClassName={styles['demo-editor']}
                                                      toolbar={{
@@ -1017,7 +1098,7 @@ render() {
                                         <FormItem>
                                               <div style={{backgroundColor:'white'}}>
                                                   <Editor
-                                                      editorState={this.state.editorMaterial }
+                                                      editorState={productDetail.defaultMaterial }
                                                       wrapperClassName={styles['demo-wrapper']}
                                                       editorClassName={styles['demo-editor']}
                                                      toolbar={{
@@ -1043,7 +1124,7 @@ render() {
                                         <FormItem>
                                               <div style={{backgroundColor:'white'}}>
                                                   <Editor
-                                                      editorState={this.state.editorSize }
+                                                      editorState={productDetail.defaultSize}
                                                       wrapperClassName={styles['demo-wrapper']}
                                                       editorClassName={styles['demo-editor']}
                                                      toolbar={{
@@ -1070,7 +1151,7 @@ render() {
                                         <FormItem>
                                               <div style={{backgroundColor:'white'}}>
                                                   <Editor
-                                                      editorState={this.state.editorDetail }
+                                                      editorState={productDetail.defaultDescDetail }
                                                       wrapperClassName={styles['demo-wrapper']}
                                                       editorClassName={styles['demo-editor']}
                                                      toolbar={{
@@ -1103,7 +1184,7 @@ render() {
                                         <ListImageUpload 
                                             onDrop={this.handleDrop}
                                             refs={this.handleCallback}
-                                            dataSource={this.state.colors}
+                                            dataSource={ this.state.images }
                                             
                                             />	             
                                     </Col>   
@@ -1116,7 +1197,7 @@ render() {
                                     <Col xs={24} md={24}>
                                          <FormItem label="Loại tiền: " {...this.formLayoutSelect}>
                                             {getFieldDecorator('currency', {
-                                                initialValue: currency
+                                                initialValue: productDetail.currency
                                             }) (<Select
                                                     onChange={this.changeCurrency}
                                                 >
@@ -1129,12 +1210,14 @@ render() {
                                     <Col xs={12} md={12}>
                                        <FormItem label="Giá gốc"  {...this.formLayout}>
                                             {getFieldDecorator('price', {
+                                                initialValue: productDetail.price
                                             })(<InputNumber className={styles.inputNumber} />)}
                                         </FormItem>        
                                     </Col>
                                     <Col xs={12} md={12} >
                                        <FormItem label="Sale"  {...this.formLayout}>
                                             {getFieldDecorator('sale', {
+                                               initialValue: (productDetail.sale) ? productDetail.sale.saleOff : null
                                             })(<InputNumber className={styles.inputNumber}/>)}
                                         </FormItem>        
                                     </Col>
@@ -1143,13 +1226,14 @@ render() {
                                     <Col xs={12} md={12}>
                                        <FormItem label="Giá đã sale"  {...this.formLayout}>
                                             {getFieldDecorator('sale_price', {
+                                               initialValue: (productDetail.sale) ? productDetail.sale.salePrice : null
                                             })(<InputNumber className={styles.inputNumber}/>)}
                                         </FormItem>        
                                     </Col>
                                     <Col xs={12} md={12} >
                                         <FormItem label="Số lượng"  {...this.formLayout}>
                                             {getFieldDecorator('amount', {
-
+                                                initialValue: productDetail.amount
                                             })(<InputNumber  />)}
                                         </FormItem>
                                      </Col> 
@@ -1158,8 +1242,8 @@ render() {
                             </UICard>     
                         </div> 
                         <div className={styles.uiLayoutItem}>
-                            <Card title="Lựa chọn" extra={this.optionExtra}>
-                                <A variants={this.state.variants} {...this.props}/>               
+                            <Card title="Lựa chọn" extra={optionExtra}>
+                                <A variants={this.state.variants} {...this.props} defaultSource={this.state.options}/>               
                             </Card>  
                         </div> 
                         <div className={styles.uiLayoutItem}>
@@ -1168,7 +1252,7 @@ render() {
                                      <Col md={24}>
                                         <FormItem  {...this.formLayout}>
                                             {getFieldDecorator('seo_meta', {
-
+                                                    
                                             })(<Input />)}
                                         </FormItem>
                                      </Col> 
@@ -1183,7 +1267,7 @@ render() {
                            <UICard className={styles.uiCardBgColor}>
                                 <FormItem label="Danh mục" {...this.formLayout}>
                                 {getFieldDecorator('nodeid', {
-                                       
+                                       initialValue: productDetail.nodeid
                                 })( 
                                 <Select
                                   mode="multiple"
@@ -1213,7 +1297,7 @@ render() {
                                      <Col md={24}>
                                         <FormItem label="Loại sản phẩm"  {...this.formLayout}>
                                             {getFieldDecorator('type', {
-
+                                                 initialValue: productDetail.type
                                             })(<Input />)}
                                         </FormItem>
                                      </Col> 
@@ -1222,7 +1306,7 @@ render() {
                                      <Col md={24}>
                                         <FormItem label="Thương hiệu"  {...this.formLayout}>
                                             {getFieldDecorator('brand', {
-
+                                                initialValue: productDetail.brand
                                             })(<Input />)}
                                         </FormItem>
                                      </Col> 
@@ -1231,7 +1315,7 @@ render() {
                                      <Col md={24}>
                                         <FormItem label="Người bán"  {...this.formLayout}>
                                             {getFieldDecorator('seller', {
-
+                                                initialValue: productDetail.seller
                                             })(<Input />)}
                                         </FormItem>
                                      </Col> 
@@ -1240,7 +1324,7 @@ render() {
                                      <Col md={24}>
                                         <FormItem label="NSX"  {...this.formLayout}>
                                             {getFieldDecorator('manufacturer', {
-
+                                                initialValue: productDetail.manufacturer
                                             })(<Input />)}
                                         </FormItem>
                                      </Col> 
@@ -1249,7 +1333,7 @@ render() {
                                      <Col md={24}>
                                         <FormItem label="Kiểu kích cỡ"  {...this.formLayout}>
                                             {getFieldDecorator('size_type', {
-
+                                                initialValue: productDetail.size_type
                                             })(<Input />)}
                                         </FormItem>
                                      </Col> 
@@ -1260,7 +1344,7 @@ render() {
                            <Card className={styles.uiCardBgColor} title='Tags'>
                                 <FormItem  {...this.formLayout}>
                                     {getFieldDecorator('tag', {
-                                        
+                                        initialValue: productDetail.tag
                                      })(<Input />)}
                                 </FormItem>
                             </Card>
@@ -1291,11 +1375,19 @@ render() {
               onOk={this.handleOkVariant}
               onCancel={this.handleCancelVariant}
             >
-            <DynamicFieldSet  variantSubmit={this.handleVariantSubmit}/>
-        </Modal>                                       
+            <AddVariant defaultSource={this.state.variants}  variantSubmit={this.handleVariantSubmit}/>
+        </Modal>   
+        <Modal
+              title="Edit"
+              visible={this.state.editVariantVisible}
+              onOk={this.handleOkEditVariant}
+              onCancel={this.handleCancelEditVariant}
+            >
+            <EditVariant defaultSource={this.state.variants}  variantSubmit={this.handleEditVariantSubmit}/>
+        </Modal>                                
       </PageHeaderWrapper>
     );
   }
 }
 
-export default ProductOption;
+export default ProductEdit;

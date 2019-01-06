@@ -35,9 +35,22 @@ export async function getAllCategory() {
       headers:{'X-Access-Token':getAuthority()[0].token}
   });
 }
+export async function getLVer2() {
+  return request(`/api/category/LVer2?ref=${new Date().getTime()}`,{
+      method : "GET",
+      headers:{'X-Access-Token':getAuthority()[0].token}
+  });
+}
 export async function getDetailCategory(params) {
   return request(`/api/category/DT?nodeid=${params}&ref=${new Date().getTime()}`,{
       method : "GET",
+      headers:{'X-Access-Token':getAuthority()[0].token}
+  });
+}
+export async function addCategory(params) {
+  return request(`/api/category/add?ref=${new Date().getTime()}`,{
+      method : "POST",
+      body: params,
       headers:{'X-Access-Token':getAuthority()[0].token}
   });
 }

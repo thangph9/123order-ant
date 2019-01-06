@@ -1,6 +1,6 @@
 import { routerRedux } from 'dva/router';
 import { message } from 'antd';
-import { getTreeMap,saveCategory,getAllCategory,getDetailCategory,getSearch,updateCategory,deleteCategory } from '@/services/category';
+import { getTreeMap,saveCategory,getAllCategory,getDetailCategory,getSearch,updateCategory,deleteCategory,addCategory,getLVer2 } from '@/services/category';
 
 export default {
   namespace: 'category',
@@ -55,7 +55,23 @@ export default {
                 type:'all',
                 payload: d
             })
-    },  
+    }, 
+    *lver2({payload },{call,put}){
+        const response =yield call(getLVer2,payload);
+        let d = [];
+        try{
+           if(response.status == 'ok'){
+            d=(response && response.data) ? response.data : {}
+           } 
+        }catch(e){
+            
+        }
+        
+        yield put({
+                type:'lver2Reducer',
+                payload: d
+        })
+    },    
     *search({ payload },{call,put}){
         const response =yield call(getSearch,payload);
         let d = [];
@@ -72,6 +88,23 @@ export default {
                 payload: d
             })
     } , 
+    *add({ payload },{call, put}){
+         const response = yield call(addCategory, payload);
+             
+          if(response.status==='ok'){
+                message.success('Thêm mới thành công');
+            }else if (response.status==='expired'){
+                message.warning('Đăng nhập lại ');
+            }else{
+                message.error('Lỗi! không thể thay đổi');
+            }
+          yield put({
+            type: 'addReducer',
+            payload: {
+                ...response
+            },
+          });
+    },
     *save({ payload },{call, put}){
     
           const response = yield call(saveCategory, payload);
@@ -146,6 +179,12 @@ export default {
             data: payload
         }
     },
+    lver2Reducer(state,{ payload }){
+        return {
+            ...state,
+            data: payload
+        }
+    },    
     saveReducer(state,{ payload }){
         if(payload.newData){
             state.data=payload.newData;
@@ -155,6 +194,14 @@ export default {
             }
         
     }, 
+    addReducer(state,{payload}){
+        if(payload.newData){
+            state.data=payload.newData;
+        }
+        return {
+                ...state
+            }
+    },
     deleteReducer(state,{payload}){
         var newData=[];
         try{

@@ -22,6 +22,46 @@ export function change_alias(alias) {
     str=str.replace(/\s+/g, '-');
     return str;
 }
+export function populateFromArray(array) {
+      var output = {};
+      var rows=[];
+      var v=array[0];
+      if(Array.isArray(v.values)){
+        v.values.forEach(function(item,index){
+            var t={[v._id]: item};
+            rows[index]=t;
+            
+        })       
+       }
+        
+      var k=array[1];
+      var arr2=[];
+      if(k && Array.isArray(k.values)){
+        rows.forEach(function(item,index){
+            k.values.forEach(function(e,i){
+                var t={[k._id]: e};
+                var newsObj={...item,...t}
+                arr2.push(newsObj);
+            });
+        });  
+        rows=arr2;
+        arr2=[];
+       }
+      var d= array[2];
+      if(d && Array.isArray(d.values)){
+         rows.forEach(function(item,index){
+            d.values.forEach(function(e,i){
+                var t={[d._id]: e};
+                var newsObj={...item,...t}
+                arr2.push(newsObj);
+            });
+        });
+        rows=arr2;
+        arr2=[];  
+      }
+      //console.log(rows);
+      return rows;
+    }
 export function getTimeDistance(type) {
   const now = new Date();
   const oneDay = 1000 * 60 * 60 * 24;
@@ -124,18 +164,23 @@ function getRenderArr(routes) {
  */
 export function encodeVI(alias) {
     var str = alias;
-    str = str.toLowerCase();
-    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
-    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
-    str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
-    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
-    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
-    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
-    str = str.replace(/đ/g,"d");
-    str = str.replace(/!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g," ");
-    str = str.replace(/ + /g," ");
-    str = str.trim(); 
-    str=str.replace(/\s+/g, ' ');
+    try{
+        str = str.toLowerCase();
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
+        str = str.replace(/đ/g,"d");
+        str = str.replace(/!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g," ");
+        str = str.replace(/ + /g," ");
+        str = str.trim(); 
+        str=str.replace(/\s+/g, ' ');
+    }catch(e){
+    
+    }
+   
     return str;
 }
 /**
