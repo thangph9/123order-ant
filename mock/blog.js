@@ -160,7 +160,7 @@ function update(req,res){
                                         image: object.image,
                                         short_desc:object.short_desc,
                                         expired: object.expired};
-            var options = {ttl: 86400, if_exists: true};
+            var options = {if_exists: true};
             models.instance.articles.update(query_object, update_values_object, options, function(err){
                 callback(err,null);
             });
