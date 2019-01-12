@@ -416,7 +416,7 @@ class ProductLists extends PureComponent {
                 >
                   <List.Item.Meta
                     avatar={<Avatar src={`/api/product/image/${item.thumbnail}`} shape="square" size="large" />}
-                    title={<Link to={`/products/edit/${item.productid}`}>{item.title}</Link>}
+                    title={<Link to={`/products/edit/${item.productid}`}>E-{item.title}</Link>}
                     description={(item.category && item.category.length > 0) && item.category.map((e,i)=>{
                             if(e){
                                 if(item.category.length >1 && (item.category.length-1) > i ){
